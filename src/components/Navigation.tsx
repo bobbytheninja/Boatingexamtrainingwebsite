@@ -41,11 +41,11 @@ export function Navigation({
   const navLinks = [
     { id: 'home', label: t.home },
     { id: 'pricing', label: t.pricing },
-    { id: 'contact', label: t.contact },
+    { id: 'partners', label: t.partners },
   ];
 
-  const languages: Language[] = ['English', 'Bulgarian'];
-  const regions = ['Bulgaria', 'Greece', 'Romania'];
+  const languages: Language[] = ['English', 'Bulgarian', 'Spanish', 'Greek'];
+  const regions = ['Bulgaria'];
   
   const handleNavigate = (page: string) => {
     onNavigate(page);
@@ -68,7 +68,7 @@ export function Navigation({
       } : undefined}
     >
       <div className="container mx-auto px-4 md:px-6 lg:px-8 py-4">
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center justify-between gap-2">
           {/* Logo */}
           <button 
             onClick={() => onNavigate('home')}
@@ -103,7 +103,7 @@ export function Navigation({
           </button>
 
           {/* Center Navigation Links */}
-          <div className="hidden md:flex items-center gap-1">
+          <div className="hidden md:flex items-center gap-1 flex-1 justify-center">
             {navLinks.map((link) => (
               <Button
                 key={link.id}
@@ -113,6 +113,8 @@ export function Navigation({
                   currentPage === link.id
                     ? transparent
                       ? 'bg-white/20 text-white backdrop-blur-md'
+                      : link.id === 'partners'
+                      ? 'bg-cyan-50 text-cyan-700 dark:bg-cyan-900/50 dark:text-cyan-300'
                       : 'bg-sky-50 text-sky-700 dark:bg-sky-900/50 dark:text-sky-300'
                     : transparent
                     ? 'text-white hover:bg-white/10 backdrop-blur-sm drop-shadow-md'
@@ -267,7 +269,7 @@ export function Navigation({
                     </Button>
                   ))}
                   
-                  <div className="h-px bg-gray-200 my-2" />
+                  <div className="h-px bg-gray-200 dark:bg-gray-700 my-2" />
                   
                   {/* Dark Mode Toggle */}
                   {onDarkModeToggle && (

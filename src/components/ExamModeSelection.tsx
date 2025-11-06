@@ -22,7 +22,7 @@ export function ExamModeSelection({ examType, onStart, onBack, language }: ExamM
   const [selectedMode, setSelectedMode] = useState<ExamMode>('study');
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 py-12 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 pt-24 pb-12 px-4">
       <div className="container mx-auto max-w-5xl">
         <Button onClick={onBack} variant="ghost" className="mb-6 hover:bg-blue-100 dark:hover:bg-slate-700 dark:text-gray-200">
           <ArrowLeft className="w-4 h-4 mr-2" />

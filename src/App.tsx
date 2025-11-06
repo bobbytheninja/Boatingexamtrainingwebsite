@@ -6,6 +6,7 @@ import { ContactPage } from './components/ContactPage';
 import { LoginPage } from './components/LoginPage';
 import { AccountPage } from './components/AccountPage';
 import { PaymentPage } from './components/PaymentPage';
+import { PartnersPage } from './components/PartnersPage';
 import { ExamModeSelection, ExamMode, ExamTier } from './components/ExamModeSelection';
 import { ExamPage } from './components/ExamPage';
 import { Footer } from './components/Footer';
@@ -13,7 +14,7 @@ import { ExamType } from './data/examQuestions';
 import { Toaster } from './components/ui/sonner';
 import { Language } from './data/translations';
 
-type Page = 'home' | 'pricing' | 'contact' | 'login' | 'account' | 'payment' | 'mode-selection' | 'exam';
+type Page = 'home' | 'pricing' | 'contact' | 'login' | 'account' | 'payment' | 'partners' | 'mode-selection' | 'exam';
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<Page>('home');
@@ -24,6 +25,7 @@ export default function App() {
   const [examTier, setExamTier] = useState<ExamTier | null>(null);
   const [language, setLanguage] = useState<Language>('English');
   const [region, setRegion] = useState<string>('Bulgaria');
+  const [selectedPartnerIndex, setSelectedPartnerIndex] = useState<number>(0);
   const [darkMode, setDarkMode] = useState<boolean>(() => {
     const saved = localStorage.getItem('darkMode');
     return saved ? JSON.parse(saved) : false;
@@ -59,11 +61,17 @@ export default function App() {
     setCurrentPage('home');
   };
 
-  const handleNavigate = (page: string) => {
+  const handleNavigate = (page: string, partnerIndex?: number) => {
     if (page === 'account' && !userEmail) {
       setCurrentPage('login');
       return;
     }
+    
+    // If navigating to partners with a specific index, save it
+    if (page === 'partners' && partnerIndex !== undefined) {
+      setSelectedPartnerIndex(partnerIndex);
+    }
+    
     setCurrentPage(page as Page);
     
     // Reset exam state when navigating away from exam pages
@@ -117,10 +125,10 @@ export default function App() {
     setExamTier(null);
   };
 
-  const handleStartExamFromAccount = (examType: ExamType) => {
-    // Start the paid exam directly for the selected exam type
+  const handleStartExamFromAccount = (examType: ExamType, mode: ExamMode = 'exam') => {
+    // Start the paid exam directly for the selected exam type in the specified mode
     setSelectedExam(examType);
-    setExamMode('exam');
+    setExamMode(mode);
     setExamTier('paid');
     setCurrentPage('exam');
   };
@@ -154,6 +162,14 @@ export default function App() {
       
       {currentPage === 'contact' && (
         <ContactPage onNavigate={handleNavigate} language={language} />
+      )}
+
+      {currentPage === 'partners' && (
+        <PartnersPage 
+          onNavigate={handleNavigate} 
+          language={language} 
+          selectedPartnerIndex={selectedPartnerIndex}
+        />
       )}
       
       {currentPage === 'login' && (
@@ -200,7 +216,7 @@ export default function App() {
       )}
       
       {/* Footer - hide on exam page for cleaner experience */}
-      {currentPage !== 'exam' && <Footer language={language} />}
+      {currentPage !== 'exam' && <Footer language={language} onNavigate={handleNavigate} />}
       
       <Toaster />
     </div>

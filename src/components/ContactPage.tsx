@@ -131,7 +131,9 @@ export function ContactPage({ onNavigate, language }: ContactPageProps) {
                   </div>
                   <div>
                     <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">{t.phone}</p>
-                    <p className="text-sm font-medium text-gray-700 dark:text-gray-200">+359 2 123 4567</p>
+                    <a href="tel:+359889660467" className="text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-sky-600 dark:hover:text-sky-400">
+                      +359 88 9660467
+                    </a>
                   </div>
                 </div>
 

@@ -9,7 +9,7 @@ interface AccountPageProps {
   userEmail: string;
   paidExams: ExamType[];
   onNavigate: (page: string) => void;
-  onStartExam: (examType: ExamType) => void;
+  onStartExam: (examType: ExamType, mode?: 'exam' | 'study') => void;
   onLogout: () => void;
   language: Language;
 }
@@ -160,13 +160,22 @@ export function AccountPage({ userEmail, paidExams, onNavigate, onStartExam, onL
                                   </div>
                                 </div>
                               </div>
-                              <Button
-                                onClick={() => onStartExam(examType)}
-                                variant="outline"
-                                className="border-2 border-sky-600 text-sky-700 hover:bg-sky-50 dark:border-sky-500 dark:text-sky-400 dark:hover:bg-sky-900/30 font-semibold whitespace-nowrap"
-                              >
-                                {t.startExam}
-                              </Button>
+                              <div className="flex flex-col gap-2">
+                                <Button
+                                  onClick={() => onStartExam(examType, 'exam')}
+                                  variant="outline"
+                                  className="border-2 border-sky-600 text-sky-700 hover:bg-sky-50 dark:border-sky-500 dark:text-sky-400 dark:hover:bg-sky-900/30 font-semibold whitespace-nowrap"
+                                >
+                                  {t.startExam}
+                                </Button>
+                                <Button
+                                  onClick={() => onStartExam(examType, 'study')}
+                                  variant="outline"
+                                  className="border-2 border-emerald-600 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-500 dark:text-emerald-400 dark:hover:bg-emerald-900/30 font-semibold whitespace-nowrap"
+                                >
+                                  {t.startStudy}
+                                </Button>
+                              </div>
                             </div>
                           </CardContent>
                         </Card>
