@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Checkbox } from './ui/checkbox';
@@ -23,6 +23,10 @@ import { ExamType, examData, Question } from '../data/examQuestions';
 import { ExamMode, ExamTier } from './ExamModeSelection';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { Language, getTranslation } from '../data/translations';
+import { useAuth } from '../contexts/AuthContext';
+import { api } from '../utils/api';
+import { LoadingSpinner } from './LoadingSpinner';
+import { toast } from 'sonner@2.0.3';
 
 interface ExamPageProps {
   examType: ExamType;
@@ -41,23 +45,10 @@ interface AnswerData {
 
 export function ExamPage({ examType, mode, tier, onBackToHome, onNeedPayment, language }: ExamPageProps) {
   const t = getTranslation(language);
-  const allQuestions = examData[examType].questions;
-  
-  // Shuffle questions for paid tier only
-  const [shuffledQuestions] = useState(() => {
-    if (tier === 'paid') {
-      const shuffled = [...allQuestions];
-      for (let i = shuffled.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-      }
-      return shuffled;
-    }
-    return allQuestions;
-  });
-  
-  // Mock exams get first 10 questions (unshuffled), paid get all 40 (shuffled)
-  const examQuestions = tier === 'mock' ? allQuestions.slice(0, 10) : shuffledQuestions;
+  const { accessToken } = useAuth();
+  const [examQuestions, setExamQuestions] = useState<Question[]>([]);
+  const [loadingQuestions, setLoadingQuestions] = useState(tier === 'paid');
+  const [questionLoadError, setQuestionLoadError] = useState<string | null>(null);
   
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
@@ -70,6 +61,73 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNeedPayment, la
   const [examStarted, setExamStarted] = useState(false);
   const [showExitDialog, setShowExitDialog] = useState(false);
   const [showSubmitDialog, setShowSubmitDialog] = useState(false);
+
+  // Load questions based on tier
+  useEffect(() => {
+    const loadQuestions = async () => {
+      if (tier === 'paid') {
+        // Fetch from database for paid tier
+        if (!accessToken) {
+          console.error('[ExamPage] No access token available');
+          setQuestionLoadError('Authentication required');
+          setLoadingQuestions(false);
+          return;
+        }
+
+        try {
+          console.log(`[ExamPage] Loading questions for exam type: ${examType}`);
+          const response = await api.getQuestions(examType, accessToken);
+          
+          console.log(`[ExamPage] Received ${response.questions?.length || 0} questions from API`);
+          
+          if (!response.questions || response.questions.length === 0) {
+            setQuestionLoadError(`No questions available for ${examType} exam. Please check the Admin Panel > Diagnostics tab to verify questions were imported.`);
+            setLoadingQuestions(false);
+            return;
+          }
+          
+          // Convert database questions to Question format
+          const dbQuestions: Question[] = response.questions.map((q: any, index: number) => ({
+            id: index + 1,
+            question: q.questionText,
+            answers: [q.answerA, q.answerB, q.answerC, q.answerD],
+            correctAnswers: q.correctAnswer.includes(',') 
+              ? q.correctAnswer.split(',').map((a: string) => a.trim().charCodeAt(0) - 97)
+              : [q.correctAnswer.charCodeAt(0) - 97],
+            difficulty: q.difficulty,
+            image: q.imageUrl,
+          }));
+
+          console.log(`[ExamPage] Successfully converted ${dbQuestions.length} questions`);
+          setExamQuestions(dbQuestions);
+          setLoadingQuestions(false);
+        } catch (error: any) {
+          console.error('[ExamPage] Failed to load questions:', error);
+          const errorMsg = error.message || 'Failed to load questions';
+          
+          // Provide helpful error messages
+          if (errorMsg.includes('Subscription required')) {
+            setQuestionLoadError('You need an active subscription for this exam type. Please purchase access or contact support.');
+          } else if (errorMsg.includes('No questions available')) {
+            setQuestionLoadError(`No questions found for ${examType} exam. The admin needs to import questions. Check Admin Panel > Diagnostics.`);
+          } else {
+            setQuestionLoadError(`Error loading questions: ${errorMsg}. Please try again or contact support.`);
+          }
+          
+          setLoadingQuestions(false);
+          toast.error('Failed to load exam questions. Please try again.');
+        }
+      } else {
+        // Use mock questions for free tier
+        console.log(`[ExamPage] Using mock questions for ${examType} exam`);
+        const mockQuestions = examData[examType].questions.slice(0, 10);
+        setExamQuestions(mockQuestions);
+        setLoadingQuestions(false);
+      }
+    };
+
+    loadQuestions();
+  }, [examType, tier, accessToken]);
 
   const currentQuestion = examQuestions[currentQuestionIndex];
   const totalQuestions = examQuestions.length;
@@ -596,6 +654,77 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNeedPayment, la
             </Button>
           </div>
         </div>
+      </div>
+    );
+  }
+
+  // Show loading state while fetching paid questions
+  if (loadingQuestions) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+        <Card className="max-w-md w-full">
+          <CardContent className="pt-6 flex flex-col items-center space-y-4">
+            <LoadingSpinner size="lg" />
+            <h3 className="text-xl dark:text-gray-100">
+              {language === 'English' ? 'Loading exam questions...' : 'Зареждане на въпроси...'}
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
+              {language === 'English' 
+                ? 'Please wait while we prepare your exam' 
+                : 'Моля, изчакайте, докато подготвяме вашия изпит'}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Show error if questions failed to load
+  if (questionLoadError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 px-4">
+        <Card className="max-w-lg w-full border-red-200 dark:border-red-800">
+          <CardContent className="pt-6 space-y-4">
+            <div className="flex items-center justify-center">
+              <XCircle className="w-16 h-16 text-red-500" />
+            </div>
+            <h3 className="text-xl text-center dark:text-gray-100">
+              {language === 'English' ? 'Failed to Load Questions' : 'Грешка при зареждане'}
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
+              {questionLoadError}
+            </p>
+            
+            {questionLoadError.includes('No questions') && (
+              <Alert className="border-blue-200 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-700">
+                <AlertCircle className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                <AlertDescription className="text-blue-800 dark:text-blue-200 text-sm">
+                  <strong className="block mb-1">💡 Need to import questions?</strong>
+                  <p className="text-xs">
+                    Go to the Admin Panel &gt; Diagnostics tab to check the database status and import questions.
+                  </p>
+                </AlertDescription>
+              </Alert>
+            )}
+            
+            <div className="flex flex-col gap-2">
+              {questionLoadError.includes('No questions') && (
+                <Button 
+                  onClick={() => window.location.href = '/admin'} 
+                  variant="outline"
+                  className="w-full border-blue-500 text-blue-600 hover:bg-blue-50"
+                >
+                  <AlertCircle className="w-4 h-4 mr-2" />
+                  {language === 'English' ? 'Open Admin Diagnostics' : 'Отвори диагностика'}
+                </Button>
+              )}
+              <Button onClick={onBackToHome} className="w-full">
+                <Home className="w-4 h-4 mr-2" />
+                {t.backToHome}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }

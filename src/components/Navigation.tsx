@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Anchor, ChevronDown, Globe, MapPin, Moon, Sun, Menu, X } from 'lucide-react';
 import { Button } from './ui/button';
 import {
@@ -211,9 +211,7 @@ export function Navigation({
                 className={`hidden sm:flex ${
                   transparent
                     ? 'bg-gradient-to-r from-cyan-400/40 to-teal-500/40 text-white backdrop-blur-md hover:from-cyan-400/50 hover:to-teal-500/50 border-2 border-cyan-300/40'
-                    : currentPage === 'account'
-                    ? 'bg-gradient-to-r from-sky-500 to-cyan-600'
-                    : 'bg-gradient-to-r from-sky-500 to-cyan-600 hover:from-sky-600 hover:to-cyan-700'
+                    : 'bg-gradient-to-r from-cyan-500 to-teal-600 hover:from-cyan-600 hover:to-teal-700 text-white'
                 } shadow-lg font-semibold min-w-[90px] flex-shrink-0`}
               >
                 {t.account}
@@ -221,11 +219,12 @@ export function Navigation({
             ) : (
               <Button
                 onClick={() => onNavigate('login')}
+                variant="ghost"
                 className={`hidden sm:flex ${
                   transparent
-                    ? 'bg-white/20 text-white backdrop-blur-md hover:bg-white/30 border border-white/30'
-                    : 'bg-gradient-to-r from-sky-500 to-cyan-600 hover:from-sky-600 hover:to-cyan-700'
-                } shadow-lg font-semibold min-w-[90px] flex-shrink-0`}
+                    ? 'text-white hover:bg-white/10 backdrop-blur-sm border border-white/30'
+                    : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 border-2 border-gray-300 dark:border-gray-600'
+                } font-semibold min-w-[90px] flex-shrink-0`}
               >
                 {t.login}
               </Button>
@@ -327,14 +326,15 @@ export function Navigation({
                   {isLoggedIn ? (
                     <Button
                       onClick={() => handleNavigate('account')}
-                      className="w-full bg-gradient-to-r from-sky-500 to-cyan-600"
+                      className="w-full bg-gradient-to-r from-cyan-500 to-teal-600 hover:from-cyan-600 hover:to-teal-700 text-white"
                     >
                       {t.account}
                     </Button>
                   ) : (
                     <Button
                       onClick={() => handleNavigate('login')}
-                      className="w-full bg-gradient-to-r from-sky-500 to-cyan-600"
+                      variant="outline"
+                      className="w-full border-2"
                     >
                       {t.login}
                     </Button>

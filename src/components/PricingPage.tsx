@@ -1,8 +1,12 @@
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import { Check, ArrowLeft } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { Language, getTranslation } from '../data/translations';
+import { Navigation } from './Navigation';
+import { Footer } from './Footer';
+import { useDarkMode } from '../contexts/DarkModeContext';
 
 interface PricingPageProps {
   onNavigate: (page: string) => void;
@@ -12,27 +16,48 @@ interface PricingPageProps {
 
 export function PricingPage({ onNavigate, isLoggedIn, language }: PricingPageProps) {
   const t = getTranslation(language);
+  const { darkMode, toggleDarkMode } = useDarkMode();
+  const [region, setRegion] = useState('Bulgaria');
+  const [currentLanguage, setCurrentLanguage] = useState<Language>(language);
   
   const handleGetStarted = () => {
     if (isLoggedIn) {
-      onNavigate('payment');
+      onNavigate('/payment');
     } else {
-      onNavigate('login');
+      onNavigate('/login');
+    }
+  };
+
+  const handleNavigate = (page: string) => {
+    if (page === 'pricing') return;
+    if (page === 'home') {
+      onNavigate(isLoggedIn ? '/home' : '/');
+    } else if (page === 'login') {
+      onNavigate('/login');
+    } else if (page === 'account') {
+      onNavigate('/account');
+    } else {
+      onNavigate(`/${page}`);
     }
   };
 
   return (
-    <div className="min-h-screen pt-24 pb-20 bg-gradient-to-br from-slate-50 via-blue-50/50 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-      <div className="container mx-auto px-4 md:px-6 lg:px-8">
-        {/* Back Button */}
-        <Button
-          onClick={() => onNavigate('home')}
-          variant="ghost"
-          className="mb-6 hover:bg-sky-50 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-200 text-sm"
-        >
-          <ArrowLeft className="w-3.5 h-3.5 mr-1.5" />
-          {t.backToHome}
-        </Button>
+    <div className={darkMode ? 'dark' : ''}>
+      <Navigation
+        currentPage="pricing"
+        onNavigate={handleNavigate}
+        isLoggedIn={isLoggedIn}
+        transparent={false}
+        language={currentLanguage}
+        onLanguageChange={setCurrentLanguage}
+        region={region}
+        onRegionChange={setRegion}
+        darkMode={darkMode}
+        onDarkModeToggle={toggleDarkMode}
+      />
+      
+      <div className="min-h-screen pt-24 pb-20 bg-gradient-to-br from-slate-50 via-blue-50/50 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+        <div className="container mx-auto px-4 md:px-6 lg:px-8">
 
         <div className="text-center mb-10 animate-fadeIn">
           <div className="inline-block mb-3 px-4 py-1.5 bg-sky-100 dark:bg-sky-900 rounded-full border border-sky-200 dark:border-sky-700">
@@ -164,11 +189,13 @@ export function PricingPage({ onNavigate, isLoggedIn, language }: PricingPagePro
 
         {/* Features Comparison */}
         <div className="mt-10 text-center">
-          <p className="text-gray-500 text-xs max-w-2xl mx-auto">
+          <p className="text-gray-500 dark:text-gray-400 text-xs max-w-2xl mx-auto">
             {t.disclaimerText}
           </p>
         </div>
       </div>
+      <Footer />
+    </div>
     </div>
   );
 }

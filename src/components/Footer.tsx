@@ -1,15 +1,19 @@
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Phone, Mail, MessageCircle } from 'lucide-react';
 import { Language, getTranslation } from '../data/translations';
 import { Button } from './ui/button';
+import { useAuth } from '../contexts/AuthContext';
 
-interface FooterProps {
-  language: Language;
-  onNavigate: (page: string) => void;
-}
-
-export function Footer({ language, onNavigate }: FooterProps) {
+export function Footer() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [language] = useState<Language>('English');
   const t = getTranslation(language);
   const currentYear = new Date().getFullYear();
+  
+  // Check if user is admin (you can adjust this logic)
+  const isAdmin = user?.email === 'admin@yachtexamtrainer.com';
 
   return (
     <footer className="bg-slate-100 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 py-6">
@@ -18,7 +22,7 @@ export function Footer({ language, onNavigate }: FooterProps) {
           {/* Contact Button - Full Width */}
           <div className="flex justify-center">
             <Button
-              onClick={() => onNavigate('contact')}
+              onClick={() => navigate('/contact')}
               className="bg-gradient-to-r from-cyan-500 to-teal-600 hover:from-cyan-600 hover:to-teal-700 text-white shadow-md px-6"
             >
               <MessageCircle className="w-4 h-4 mr-2" />
@@ -53,6 +57,18 @@ export function Footer({ language, onNavigate }: FooterProps) {
 
             {/* Policy Links */}
             <div className="flex items-center gap-3 text-gray-600 dark:text-gray-400">
+              {user && (
+                <>
+                  <button
+                    onClick={() => navigate('/admin')}
+                    className="hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors flex items-center gap-1"
+                  >
+                    {isAdmin && <span className="text-purple-500">🛡️</span>}
+                    Admin
+                  </button>
+                  <span className="text-gray-300 dark:text-gray-600">|</span>
+                </>
+              )}
               <a 
                 href="#privacy" 
                 className="hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors"
