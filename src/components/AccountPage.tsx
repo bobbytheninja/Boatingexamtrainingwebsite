@@ -138,13 +138,6 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
               <Card className="border-2 border-blue-200 dark:border-blue-800 bg-gradient-to-br from-blue-50 to-white dark:from-blue-900/30 dark:to-slate-700 shadow-xl">
                 <CardContent className="pt-6 space-y-4">
                   <Button
-                    onClick={() => onNavigate('/payment')}
-                    className="w-full bg-gradient-to-r from-sky-500 via-sky-600 to-blue-600 hover:from-sky-600 hover:via-sky-700 hover:to-blue-700 shadow-lg font-semibold"
-                  >
-                    <Package className="w-4 h-4 mr-2" />
-                    {t.manageSubscriptions}
-                  </Button>
-                  <Button
                     onClick={onLogout}
                     variant="outline"
                     className="w-full border-2 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-slate-600 dark:text-gray-200 font-semibold"
@@ -239,7 +232,7 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
                       <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">{t.noActiveSubscriptions}</h3>
                       <p className="text-gray-600 dark:text-gray-300 mb-6">{t.noActiveSubscriptionsDesc}</p>
                       <Button
-                        onClick={() => onNavigate('payment')}
+                        onClick={() => onNavigate('/payment')}
                         className="bg-gradient-to-r from-sky-500 via-sky-600 to-blue-600 hover:from-sky-600 hover:via-sky-700 hover:to-blue-700 shadow-lg font-semibold"
                       >
                         {t.browsePlans}
@@ -316,7 +309,7 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
                               <p className="text-sm text-gray-600 dark:text-gray-300">{t.additionalCategories}</p>
                             </div>
                             <Button
-                              onClick={() => onNavigate('pricing')}
+                              onClick={() => onNavigate('/payment')}
                               className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-md font-semibold whitespace-nowrap"
                             >
                               {t.addMore}
