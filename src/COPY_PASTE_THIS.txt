@@ -1,0 +1,146 @@
+================================================================================
+                    COPY & PASTE - DEPLOYMENT COMMANDS
+================================================================================
+
+📋 STEP 1: DEPLOY BACKEND
+================================================================================
+
+Mac/Linux:
+----------
+chmod +x deploy-backend.sh
+./deploy-backend.sh
+
+Windows:
+--------
+deploy-backend.bat
+
+When prompted for "Admin Import Key": Type a secure password like YachtAdmin2024!
+
+
+================================================================================
+📋 STEP 2: VERCEL ENVIRONMENT VARIABLES
+================================================================================
+
+Copy these EXACTLY into Vercel (3 separate variables):
+
+Variable 1:
+-----------
+Name:  VITE_SUPABASE_URL
+Value: https://abtrsjhvjfgcxxpkszwi.supabase.co
+
+Variable 2:
+-----------
+Name:  VITE_SUPABASE_ANON_KEY
+Value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFidHJzamh2amZnY3h4cGtzendpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIwOTgwODcsImV4cCI6MjA3NzY3NDA4N30.V6JxIrjjr3b1rxcdpNrrCEgh-cOuEl9HIAMDMHSOZWw
+
+Variable 3:
+-----------
+Name:  VITE_STRIPE_PUBLISHABLE_KEY
+Value: pk_test_51SP7XPQyfKnmTYnIk5mOWeTqsekl04C6gydyJLZRMHW8nPHdcImcybnUiIQjz92YFurcOjA0ul9BUAyAoxtECp6h00nsPAZvho
+
+
+================================================================================
+📋 STEP 3: MAKE YOURSELF ADMIN (Run in Supabase SQL Editor)
+================================================================================
+
+UPDATE auth.users 
+SET raw_user_meta_data = jsonb_set(
+  COALESCE(raw_user_meta_data, '{}'::jsonb),
+  '{role}',
+  '"admin"'
+)
+WHERE id = 'REPLACE_WITH_YOUR_USER_ID';
+
+(Get your User ID from: Supabase Dashboard → Authentication → Users → Click your user)
+
+
+================================================================================
+📋 STEP 4: SUPABASE AUTH CONFIGURATION
+================================================================================
+
+Go to: Supabase Dashboard → Authentication → URL Configuration
+
+Add these URLs (replace YOUR-APP with your actual Vercel URL):
+
+Site URL:
+---------
+https://YOUR-APP.vercel.app
+
+Redirect URLs:
+--------------
+https://YOUR-APP.vercel.app/**
+http://localhost:5173/**
+
+
+================================================================================
+✅ VERIFICATION CHECKLIST
+================================================================================
+
+After deployment, verify:
+
+[ ] Site loads at your-app.vercel.app
+[ ] You can sign up for an account
+[ ] You can log in
+[ ] You can see "Admin Panel" in footer (after running SQL)
+[ ] Sample CSV downloads from Admin Panel
+[ ] You can import questions via Admin Panel
+[ ] Mock exam works (10 questions, free)
+[ ] Payment page loads with Stripe
+[ ] Dark mode toggle works
+[ ] Mobile responsive
+
+
+================================================================================
+🆘 TROUBLESHOOTING
+================================================================================
+
+Backend deployment fails:
+-------------------------
+npm install -g supabase
+supabase login
+supabase link --project-ref abtrsjhvjfgcxxpkszwi
+supabase functions deploy server
+
+Site not loading:
+-----------------
+- Check all 3 env vars are set in Vercel
+- Check no typos in values
+- Redeploy from Vercel dashboard
+
+Questions not loading:
+----------------------
+- Make sure you imported questions via Admin Panel
+- Check Diagnostics tab for counts
+- Verify you have an active subscription
+
+Payment not working:
+--------------------
+- Verify Stripe publishable key in Vercel
+- Make sure you're using test mode
+- Use test card: 4242 4242 4242 4242
+
+Not admin:
+----------
+- Make sure you ran the SQL query
+- Verify you replaced YOUR_USER_ID with actual ID
+- Refresh the page after running SQL
+
+
+================================================================================
+🎉 SUCCESS!
+================================================================================
+
+When everything works, you'll have:
+
+✓ Live website at your-app.vercel.app
+✓ User authentication working
+✓ Payment processing with Stripe
+✓ Admin panel accessible
+✓ Questions importable
+✓ Exams functional
+✓ Responsive design
+✓ Dark mode
+
+Time to import your 600 questions and get users! 🛥️⚓
+
+================================================================================

@@ -9,18 +9,15 @@ import {
 } from './ui/dropdown-menu';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from './ui/sheet';
 import { getTranslation, Language } from '../data/translations';
+import { useLanguage } from '../contexts/LanguageContext';
+import { useRegion } from '../contexts/RegionContext';
+import { useDarkMode } from '../contexts/DarkModeContext';
 
 interface NavigationProps {
   currentPage: string;
   onNavigate: (page: string) => void;
   isLoggedIn: boolean;
   transparent?: boolean;
-  language: Language;
-  onLanguageChange: (language: Language) => void;
-  region: string;
-  onRegionChange: (region: string) => void;
-  darkMode?: boolean;
-  onDarkModeToggle?: () => void;
 }
 
 export function Navigation({ 
@@ -28,13 +25,12 @@ export function Navigation({
   onNavigate, 
   isLoggedIn, 
   transparent = false,
-  language,
-  onLanguageChange,
-  region,
-  onRegionChange,
-  darkMode = false,
-  onDarkModeToggle
 }: NavigationProps) {
+  // Use contexts for global state
+  const { language, setLanguage } = useLanguage();
+  const { region, setRegion } = useRegion();
+  const { darkMode, toggleDarkMode } = useDarkMode();
+  
   const t = getTranslation(language);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -54,7 +50,7 @@ export function Navigation({
 
   return (
     <nav 
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b-2 ${
+      className={`fixed top-0 left-0 right-0 z-50 border-b-2 ${
         transparent 
           ? isLoggedIn 
             ? 'backdrop-blur-md border-cyan-400/50' 
@@ -129,20 +125,19 @@ export function Navigation({
           {/* Right Side - Dark Mode, Language, Region, Account, Mobile Menu */}
           <div className="flex items-center gap-2 flex-shrink-0">
             {/* Dark Mode Toggle - Desktop */}
-            {onDarkModeToggle && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onDarkModeToggle}
-                className={`hidden sm:flex ${
-                  transparent
-                    ? 'text-white hover:bg-white/10 backdrop-blur-sm'
-                    : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'
-                } px-2 flex-shrink-0`}
-              >
-                {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-              </Button>
-            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleDarkMode}
+              className={`hidden sm:flex ${
+                transparent
+                  ? 'text-white hover:bg-white/10 backdrop-blur-sm'
+                  : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'
+              } px-2 flex-shrink-0`}
+              style={{ willChange: 'auto' }}
+            >
+              {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </Button>
             
             {/* Language Dropdown - Desktop */}
             <DropdownMenu>
@@ -155,6 +150,7 @@ export function Navigation({
                       ? 'text-white hover:bg-white/10 backdrop-blur-sm'
                       : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'
                   } gap-1 px-2 md:px-3 min-w-[100px] sm:min-w-[130px] flex-shrink-0`}
+                  style={{ willChange: 'auto' }}
                 >
                   <Globe className="w-4 h-4 flex-shrink-0" />
                   <span className="hidden sm:inline truncate flex-1 text-left">{language}</span>
@@ -165,7 +161,7 @@ export function Navigation({
                 {languages.map((lang) => (
                   <DropdownMenuItem
                     key={lang}
-                    onClick={() => onLanguageChange(lang)}
+                    onClick={() => setLanguage(lang)}
                     className={`cursor-pointer ${language === lang ? 'bg-sky-50 dark:bg-sky-900 text-sky-700 dark:text-sky-300 font-semibold' : 'dark:text-gray-200'}`}
                   >
                     {lang}
@@ -185,6 +181,7 @@ export function Navigation({
                       ? 'text-white hover:bg-white/10 backdrop-blur-sm'
                       : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'
                   } gap-1 px-2 md:px-3 min-w-[100px] sm:min-w-[130px] flex-shrink-0`}
+                  style={{ willChange: 'auto' }}
                 >
                   <MapPin className="w-4 h-4 flex-shrink-0" />
                   <span className="hidden sm:inline truncate flex-1 text-left">{region}</span>
@@ -195,7 +192,7 @@ export function Navigation({
                 {regions.map((reg) => (
                   <DropdownMenuItem
                     key={reg}
-                    onClick={() => onRegionChange(reg)}
+                    onClick={() => setRegion(reg)}
                     className={`cursor-pointer ${region === reg ? 'bg-sky-50 dark:bg-sky-900 text-sky-700 dark:text-sky-300 font-semibold' : 'dark:text-gray-200'}`}
                   >
                     {reg}
@@ -213,6 +210,7 @@ export function Navigation({
                     ? 'bg-gradient-to-r from-cyan-400/40 to-teal-500/40 text-white backdrop-blur-md hover:from-cyan-400/50 hover:to-teal-500/50 border-2 border-cyan-300/40'
                     : 'bg-gradient-to-r from-cyan-500 to-teal-600 hover:from-cyan-600 hover:to-teal-700 text-white'
                 } shadow-lg font-semibold min-w-[90px] flex-shrink-0`}
+                style={{ willChange: 'auto' }}
               >
                 {t.account}
               </Button>
@@ -225,6 +223,7 @@ export function Navigation({
                     ? 'text-white hover:bg-white/10 backdrop-blur-sm border border-white/30'
                     : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 border-2 border-gray-300 dark:border-gray-600'
                 } font-semibold min-w-[90px] flex-shrink-0`}
+                style={{ willChange: 'auto' }}
               >
                 {t.login}
               </Button>
@@ -245,8 +244,8 @@ export function Navigation({
                   <Menu className="w-5 h-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[280px] sm:w-[350px]">
-                <SheetHeader>
+              <SheetContent side="right" className="w-[280px] sm:w-[350px] flex flex-col">
+                <SheetHeader className="flex-shrink-0">
                   <SheetTitle className="flex items-center gap-2">
                     <Anchor className="w-5 h-5 text-sky-600" />
                     Menu
@@ -255,7 +254,7 @@ export function Navigation({
                     Navigate through different sections and settings
                   </SheetDescription>
                 </SheetHeader>
-                <div className="mt-6 flex flex-col gap-4">
+                <div className="mt-6 flex flex-col gap-4 overflow-y-auto flex-1 pr-2 pb-6">
                   {/* Navigation Links */}
                   {navLinks.map((link) => (
                     <Button
@@ -271,16 +270,14 @@ export function Navigation({
                   <div className="h-px bg-gray-200 dark:bg-gray-700 my-2" />
                   
                   {/* Dark Mode Toggle */}
-                  {onDarkModeToggle && (
-                    <Button
-                      onClick={onDarkModeToggle}
-                      variant="ghost"
-                      className="w-full justify-start"
-                    >
-                      {darkMode ? <Sun className="w-4 h-4 mr-2" /> : <Moon className="w-4 h-4 mr-2" />}
-                      {darkMode ? 'Light Mode' : 'Dark Mode'}
-                    </Button>
-                  )}
+                  <Button
+                    onClick={toggleDarkMode}
+                    variant="ghost"
+                    className="w-full justify-start"
+                  >
+                    {darkMode ? <Sun className="w-4 h-4 mr-2" /> : <Moon className="w-4 h-4 mr-2" />}
+                    {darkMode ? 'Light Mode' : 'Dark Mode'}
+                  </Button>
                   
                   {/* Language Selection */}
                   <div className="space-y-2">
@@ -289,7 +286,7 @@ export function Navigation({
                       <Button
                         key={lang}
                         onClick={() => {
-                          onLanguageChange(lang);
+                          setLanguage(lang);
                           setMobileMenuOpen(false);
                         }}
                         variant={language === lang ? 'default' : 'ghost'}
@@ -308,7 +305,7 @@ export function Navigation({
                       <Button
                         key={reg}
                         onClick={() => {
-                          onRegionChange(reg);
+                          setRegion(reg);
                           setMobileMenuOpen(false);
                         }}
                         variant={region === reg ? 'default' : 'ghost'}

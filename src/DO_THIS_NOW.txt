@@ -1,0 +1,99 @@
+╔════════════════════════════════════════════════════════════════╗
+║                                                                ║
+║     YOU ALREADY IMPORTED QUESTIONS? PERFECT! DO THIS:          ║
+║                                                                ║
+╚════════════════════════════════════════════════════════════════╝
+
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃  THE PROBLEM:                                                 ┃
+┃                                                               ┃
+┃  I added NEW code (the /mock endpoint) that doesn't exist    ┃
+┃  in your deployed backend yet.                                ┃
+┃                                                               ┃
+┃  Your questions ARE in the database ✅                        ┃
+┃  But the backend needs updating to use them! ⚡               ┃
+┃                                                               ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃  THE FIX (2 minutes):                                         ┃
+┃                                                               ┃
+┃  1. Open Terminal/Command Prompt                             ┃
+┃                                                               ┃
+┃  2. Run:                                                      ┃
+┃                                                               ┃
+┃     Mac/Linux:                                                ┃
+┃     ./deploy-backend.sh                                       ┃
+┃                                                               ┃
+┃     Windows:                                                  ┃
+┃     deploy-backend.bat                                        ┃
+┃                                                               ┃
+┃  3. Use the SAME admin key as before                         ┃
+┃                                                               ┃
+┃  4. Wait for "Deployment Complete"                            ┃
+┃                                                               ┃
+┃  5. Done! ✅                                                  ┃
+┃                                                               ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃  WHAT THIS DOES:                                              ┃
+┃                                                               ┃
+┃  ✅ Updates backend with new /mock endpoint                  ┃
+┃  ✅ Keeps all your existing questions                        ┃
+┃  ✅ Keeps all your users                                     ┃
+┃  ✅ Keeps all your data                                      ┃
+┃  ✅ Just adds the new functionality                          ┃
+┃                                                               ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃  TEST IT WORKED:                                              ┃
+┃                                                               ┃
+┃  Test 1: Check question counts                               ┃
+┃  → Open check-questions.html in your browser                 ┃
+┃  → Should show your question counts (e.g., 120 each)         ┃
+┃                                                               ┃
+┃  Test 2: Try mock exam                                        ┃
+┃  → Go to your site                                            ┃
+┃  → Click any exam type                                        ┃
+┃  → Click "Start Mock Exam"                                    ┃
+┃  → Should show questions 1-10 from your Excel                ┃
+┃  → NO warning toast!                                          ┃
+┃                                                               ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃  WHAT HAPPENS AFTER:                                          ┃
+┃                                                               ┃
+┃  BEFORE (now):                                                ┃
+┃    Mock exam → Error → Demo questions → Warning toast        ┃
+┃                                                               ┃
+┃  AFTER (re-deploy):                                           ┃
+┃    Mock exam → Real questions (1-10 from Excel) → No error! ┃
+┃                                                               ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃  NEED MORE INFO?                                              ┃
+┃                                                               ┃
+┃  📄 ALREADY_IMPORTED_README.md - Detailed guide              ┃
+┃  📄 check-questions.html - Database checker tool             ┃
+┃  📄 ERROR_EXPLAINED.md - Why you see the error               ┃
+┃                                                               ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+
+╔════════════════════════════════════════════════════════════════╗
+║                                                                ║
+║               JUST RUN: ./deploy-backend.sh                    ║
+║                                                                ║
+║               (Takes 2 minutes, fixes everything!)             ║
+║                                                                ║
+╚════════════════════════════════════════════════════════════════╝

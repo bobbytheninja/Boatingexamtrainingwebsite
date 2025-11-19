@@ -16,17 +16,50 @@ async function apiCall<T>(
   // Use provided token or default to public anon key
   headers['Authorization'] = `Bearer ${token || publicAnonKey}`;
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    ...options,
-    headers,
-  });
+  const url = `${API_BASE_URL}${endpoint}`;
+  
+  try {
+    const response = await fetch(url, {
+      ...options,
+      headers,
+    });
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: 'Request failed' }));
-    throw new Error(error.message || `API call failed with status ${response.status}`);
+    if (!response.ok) {
+      const errorText = await response.text();
+      let errorMessage = `API call failed with status ${response.status}`;
+      
+      try {
+        const errorJson = JSON.parse(errorText);
+        errorMessage = errorJson.message || errorMessage;
+      } catch {
+        errorMessage = errorText || errorMessage;
+      }
+      
+      console.error('[API] Request failed:', {
+        url,
+        status: response.status,
+        statusText: response.statusText,
+        error: errorMessage,
+      });
+      
+      throw new Error(errorMessage);
+    }
+
+    return response.json();
+  } catch (error: any) {
+    // Network error or other issue
+    if (error.message.includes('API call failed')) {
+      // Already handled above
+      throw error;
+    }
+    
+    console.error('[API] Network error:', {
+      url,
+      error: error.message,
+    });
+    
+    throw new Error(`Network error: ${error.message}. Make sure backend is deployed.`);
   }
-
-  return response.json();
 }
 
 export const api = {
@@ -56,6 +89,13 @@ export const api = {
       `/questions/${examType}`,
       { method: 'GET' },
       token
+    );
+  },
+
+  getMockQuestions: async (examType: string) => {
+    return apiCall<{ questions: any[] }>(
+      `/questions/${examType}/mock`,
+      { method: 'GET' }
     );
   },
 

@@ -198,20 +198,25 @@ export function QuestionImporter() {
         
         questions = dataRows
           .filter(row => row && row.length > 1 && row[1])
-          .map((row, index) => ({
-            id: `${selectedExamType}_${Date.now()}_${index}`,
-            questionNumber: parseInt(row[0]?.toString()) || undefined, // Column 1: question number
-            examType: selectedExamType,
-            questionText: row[1]?.toString() || '', // Column 2: question
-            answerA: row[3]?.toString() || '', // Column 4: answer A
-            answerB: row[4]?.toString() || '', // Column 5: answer B
-            answerC: row[5]?.toString() || '', // Column 6: answer C
-            answerD: row[6]?.toString() || '', // Column 7: answer D
-            correctAnswer: (row[7]?.toString() || 'a').toLowerCase(), // Column 8: correct answer
-            difficulty: 2 as 1 | 2 | 3, // Default difficulty
-            imageUrl: row[2]?.toString() || undefined, // Column 3: image
-            language: 'English',
-          }));
+          .map((row, index) => {
+            const questionNumber = parseInt(row[0]?.toString()) || (index + 1);
+            const paddedNumber = String(questionNumber).padStart(3, '0');
+            return {
+              // Use deterministic ID based on exam type and question number (prevents duplicates!)
+              id: `${selectedExamType}_${paddedNumber}`,
+              questionNumber,
+              examType: selectedExamType,
+              questionText: row[1]?.toString() || '', // Column 2: question
+              answerA: row[3]?.toString() || '', // Column 4: answer A
+              answerB: row[4]?.toString() || '', // Column 5: answer B
+              answerC: row[5]?.toString() || '', // Column 6: answer C
+              answerD: row[6]?.toString() || '', // Column 7: answer D
+              correctAnswer: (row[7]?.toString() || 'a').toLowerCase(), // Column 8: correct answer
+              difficulty: 2 as 1 | 2 | 3, // Default difficulty
+              imageUrl: row[2]?.toString() || undefined, // Column 3: image
+              language: 'English',
+            };
+          });
       } else {
         // Parse CSV file
         const text = await file.text();
@@ -220,10 +225,13 @@ export function QuestionImporter() {
         
         questions = dataLines.map((line, index) => {
           const columns = parseCSVLine(line);
+          const questionNumber = parseInt(columns[0]) || (index + 1);
+          const paddedNumber = String(questionNumber).padStart(3, '0');
 
           return {
-            id: `${selectedExamType}_${Date.now()}_${index}`,
-            questionNumber: parseInt(columns[0]) || undefined, // Column 1: question number
+            // Use deterministic ID based on exam type and question number (prevents duplicates!)
+            id: `${selectedExamType}_${paddedNumber}`,
+            questionNumber,
             examType: selectedExamType,
             questionText: columns[1] || '', // Column 2: question
             imageUrl: columns[2] || undefined, // Column 3: image
@@ -501,13 +509,28 @@ export function QuestionImporter() {
           <strong>Important:</strong> Select the exam type from the dropdown above before importing. All questions in the file will be assigned to that exam type.
         </p>
         <div className="mt-3">
-          <a
-            href="/sample-questions.csv"
-            download="sample-questions.csv"
-            className="text-sm text-teal-600 dark:text-teal-400 hover:underline flex items-center gap-1"
+          <button
+            onClick={async () => {
+              try {
+                const response = await fetch('/sample-questions.csv');
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'sample-questions.csv';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(url);
+              } catch (error) {
+                console.error('Failed to download sample:', error);
+                alert('Failed to download sample file. Check console for details.');
+              }
+            }}
+            className="text-sm text-teal-600 dark:text-teal-400 hover:underline flex items-center gap-1 cursor-pointer bg-transparent border-none p-0"
           >
             📥 Download Sample CSV Template
-          </a>
+          </button>
         </div>
       </div>
     </div>

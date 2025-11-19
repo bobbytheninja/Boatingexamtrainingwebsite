@@ -6,25 +6,24 @@ import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { Mail, MapPin, Phone } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
-import { Language, getTranslation } from '../data/translations';
+import { getTranslation } from '../data/translations';
 import { Navigation } from './Navigation';
 import { Footer } from './Footer';
 import { useDarkMode } from '../contexts/DarkModeContext';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface ContactPageProps {
   onNavigate: (page: string) => void;
-  language: Language;
   isLoggedIn?: boolean;
 }
 
-export function ContactPage({ onNavigate, language, isLoggedIn = false }: ContactPageProps) {
+export function ContactPage({ onNavigate, isLoggedIn = false }: ContactPageProps) {
+  const { language } = useLanguage();
   const t = getTranslation(language);
-  const { darkMode, toggleDarkMode } = useDarkMode();
+  const { darkMode } = useDarkMode();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
-  const [region, setRegion] = useState('Bulgaria');
-  const [currentLanguage, setCurrentLanguage] = useState<Language>(language);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,12 +51,6 @@ export function ContactPage({ onNavigate, language, isLoggedIn = false }: Contac
         onNavigate={handleNavigate}
         isLoggedIn={isLoggedIn}
         transparent={false}
-        language={currentLanguage}
-        onLanguageChange={setCurrentLanguage}
-        region={region}
-        onRegionChange={setRegion}
-        darkMode={darkMode}
-        onDarkModeToggle={toggleDarkMode}
       />
       
       <div className="min-h-screen pt-24 pb-20 bg-gradient-to-br from-slate-50 via-blue-50/50 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">

@@ -22,12 +22,27 @@ interface PaymentPageProps {
 }
 
 export function PaymentPage({ userEmail, onBack, onComplete, onNavigate }: PaymentPageProps) {
-  const { accessToken, refreshSubscriptions } = useAuth();
+  const { accessToken, refreshSubscriptions, user } = useAuth();
   const { darkMode, toggleDarkMode } = useDarkMode();
   const [selectedExams, setSelectedExams] = useState<ExamType[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentLanguage, setCurrentLanguage] = useState<Language>('English');
   const [region, setRegion] = useState('Bulgaria');
+
+  // Get the user's current subscriptions and expiration date
+  const currentSubscriptions = user?.subscriptions || [];
+  const subscriptionExpiresAt = user?.subscriptionExpiresAt || null;
+
+  // Calculate expiry date for display
+  const getExpiryDateString = () => {
+    if (!subscriptionExpiresAt) return 'N/A';
+    const date = new Date(subscriptionExpiresAt);
+    return date.toLocaleDateString(currentLanguage === 'English' ? 'en-US' : 'bg-BG', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+  };
 
   const examTypes: { type: ExamType; title: string; description: string }[] = [
     { type: 'jet', title: examData.jet.title, description: examData.jet.description },
@@ -38,6 +53,11 @@ export function PaymentPage({ userEmail, onBack, onComplete, onNavigate }: Payme
   ];
 
   const toggleExam = (examType: ExamType) => {
+    // Don't allow toggling already subscribed exams
+    if (currentSubscriptions.includes(examType)) {
+      return;
+    }
+    
     if (selectedExams.includes(examType)) {
       setSelectedExams(selectedExams.filter(e => e !== examType));
     } else {
@@ -122,35 +142,52 @@ export function PaymentPage({ userEmail, onBack, onComplete, onNavigate }: Payme
                   <CardDescription className="dark:text-gray-300">Choose which exams you want full access to</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {examTypes.map((exam) => (
-                    <div
-                      key={exam.type}
-                      className={`flex items-start space-x-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                        selectedExams.includes(exam.type)
-                          ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 dark:border-blue-400'
-                          : 'border-gray-200 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-500 hover:bg-gray-50 dark:hover:bg-gray-600'
-                      }`}
-                      onClick={() => toggleExam(exam.type)}
-                    >
-                      <Checkbox
-                        checked={selectedExams.includes(exam.type)}
-                        onCheckedChange={() => toggleExam(exam.type)}
-                        className="mt-1"
-                      />
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between">
-                          <h4 className="dark:text-gray-100">{exam.title}</h4>
-                          <Badge variant="secondary" className="dark:bg-slate-600 dark:text-gray-200">€5/month</Badge>
-                        </div>
-                        <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">{exam.description}</p>
-                        <div className="flex gap-2 mt-2 text-xs text-gray-500 dark:text-gray-400">
-                          <span>• 40 Questions</span>
-                          <span>• Unlimited Attempts</span>
-                          <span>• Study & Exam Modes</span>
+                  {examTypes.map((exam) => {
+                    const isSubscribed = currentSubscriptions.includes(exam.type);
+                    
+                    return (
+                      <div
+                        key={exam.type}
+                        className={`flex items-start space-x-3 p-4 rounded-lg border-2 transition-all ${
+                          isSubscribed
+                            ? 'border-green-400 bg-green-50 dark:bg-green-900/20 dark:border-green-600 cursor-not-allowed opacity-75'
+                            : selectedExams.includes(exam.type)
+                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 dark:border-blue-400 cursor-pointer'
+                            : 'border-gray-200 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-500 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer'
+                        }`}
+                        onClick={() => toggleExam(exam.type)}
+                      >
+                        <Checkbox
+                          checked={isSubscribed || selectedExams.includes(exam.type)}
+                          disabled={isSubscribed}
+                          onCheckedChange={() => toggleExam(exam.type)}
+                          className="mt-1"
+                        />
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between gap-2 flex-wrap">
+                            <h4 className="dark:text-gray-100">{exam.title}</h4>
+                            <div className="flex items-center gap-2">
+                              {isSubscribed ? (
+                                <Badge className="bg-green-100 text-green-700 hover:bg-green-100 dark:bg-green-900/50 dark:text-green-300">
+                                  ✓ Active until {getExpiryDateString()}
+                                </Badge>
+                              ) : (
+                                <Badge variant="secondary" className="dark:bg-slate-600 dark:text-gray-200">€5/month</Badge>
+                              )}
+                            </div>
+                          </div>
+                          <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">{exam.description}</p>
+                          {!isSubscribed && (
+                            <div className="flex gap-2 mt-2 text-xs text-gray-500 dark:text-gray-400">
+                              <span>• 40 Questions</span>
+                              <span>• Unlimited Attempts</span>
+                              <span>• Study & Exam Modes</span>
+                            </div>
+                          )}
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </CardContent>
               </Card>
 

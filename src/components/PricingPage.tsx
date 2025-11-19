@@ -1,24 +1,23 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Check } from 'lucide-react';
-import { Language, getTranslation } from '../data/translations';
+import { getTranslation } from '../data/translations';
 import { Navigation } from './Navigation';
 import { Footer } from './Footer';
 import { useDarkMode } from '../contexts/DarkModeContext';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface PricingPageProps {
   onNavigate: (page: string) => void;
   isLoggedIn: boolean;
-  language: Language;
 }
 
-export function PricingPage({ onNavigate, isLoggedIn, language }: PricingPageProps) {
+export function PricingPage({ onNavigate, isLoggedIn }: PricingPageProps) {
+  const { language } = useLanguage();
   const t = getTranslation(language);
-  const { darkMode, toggleDarkMode } = useDarkMode();
-  const [region, setRegion] = useState('Bulgaria');
-  const [currentLanguage, setCurrentLanguage] = useState<Language>(language);
+  const { darkMode } = useDarkMode();
   
   const handleGetStarted = () => {
     if (isLoggedIn) {
@@ -48,12 +47,6 @@ export function PricingPage({ onNavigate, isLoggedIn, language }: PricingPagePro
         onNavigate={handleNavigate}
         isLoggedIn={isLoggedIn}
         transparent={false}
-        language={currentLanguage}
-        onLanguageChange={setCurrentLanguage}
-        region={region}
-        onRegionChange={setRegion}
-        darkMode={darkMode}
-        onDarkModeToggle={toggleDarkMode}
       />
       
       <div className="min-h-screen pt-24 pb-20 bg-gradient-to-br from-slate-50 via-blue-50/50 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
@@ -194,8 +187,9 @@ export function PricingPage({ onNavigate, isLoggedIn, language }: PricingPagePro
           </p>
         </div>
       </div>
+      </div>
+      
       <Footer />
-    </div>
     </div>
   );
 }

@@ -22,19 +22,23 @@ import {
 import { ExamType, examData, Question } from '../data/examQuestions';
 import { ExamMode, ExamTier } from './ExamModeSelection';
 import { ImageWithFallback } from './figma/ImageWithFallback';
-import { Language, getTranslation } from '../data/translations';
+import { getTranslation } from '../data/translations';
 import { useAuth } from '../contexts/AuthContext';
+import { useDarkMode } from '../contexts/DarkModeContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { api } from '../utils/api';
 import { LoadingSpinner } from './LoadingSpinner';
 import { toast } from 'sonner@2.0.3';
+import { Navigation } from './Navigation';
+import { Footer } from './Footer';
 
 interface ExamPageProps {
   examType: ExamType;
   mode: ExamMode;
   tier: ExamTier;
   onBackToHome: () => void;
+  onNavigate?: (page: string) => void;
   onNeedPayment?: () => void;
-  language: Language;
 }
 
 interface AnswerData {
@@ -43,12 +47,28 @@ interface AnswerData {
   pointsLost: number;
 }
 
-export function ExamPage({ examType, mode, tier, onBackToHome, onNeedPayment, language }: ExamPageProps) {
+export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNeedPayment }: ExamPageProps) {
+  const { language } = useLanguage();
   const t = getTranslation(language);
-  const { accessToken } = useAuth();
+  const { accessToken, user } = useAuth();
+  const { darkMode } = useDarkMode();
   const [examQuestions, setExamQuestions] = useState<Question[]>([]);
-  const [loadingQuestions, setLoadingQuestions] = useState(tier === 'paid');
+  const [loadingQuestions, setLoadingQuestions] = useState(true); // Always start with loading state
   const [questionLoadError, setQuestionLoadError] = useState<string | null>(null);
+  
+  // Create a navigation handler that supports all pages
+  const handleNavigate = (page: string) => {
+    console.log('[ExamPage] Navigation requested to:', page);
+    if (onNavigate) {
+      console.log('[ExamPage] Using onNavigate prop');
+      onNavigate(page);
+    } else if (page === 'home') {
+      console.log('[ExamPage] Fallback to onBackToHome');
+      onBackToHome();
+    } else {
+      console.warn('[ExamPage] Navigation handler not available for page:', page);
+    }
+  };
   
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
@@ -87,18 +107,27 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNeedPayment, la
           }
           
           // Convert database questions to Question format
-          const dbQuestions: Question[] = response.questions.map((q: any, index: number) => ({
-            id: index + 1,
-            question: q.questionText,
-            answers: [q.answerA, q.answerB, q.answerC, q.answerD],
-            correctAnswers: q.correctAnswer.includes(',') 
-              ? q.correctAnswer.split(',').map((a: string) => a.trim().charCodeAt(0) - 97)
-              : [q.correctAnswer.charCodeAt(0) - 97],
-            difficulty: q.difficulty,
-            image: q.imageUrl,
-          }));
+          const dbQuestions: Question[] = response.questions.map((q: any, index: number) => {
+            // Parse correct answers - can be single (e.g., "a") or multiple (e.g., "a,c")
+            const correctAnswersArray = q.correctAnswer.includes(',') 
+              ? q.correctAnswer.split(',').map((a: string) => a.trim().toLowerCase().charCodeAt(0) - 97)
+              : [q.correctAnswer.trim().toLowerCase().charCodeAt(0) - 97];
+            
+            const isMultiple = correctAnswersArray.length > 1;
+            
+            return {
+              id: index + 1,
+              question: q.questionText,
+              answers: [q.answerA, q.answerB, q.answerC, q.answerD],
+              correctAnswer: isMultiple ? correctAnswersArray[0] : correctAnswersArray[0], // Single answer (always set)
+              correctAnswers: isMultiple ? correctAnswersArray : undefined, // Only set for multiple answers
+              points: q.difficulty || 1, // Default to 1 if difficulty not set
+              image: q.imageUrl,
+            };
+          });
 
           console.log(`[ExamPage] Successfully converted ${dbQuestions.length} questions`);
+          console.log('[ExamPage] Sample question structure:', dbQuestions[0]);
           setExamQuestions(dbQuestions);
           setLoadingQuestions(false);
         } catch (error: any) {
@@ -118,11 +147,62 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNeedPayment, la
           toast.error('Failed to load exam questions. Please try again.');
         }
       } else {
-        // Use mock questions for free tier
-        console.log(`[ExamPage] Using mock questions for ${examType} exam`);
-        const mockQuestions = examData[examType].questions.slice(0, 10);
-        setExamQuestions(mockQuestions);
-        setLoadingQuestions(false);
+        // Fetch mock questions (first 10) from database for free tier
+        try {
+          console.log(`[ExamPage] Loading mock questions for exam type: ${examType}`);
+          const response = await api.getMockQuestions(examType);
+          
+          console.log(`[ExamPage] Received ${response.questions?.length || 0} mock questions from API`);
+          
+          if (!response.questions || response.questions.length === 0) {
+            // Fallback to local mock data if no questions in database
+            console.log(`[ExamPage] No mock questions in database, using local fallback`);
+            const mockQuestions = examData[examType].questions.slice(0, 10);
+            setExamQuestions(mockQuestions);
+            setLoadingQuestions(false);
+            return;
+          }
+          
+          // Convert database questions to Question format
+          const dbQuestions: Question[] = response.questions.map((q: any, index: number) => {
+            // Parse correct answers - can be single (e.g., "a") or multiple (e.g., "a,c")
+            const correctAnswersArray = q.correctAnswer.includes(',') 
+              ? q.correctAnswer.split(',').map((a: string) => a.trim().toLowerCase().charCodeAt(0) - 97)
+              : [q.correctAnswer.trim().toLowerCase().charCodeAt(0) - 97];
+            
+            const isMultiple = correctAnswersArray.length > 1;
+            
+            return {
+              id: index + 1,
+              question: q.questionText,
+              answers: [q.answerA, q.answerB, q.answerC, q.answerD],
+              correctAnswer: isMultiple ? correctAnswersArray[0] : correctAnswersArray[0], // Single answer (always set)
+              correctAnswers: isMultiple ? correctAnswersArray : undefined, // Only set for multiple answers
+              points: q.difficulty || 1, // Default to 1 if difficulty not set
+              image: q.imageUrl,
+            };
+          });
+
+          console.log(`[ExamPage] Successfully converted ${dbQuestions.length} mock questions`);
+          setExamQuestions(dbQuestions);
+          setLoadingQuestions(false);
+        } catch (error: any) {
+          console.error('[ExamPage] Failed to load mock questions:', error);
+          console.error('[ExamPage] Error details:', {
+            message: error.message,
+            stack: error.stack,
+            examType,
+          });
+          
+          // Show user-friendly warning
+          toast.warning('⚠️ Using demo questions. For real exam questions, ask admin to import questions via Admin Panel.');
+          
+          // Fallback to local mock data on error
+          console.log(`[ExamPage] Error loading mock questions, using local fallback`);
+          const mockQuestions = examData[examType].questions.slice(0, 10);
+          setExamQuestions(mockQuestions);
+          setLoadingQuestions(false);
+        }
       }
     };
 
@@ -131,10 +211,13 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNeedPayment, la
 
   const currentQuestion = examQuestions[currentQuestionIndex];
   const totalQuestions = examQuestions.length;
-  const progress = ((currentQuestionIndex + 1) / totalQuestions) * 100;
+  const progress = totalQuestions > 0 ? ((currentQuestionIndex + 1) / totalQuestions) * 100 : 0;
   const MAX_POINTS_LOSS = 6;
   
-  const isMultipleChoice = currentQuestion.correctAnswers && currentQuestion.correctAnswers.length > 1;
+  // Early safety check - must happen before using currentQuestion
+  const hasValidQuestion = examQuestions && examQuestions.length > 0 && currentQuestion;
+  
+  const isMultipleChoice = currentQuestion?.correctAnswers && currentQuestion.correctAnswers.length > 1;
 
   // Timer effect
   useEffect(() => {
@@ -174,6 +257,8 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNeedPayment, la
   
   // Sync selected answer when question changes
   useEffect(() => {
+    if (!currentQuestion) return; // Safety check
+    
     const answer = answeredQuestions[currentQuestionIndex];
     const isCurrentMultiple = currentQuestion.correctAnswers && currentQuestion.correctAnswers.length > 1;
     
@@ -184,11 +269,12 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNeedPayment, la
       setSelectedAnswer(typeof answer?.answer === 'number' ? answer.answer : null);
       setSelectedAnswers([]);
     }
-  }, [currentQuestionIndex, currentQuestion]);
+  }, [currentQuestionIndex, currentQuestion, answeredQuestions]);
   
-  // Save progress to localStorage
+  // Save progress to localStorage (only if user has answered at least one question)
   useEffect(() => {
-    if (!showResults && examStarted) {
+    const hasAnsweredQuestions = Object.keys(answeredQuestions).length > 0;
+    if (!showResults && examStarted && hasAnsweredQuestions) {
       const storageKey = `exam_progress_${examType}_${mode}_${tier}`;
       const progressData = {
         currentQuestionIndex,
@@ -377,7 +463,13 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNeedPayment, la
     const percentage = Math.round((correctCount / totalQuestions) * 100);
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 pt-24 pb-8 px-4">
+      <>
+        <Navigation 
+          currentPage="exam"
+          onNavigate={handleNavigate}
+          isLoggedIn={!!user}
+        />
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 pt-24 pb-8 px-4">
         <div className="container mx-auto max-w-3xl">
           <Card className="border-2 shadow-2xl dark:bg-slate-700 dark:border-slate-600">
             <CardHeader className="text-center bg-gradient-to-br from-slate-50 to-white dark:from-slate-600 dark:to-slate-700 pb-4 pt-6">
@@ -489,6 +581,8 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNeedPayment, la
           </Card>
         </div>
       </div>
+      <Footer />
+      </>
     );
   }
   
@@ -496,11 +590,17 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNeedPayment, la
     const { totalPointsLost, correctCount } = calculateResults();
     
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 pt-24 pb-8 px-4">
+      <>
+        <Navigation 
+          currentPage="exam"
+          onNavigate={handleNavigate}
+          isLoggedIn={!!user}
+        />
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 pt-24 pb-8 px-4">
         <div className="container mx-auto max-w-4xl">
           <div className="mb-6 flex items-center justify-between">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t.reviewAnswers}</h2>
-            <Button onClick={() => setShowReview(false)} variant="outline">
+            <Button onClick={onBackToHome} variant="outline">
               <ArrowLeft className="w-4 h-4 mr-2" />
               {t.backToExams}
             </Button>
@@ -655,34 +755,50 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNeedPayment, la
           </div>
         </div>
       </div>
+      <Footer />
+      </>
     );
   }
 
   // Show loading state while fetching paid questions
   if (loadingQuestions) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-        <Card className="max-w-md w-full">
-          <CardContent className="pt-6 flex flex-col items-center space-y-4">
-            <LoadingSpinner size="lg" />
-            <h3 className="text-xl dark:text-gray-100">
-              {language === 'English' ? 'Loading exam questions...' : 'Зареждане на въпроси...'}
-            </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
-              {language === 'English' 
-                ? 'Please wait while we prepare your exam' 
-                : 'Моля, изчакайте, докато подготвяме вашия изпит'}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+      <>
+        <Navigation 
+          currentPage="exam"
+          onNavigate={handleNavigate}
+          isLoggedIn={!!user}
+        />
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 pt-20">
+          <Card className="max-w-md w-full">
+            <CardContent className="pt-6 flex flex-col items-center space-y-4">
+              <LoadingSpinner size="lg" />
+              <h3 className="text-xl dark:text-gray-100">
+                {language === 'English' ? 'Loading exam questions...' : 'Зареждане на въпроси...'}
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
+                {language === 'English' 
+                  ? 'Please wait while we prepare your exam' 
+                  : 'Моля, изчакайте, докато подготвяме вашия изпит'}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+        <Footer />
+      </>
     );
   }
 
   // Show error if questions failed to load
   if (questionLoadError) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 px-4">
+      <>
+        <Navigation 
+          currentPage="exam"
+          onNavigate={handleNavigate}
+          isLoggedIn={!!user}
+        />
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 px-4 pt-20">
         <Card className="max-w-lg w-full border-red-200 dark:border-red-800">
           <CardContent className="pt-6 space-y-4">
             <div className="flex items-center justify-center">
@@ -726,32 +842,49 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNeedPayment, la
           </CardContent>
         </Card>
       </div>
+      <Footer />
+      </>
     );
   }
 
+  // Safety check - show error if no valid question
+  if (!hasValidQuestion) {
+    return (
+      <>
+        <Navigation 
+          currentPage="exam"
+          onNavigate={handleNavigate}
+          isLoggedIn={!!user}
+        />
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 pt-20">
+          <Card className="max-w-md">
+            <CardContent className="pt-6">
+              <p className="text-center text-gray-600 dark:text-gray-400">
+                {language === 'English' ? 'Question not found. Please return to home.' : 'Въпросът не е намерен. Моля, върнете се към началото.'}
+              </p>
+              <Button onClick={onBackToHome} className="w-full mt-4">
+                <Home className="w-4 h-4 mr-2" />
+                {t.backToHome}
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+        <Footer />
+      </>
+    );
+  }
+
+  // Now safe to access answeredData
   const answeredData = answeredQuestions[currentQuestionIndex];
 
-  // Safety checks
-  if (!examQuestions || examQuestions.length === 0 || !currentQuestion) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-        <Card className="max-w-md">
-          <CardContent className="pt-6">
-            <p className="text-center text-gray-600 dark:text-gray-400">
-              {language === 'English' ? 'Question not found. Please return to home.' : 'Въпросът не е намерен. Моля, върнете се към началото.'}
-            </p>
-            <Button onClick={onBackToHome} className="w-full mt-4">
-              <Home className="w-4 h-4 mr-2" />
-              {t.backToHome}
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 pt-28 pb-6 px-4">
+    <>
+      <Navigation 
+        currentPage="exam"
+        onNavigate={handleNavigate}
+        isLoggedIn={!!user}
+      />
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 pt-28 pb-6 px-4">
       <div className="container mx-auto max-w-5xl">
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -1100,5 +1233,67 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNeedPayment, la
         </Card>
       </div>
     </div>
+    <Footer />
+    
+    {/* Exit Exam Dialog */}
+    <AlertDialog open={showExitDialog} onOpenChange={setShowExitDialog}>
+      <AlertDialogContent className="dark:bg-slate-800">
+        <AlertDialogHeader>
+          <AlertDialogTitle className="dark:text-gray-100">{t.exitExamTitle || (language === 'English' ? 'Exit Exam?' : 'Излизане от изпита?')}</AlertDialogTitle>
+          <AlertDialogDescription className="dark:text-gray-300">
+            {t.exitExamMessage || (language === 'English' 
+              ? 'Your progress will be lost if you exit now. Are you sure you want to leave?' 
+              : 'Вашият прогрес ще бъде загубен ако излезете сега. Сигурни ли сте, че искате да напуснете?')}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel className="dark:bg-slate-700 dark:text-gray-200 dark:hover:bg-slate-600">
+            {language === 'English' ? 'Cancel' : 'Отказ'}
+          </AlertDialogCancel>
+          <AlertDialogAction
+            onClick={() => {
+              const storageKey = `exam_progress_${examType}_${mode}_${tier}`;
+              localStorage.removeItem(storageKey);
+              onBackToHome();
+            }}
+            className="bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800"
+          >
+            {language === 'English' ? 'Exit' : 'Излез'}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+
+    {/* Submit Exam Dialog */}
+    <AlertDialog open={showSubmitDialog} onOpenChange={setShowSubmitDialog}>
+      <AlertDialogContent className="dark:bg-slate-800">
+        <AlertDialogHeader>
+          <AlertDialogTitle className="dark:text-gray-100">{t.submitExamTitle || (language === 'English' ? 'Submit Exam?' : 'Подаване на изпита?')}</AlertDialogTitle>
+          <AlertDialogDescription className="dark:text-gray-300">
+            {t.submitExamMessage || (language === 'English' 
+              ? 'Once you submit, you cannot change your answers. Are you ready to submit your exam?' 
+              : 'След като подадете, не можете да промените отговорите си. Готови ли сте да подадете изпита?')}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel className="dark:bg-slate-700 dark:text-gray-200 dark:hover:bg-slate-600">
+            {language === 'English' ? 'Cancel' : 'Отказ'}
+          </AlertDialogCancel>
+          <AlertDialogAction
+            onClick={() => {
+              setShowSubmitDialog(false);
+              setShowResults(true);
+              // Clear exam progress from localStorage when submitted
+              const storageKey = `exam_progress_${examType}_${mode}_${tier}`;
+              localStorage.removeItem(storageKey);
+            }}
+            className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800"
+          >
+            {language === 'English' ? 'Submit' : 'Подай'}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }

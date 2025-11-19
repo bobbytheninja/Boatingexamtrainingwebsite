@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check Questions in Database</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2563eb;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #1d4ed8;
+        }
+        button:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        .success {
+            background: #d1fae5;
+            border: 1px solid #10b981;
+            color: #065f46;
+        }
+        .error {
+            background: #fee2e2;
+            border: 1px solid #ef4444;
+            color: #991b1b;
+        }
+        .info {
+            background: #dbeafe;
+            border: 1px solid #3b82f6;
+            color: #1e40af;
+        }
+        .exam-type {
+            display: inline-block;
+            margin: 5px;
+        }
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #2563eb;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Database Questions Checker</h1>
+        <p class="subtitle">Check how many questions are stored for each exam type</p>
+        
+        <div>
+            <button onclick="checkAllQuestions()">Check All Exam Types</button>
+            <button onclick="testMockEndpoint()">Test Mock Endpoint</button>
+            <button onclick="testHealthCheck()">Test Health Check</button>
+        </div>
+
+        <div id="results"></div>
+    </div>
+
+    <script>
+        const projectId = 'abtrsjhvjfgcxxpkszwi';
+        const baseUrl = `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91`;
+        const examTypes = ['jet', 'small', 'big', 'yacht', 'navigation'];
+
+        function showResult(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.textContent = message;
+            results.appendChild(div);
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        async function testHealthCheck() {
+            clearResults();
+            showResult('Testing health check endpoint...', 'info');
+            
+            try {
+                const response = await fetch(`${baseUrl}/health`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    showResult(`✅ Backend is deployed and running!\n\nResponse: ${JSON.stringify(data, null, 2)}`, 'success');
+                } else {
+                    showResult(`❌ Health check failed\n\nStatus: ${response.status}\nText: ${await response.text()}`, 'error');
+                }
+            } catch (error) {
+                showResult(`❌ Cannot reach backend\n\nError: ${error.message}\n\nThis means the backend is NOT deployed. Run: ./deploy-backend.sh`, 'error');
+            }
+        }
+
+        async function checkAllQuestions() {
+            clearResults();
+            showResult('Checking question counts for all exam types...', 'info');
+            
+            const results = {};
+            
+            for (const examType of examTypes) {
+                try {
+                    const response = await fetch(`${baseUrl}/questions/${examType}/count`);
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        results[examType] = data.count;
+                    } else {
+                        results[examType] = `Error: ${response.status}`;
+                    }
+                } catch (error) {
+                    results[examType] = `Error: ${error.message}`;
+                }
+            }
+            
+            let message = '📊 Question Counts:\n\n';
+            let hasQuestions = false;
+            let allZero = true;
+            
+            for (const [type, count] of Object.entries(results)) {
+                const icon = typeof count === 'number' && count > 0 ? '✅' : '❌';
+                message += `${icon} ${type.padEnd(12)}: ${count}\n`;
+                
+                if (typeof count === 'number' && count > 0) {
+                    hasQuestions = true;
+                    allZero = false;
+                }
+            }
+            
+            if (allZero) {
+                message += '\n⚠️ No questions found in database!\n';
+                message += '\nTo import questions:\n';
+                message += '1. Go to Admin Panel\n';
+                message += '2. Click "Import Questions" tab\n';
+                message += '3. Upload your Excel files\n';
+                showResult(message, 'error');
+            } else if (hasQuestions) {
+                message += '\n✅ Questions are in the database!';
+                showResult(message, 'success');
+            } else {
+                showResult(message, 'error');
+            }
+        }
+
+        async function testMockEndpoint() {
+            clearResults();
+            showResult('Testing mock questions endpoint...', 'info');
+            
+            try {
+                const response = await fetch(`${baseUrl}/questions/jet/mock`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const count = data.questions?.length || 0;
+                    
+                    if (count > 0) {
+                        showResult(`✅ Mock endpoint working!\n\nFound ${count} mock questions for "jet" exam type.\n\nFirst question: ${data.questions[0].questionText?.substring(0, 100)}...`, 'success');
+                    } else {
+                        showResult(`⚠️ Mock endpoint responded but no questions found.\n\nResponse: ${JSON.stringify(data, null, 2)}`, 'error');
+                    }
+                } else if (response.status === 404) {
+                    const data = await response.json();
+                    showResult(`⚠️ Mock endpoint exists but no questions in database\n\nStatus: 404\nMessage: ${data.message}\n\nYou need to import questions via Admin Panel.`, 'error');
+                } else {
+                    showResult(`❌ Mock endpoint failed\n\nStatus: ${response.status}\nResponse: ${await response.text()}\n\nThe /mock endpoint might not exist. Re-deploy backend!`, 'error');
+                }
+            } catch (error) {
+                showResult(`❌ Cannot reach mock endpoint\n\nError: ${error.message}\n\nThis likely means:\n1. Backend not deployed, OR\n2. Backend deployed but doesn't have the /mock endpoint yet\n\nSolution: Re-deploy backend with: ./deploy-backend.sh`, 'error');
+            }
+        }
+
+        // Auto-run health check on load
+        window.addEventListener('load', () => {
+            setTimeout(testHealthCheck, 500);
+        });
+    </script>
+</body>
+</html>

@@ -6,25 +6,24 @@ import { Label } from './ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import { toast } from 'sonner@2.0.3';
-import { Language, getTranslation } from '../data/translations';
+import { getTranslation } from '../data/translations';
 import { Mail, Check } from 'lucide-react';
 import { ButtonSpinner } from './LoadingSpinner';
 import { useAuth } from '../contexts/AuthContext';
 import { useDarkMode } from '../contexts/DarkModeContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { Navigation } from './Navigation';
 import { Footer } from './Footer';
 
 interface LoginPageProps {
   onLogin: () => void;
   onNavigate: (page: string) => void;
-  language: Language;
 }
 
-export function LoginPage({ onLogin, onNavigate, language }: LoginPageProps) {
-  const [currentLanguage, setCurrentLanguage] = useState<Language>(language);
-  const [region, setRegion] = useState('Bulgaria');
-  const { darkMode, toggleDarkMode } = useDarkMode();
-  const t = getTranslation(currentLanguage);
+export function LoginPage({ onLogin, onNavigate }: LoginPageProps) {
+  const { language } = useLanguage();
+  const { darkMode } = useDarkMode();
+  const t = getTranslation(language);
   const { signIn, signUp, resetPassword } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -51,15 +50,15 @@ export function LoginPage({ onLogin, onNavigate, language }: LoginPageProps) {
       const errorMessage = error.message || error.toString();
       
       if (errorMessage.includes('Invalid login credentials')) {
-        toast.error(currentLanguage === 'English' 
+        toast.error(language === 'English' 
           ? '⚠️ We could not find a profile matching these credentials. Please check your email and password, or create a new account using the Sign Up tab.' 
           : '⚠️ Не можахме да намерим профил с тези данни. Моля, проверете имейла и паролата си или създайте нов акаунт чрез таба Регистрация.');
       } else if (errorMessage.includes('Email not confirmed')) {
-        toast.error(currentLanguage === 'English' 
+        toast.error(language === 'English' 
           ? 'Please confirm your email address before logging in.' 
           : 'Моля, потвърдете имейл адреса си преди да влезете.');
       } else {
-        toast.error(currentLanguage === 'English' 
+        toast.error(language === 'English' 
           ? `Login failed: ${errorMessage}` 
           : `Грешка при влизане: ${errorMessage}`);
       }
@@ -82,15 +81,15 @@ export function LoginPage({ onLogin, onNavigate, language }: LoginPageProps) {
       const errorMessage = error.message || error.toString();
       
       if (errorMessage.includes('already registered') || errorMessage.includes('User already registered')) {
-        toast.error(currentLanguage === 'English' 
+        toast.error(language === 'English' 
           ? 'This email is already registered. Please use the Sign In tab or try a different email.' 
           : 'Този имейл вече е регистриран. Моля, използвайте таба за влизане или опитайте с друг имейл.');
       } else if (errorMessage.includes('Missing authorization header')) {
-        toast.error(currentLanguage === 'English' 
+        toast.error(language === 'English' 
           ? 'Server configuration error. Please contact support or try again later.' 
           : 'Грешка в конфигурацията на сървъра. Моля, свържете се с поддръжката или опитайте по-късно.');
       } else {
-        toast.error(currentLanguage === 'English' 
+        toast.error(language === 'English' 
           ? `Signup failed: ${errorMessage}` 
           : `Грешка при регистрация: ${errorMessage}`);
       }
@@ -106,14 +105,14 @@ export function LoginPage({ onLogin, onNavigate, language }: LoginPageProps) {
     setIsResettingPassword(true);
     try {
       await resetPassword(resetEmail);
-      toast.success(currentLanguage === 'English'
+      toast.success(language === 'English'
         ? 'Password reset link sent! Check your email.'
         : 'Линк за нулиране на паролата изпратен! Проверете имейла си.');
       setIsResetDialogOpen(false);
       setResetEmail('');
     } catch (error: any) {
       console.error('Password reset error:', error);
-      toast.error(currentLanguage === 'English'
+      toast.error(language === 'English'
         ? 'Failed to send reset link. Please try again.'
         : 'Неуспешно изпращане на линка. Моля, опитайте отново.');
     } finally {
@@ -133,12 +132,6 @@ export function LoginPage({ onLogin, onNavigate, language }: LoginPageProps) {
         onNavigate={handleNavigate}
         isLoggedIn={false}
         transparent={false}
-        language={currentLanguage}
-        onLanguageChange={setCurrentLanguage}
-        region={region}
-        onRegionChange={setRegion}
-        darkMode={darkMode}
-        onDarkModeToggle={toggleDarkMode}
       />
       
       <div className="min-h-screen pt-24 pb-20 bg-gradient-to-br from-slate-50 via-sky-50/50 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
@@ -180,10 +173,10 @@ export function LoginPage({ onLogin, onNavigate, language }: LoginPageProps) {
                   {/* New User Notice */}
                   <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-700 rounded-lg">
                     <p className="text-sm text-blue-900 dark:text-blue-200 font-medium mb-2">
-                      👋 {currentLanguage === 'English' ? 'First time here?' : 'Тук за първи път?'}
+                      👋 {language === 'English' ? 'First time here?' : 'Тук за първи път?'}
                     </p>
                     <p className="text-xs text-blue-800 dark:text-blue-300">
-                      {currentLanguage === 'English' 
+                      {language === 'English' 
                         ? 'If you don\'t have an account yet, click the "Sign Up" tab above to create one. You need to sign up before you can log in.'
                         : 'Ако все още нямате акаунт, кликнете на "Регистрация" по-горе, за да създадете акаунт. Трябва да се регистрирате, преди да можете да влезете.'}
                     </p>
@@ -227,7 +220,7 @@ export function LoginPage({ onLogin, onNavigate, language }: LoginPageProps) {
                       {isLoggingIn ? (
                         <>
                           <ButtonSpinner className="mr-2" />
-                          {currentLanguage === 'English' ? 'Signing in...' : 'Влизане...'}
+                          {language === 'English' ? 'Signing in...' : 'Влизане...'}
                         </>
                       ) : (
                         t.signIn
@@ -238,14 +231,14 @@ export function LoginPage({ onLogin, onNavigate, language }: LoginPageProps) {
                     <Dialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
                       <DialogTrigger asChild>
                         <Button variant="link" className="w-full text-sm text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300">
-                          {currentLanguage === 'English' ? 'Forgot password?' : 'Забравена парола?'}
+                          {language === 'English' ? 'Forgot password?' : 'Забравена парола?'}
                         </Button>
                       </DialogTrigger>
                       <DialogContent className="sm:max-w-md">
                         <DialogHeader>
-                          <DialogTitle>{currentLanguage === 'English' ? 'Reset Password' : 'Нулиране на Парола'}</DialogTitle>
+                          <DialogTitle>{language === 'English' ? 'Reset Password' : 'Нулиране на Парола'}</DialogTitle>
                           <DialogDescription>
-                            {currentLanguage === 'English' 
+                            {language === 'English' 
                               ? 'Enter your email address and we\'ll send you a link to reset your password.'
                               : 'Въведете вашия имейл адрес и ще ви изпратим линк за нулиране на паролата.'}
                           </DialogDescription>
@@ -271,10 +264,10 @@ export function LoginPage({ onLogin, onNavigate, language }: LoginPageProps) {
                             {isResettingPassword ? (
                               <>
                                 <ButtonSpinner className="mr-2" />
-                                {currentLanguage === 'English' ? 'Sending...' : 'Изпращане...'}
+                                {language === 'English' ? 'Sending...' : 'Изпращане...'}
                               </>
                             ) : (
-                              currentLanguage === 'English' ? 'Send Reset Link' : 'Изпрати Линк'
+                              language === 'English' ? 'Send Reset Link' : 'Изпрати Линк'
                             )}
                           </Button>
                         </form>
@@ -288,10 +281,10 @@ export function LoginPage({ onLogin, onNavigate, language }: LoginPageProps) {
                   {/* First Time User Encouragement */}
                   <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border-2 border-green-200 dark:border-green-700 rounded-lg">
                     <p className="text-sm text-green-900 dark:text-green-200 font-medium mb-2">
-                      ✨ {currentLanguage === 'English' ? 'Create Your Account' : 'Създайте Акаунт'}
+                      ✨ {language === 'English' ? 'Create Your Account' : 'Създайте Акаунт'}
                     </p>
                     <p className="text-xs text-green-800 dark:text-green-300">
-                      {currentLanguage === 'English' 
+                      {language === 'English' 
                         ? 'New here? Start by creating an account. You\'ll be automatically logged in after signing up!'
                         : 'Нов тук? Започнете като създадете акаунт. Ще бъдете автоматично влезли след регистрация!'}
                     </p>
@@ -349,7 +342,7 @@ export function LoginPage({ onLogin, onNavigate, language }: LoginPageProps) {
                       {isSigningUp ? (
                         <>
                           <ButtonSpinner className="mr-2" />
-                          {currentLanguage === 'English' ? 'Creating account...' : 'Създаване на акаунт...'}
+                          {language === 'English' ? 'Creating account...' : 'Създаване на акаунт...'}
                         </>
                       ) : (
                         t.createAccount

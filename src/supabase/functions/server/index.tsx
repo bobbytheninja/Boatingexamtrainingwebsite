@@ -39,14 +39,19 @@ try {
   const stripeKey = getEnv('STRIPE_SECRET_KEY');
   
   if (!stripeKey) {
+    console.error('STRIPE_SECRET_KEY environment variable is not set!');
     throw new Error('Missing Stripe secret key');
   }
   
+  console.log('Initializing Stripe with key:', stripeKey.substring(0, 7) + '...');
+  
   stripe = new Stripe(stripeKey, {
-    apiVersion: '2024-11-20.acacia',
+    apiVersion: '2024-10-28.acacia' as any,
   });
+  
+  console.log('✅ Stripe initialized successfully');
 } catch (error) {
-  console.error('Failed to initialize Stripe:', error);
+  console.error('❌ Failed to initialize Stripe:', error);
   // Continue with null stripe - payment endpoints will handle this
 }
 
@@ -117,9 +122,13 @@ async function verifyAdmin(authHeader: string | null) {
   return { error: null, user, isAdmin: true };
 }
 
-// Health check endpoint
+// Health check endpoint (no auth required)
 app.get("/make-server-d36f8f91/health", (c) => {
-  return c.json({ status: "ok" });
+  return c.json({ 
+    status: "ok",
+    timestamp: new Date().toISOString(),
+    version: "1.0.0"
+  });
 });
 
 // Sign up endpoint
@@ -179,7 +188,7 @@ app.get("/make-server-d36f8f91/subscriptions", async (c) => {
     const subscription = await kv.get(`subscription:${user.id}`);
     
     if (!subscription) {
-      return c.json({ subscriptions: [] });
+      return c.json({ subscriptions: [], expiresAt: null });
     }
 
     // Check if subscription is expired
@@ -187,10 +196,13 @@ app.get("/make-server-d36f8f91/subscriptions", async (c) => {
     if (subscription.expiresAt && subscription.expiresAt < now) {
       // Subscription expired, remove it
       await kv.del(`subscription:${user.id}`);
-      return c.json({ subscriptions: [] });
+      return c.json({ subscriptions: [], expiresAt: null });
     }
 
-    return c.json({ subscriptions: subscription.examTypes || [] });
+    return c.json({ 
+      subscriptions: subscription.examTypes || [], 
+      expiresAt: subscription.expiresAt || null 
+    });
   } catch (error: any) {
     console.error('Error fetching subscriptions:', error);
     return c.json({ message: 'Error fetching subscriptions' }, 500);
@@ -406,33 +418,68 @@ app.post("/make-server-d36f8f91/preferences", async (c) => {
 
 // Create Stripe Checkout Session
 app.post("/make-server-d36f8f91/create-checkout-session", async (c) => {
+  console.log('[Checkout] Starting checkout session creation...');
+  
   const { error, user } = await verifyUser(c.req.header('Authorization'));
   
   if (error || !user) {
-    return c.json({ message: 'Unauthorized' }, 401);
+    console.error('[Checkout] Authorization failed:', error);
+    return c.json({ message: 'Unauthorized', error }, 401);
   }
 
-  if (!stripe || !supabase) {
-    return c.json({ message: 'Payment system unavailable' }, 503);
+  console.log('[Checkout] User verified:', user.id);
+
+  if (!stripe) {
+    console.error('[Checkout] Stripe not initialized! Check STRIPE_SECRET_KEY environment variable.');
+    return c.json({ 
+      message: 'Payment system unavailable - Stripe not configured',
+      hint: 'Run: supabase secrets set STRIPE_SECRET_KEY=sk_test_...'
+    }, 503);
+  }
+
+  if (!supabase) {
+    console.error('[Checkout] Supabase not initialized!');
+    return c.json({ message: 'Payment system unavailable - Database not configured' }, 503);
   }
 
   try {
     const body = await c.req.json();
     const { examTypes } = body;
 
+    console.log('[Checkout] Exam types requested:', examTypes);
+
     if (!Array.isArray(examTypes) || examTypes.length === 0) {
-      return c.json({ message: 'Invalid exam types' }, 400);
+      return c.json({ message: 'Invalid exam types - must be a non-empty array' }, 400);
     }
 
     // Price per exam type: €5 per month
     const pricePerExam = 500; // in cents
     const totalAmount = examTypes.length * pricePerExam;
 
+    console.log('[Checkout] Total amount:', totalAmount, 'cents (€' + (totalAmount / 100) + ')');
+
     // Get user email
-    const { data: userData } = await supabase.auth.admin.getUserById(user.id);
+    const { data: userData, error: userError } = await supabase.auth.admin.getUserById(user.id);
+    
+    if (userError) {
+      console.error('[Checkout] Error fetching user data:', userError);
+      return c.json({ message: 'Error fetching user data', error: userError.message }, 500);
+    }
+    
     const userEmail = userData.user?.email || '';
+    console.log('[Checkout] User email:', userEmail);
+
+    if (!userEmail) {
+      console.error('[Checkout] User has no email!');
+      return c.json({ message: 'User email not found' }, 400);
+    }
 
     // Create Stripe Checkout Session
+    console.log('[Checkout] Creating Stripe session...');
+    
+    const origin = c.req.header('origin') || 'http://localhost:3000';
+    console.log('[Checkout] Origin:', origin);
+    
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: examTypes.map((examType: string) => ({
@@ -447,8 +494,8 @@ app.post("/make-server-d36f8f91/create-checkout-session", async (c) => {
         quantity: 1,
       })),
       mode: 'payment',
-      success_url: `${c.req.header('origin') || 'http://localhost:3000'}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${c.req.header('origin') || 'http://localhost:3000'}/payment`,
+      success_url: `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/payment`,
       customer_email: userEmail,
       client_reference_id: user.id,
       metadata: {
@@ -457,13 +504,26 @@ app.post("/make-server-d36f8f91/create-checkout-session", async (c) => {
       },
     });
 
+    console.log('[Checkout] ✅ Session created successfully:', session.id);
+
     return c.json({ 
       sessionId: session.id,
       url: session.url,
     });
   } catch (error: any) {
-    console.error('Error creating Stripe checkout session:', error);
-    return c.json({ message: 'Error creating checkout session', error: error.message }, 500);
+    console.error('[Checkout] ❌ Error creating Stripe checkout session:', error);
+    console.error('[Checkout] Error details:', {
+      message: error.message,
+      type: error.type,
+      code: error.code,
+      stack: error.stack,
+    });
+    return c.json({ 
+      message: 'Error creating checkout session', 
+      error: error.message,
+      type: error.type,
+      code: error.code,
+    }, 500);
   }
 });
 
@@ -883,6 +943,33 @@ app.get("/make-server-d36f8f91/questions/:examType/count", async (c) => {
   }
 });
 
+// Get mock/test questions (first 10 questions, no auth required)
+app.get("/make-server-d36f8f91/questions/:examType/mock", async (c) => {
+  try {
+    const examType = c.req.param('examType');
+    
+    console.log(`[Mock Questions API] Requesting mock questions for exam type: ${examType}`);
+    
+    if (!examType) {
+      return c.json({ message: 'Exam type required' }, 400);
+    }
+
+    // Get first 10 questions (sorted by question number)
+    const mockQuestions = await questions.getFirstQuestions(examType, 10);
+    console.log(`[Mock Questions API] Found ${mockQuestions.length} mock questions for ${examType}`);
+
+    if (mockQuestions.length === 0) {
+      console.log(`[Mock Questions API] No questions found in database for ${examType}`);
+      return c.json({ message: 'No questions available for this exam type' }, 404);
+    }
+
+    return c.json({ questions: mockQuestions });
+  } catch (error: any) {
+    console.error('[Mock Questions API] Error fetching mock questions:', error);
+    return c.json({ message: 'Error fetching mock questions', error: error.message }, 500);
+  }
+});
+
 // Import questions (admin endpoint - requires special authorization)
 app.post("/make-server-d36f8f91/questions/import", async (c) => {
   try {
@@ -923,21 +1010,26 @@ app.get("/make-server-d36f8f91/diagnostics/questions", async (c) => {
       const count = await questions.getQuestionCount(examType);
       const questionIds = await questions.getQuestionIds(examType);
       
-      // Get a sample question if available
+      // Get one sample question
+      const sampleQuestionId = questionIds.length > 0 ? questionIds[0] : null;
       let sampleQuestion = null;
-      if (questionIds.length > 0) {
-        sampleQuestion = await questions.getQuestion(questionIds[0]);
+      
+      if (sampleQuestionId) {
+        const q = await questions.getQuestion(sampleQuestionId);
+        if (q) {
+          sampleQuestion = {
+            id: q.id,
+            questionText: q.questionText?.substring(0, 100) || 'No text',
+            examType: q.examType,
+          };
+        }
       }
 
       diagnostics[examType] = {
         count,
         indexExists: questionIds.length > 0,
-        sampleQuestionId: questionIds[0] || null,
-        sampleQuestion: sampleQuestion ? {
-          id: sampleQuestion.id,
-          questionText: sampleQuestion.questionText?.substring(0, 50) + '...',
-          examType: sampleQuestion.examType,
-        } : null,
+        sampleQuestionId,
+        sampleQuestion,
       };
     }
 
@@ -948,6 +1040,47 @@ app.get("/make-server-d36f8f91/diagnostics/questions", async (c) => {
   } catch (error: any) {
     console.error('Error running diagnostics:', error);
     return c.json({ message: 'Error running diagnostics', error: error.message }, 500);
+  }
+});
+
+// Delete all questions (admin only - for cleanup)
+app.post("/make-server-d36f8f91/admin/delete-all-questions", async (c) => {
+  try {
+    const body = await c.req.json();
+    const { adminKey } = body;
+
+    // Require admin key
+    const ADMIN_KEY = Deno.env.get('ADMIN_IMPORT_KEY') || 'change-this-key';
+    
+    if (adminKey !== ADMIN_KEY) {
+      return c.json({ message: 'Unauthorized - Invalid admin key' }, 401);
+    }
+
+    const examTypes = ['jet', 'small', 'big', 'yacht', 'navigation'];
+    let totalDeleted = 0;
+
+    for (const examType of examTypes) {
+      const questionIds = await questions.getQuestionIds(examType);
+      
+      // Delete all questions for this exam type
+      for (const id of questionIds) {
+        await questions.deleteQuestion(id);
+        totalDeleted++;
+      }
+      
+      // Delete the index
+      await kv.del(`questions_index:${examType}`);
+    }
+
+    console.log(`Deleted ${totalDeleted} questions from database`);
+
+    return c.json({ 
+      message: 'All questions deleted successfully',
+      deleted: totalDeleted,
+    });
+  } catch (error: any) {
+    console.error('Error deleting questions:', error);
+    return c.json({ message: 'Error deleting questions', error: error.message }, 500);
   }
 });
 

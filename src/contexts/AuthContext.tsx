@@ -8,6 +8,8 @@ interface UserData {
   email: string;
   name?: string;
   subscriptions: ExamType[];
+  subscriptionExpiresAt?: number | null;
+  isAdmin?: boolean;
 }
 
 interface AuthContextType {
@@ -20,6 +22,7 @@ interface AuthContextType {
   resetPassword: (email: string) => Promise<void>;
   refreshSubscriptions: () => Promise<void>;
   deleteAccount: () => Promise<void>;
+  checkAdminStatus: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -31,7 +34,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const supabase = createClient();
 
   // Fetch user subscriptions from backend
-  const fetchSubscriptions = async (userId: string, token: string): Promise<ExamType[]> => {
+  const fetchSubscriptions = async (userId: string, token: string): Promise<{ subscriptions: ExamType[], expiresAt: number | null }> => {
     try {
       const response = await fetch(
         `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/subscriptions`,
@@ -44,14 +47,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (!response.ok) {
         console.error('Failed to fetch subscriptions:', await response.text());
-        return [];
+        return { subscriptions: [], expiresAt: null };
       }
 
       const data = await response.json();
-      return data.subscriptions || [];
+      return { 
+        subscriptions: data.subscriptions || [], 
+        expiresAt: data.expiresAt || null 
+      };
     } catch (error) {
       console.error('Error fetching subscriptions:', error);
-      return [];
+      return { subscriptions: [], expiresAt: null };
     }
   };
 
@@ -69,13 +75,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (session?.user) {
           const token = session.access_token;
-          const subscriptions = await fetchSubscriptions(session.user.id, token);
+          const { subscriptions, expiresAt } = await fetchSubscriptions(session.user.id, token);
+          
+          // Check admin status
+          const isAdmin = session.user.user_metadata?.role === 'admin' || false;
           
           setUser({
             id: session.user.id,
             email: session.user.email!,
             name: session.user.user_metadata?.name,
             subscriptions,
+            subscriptionExpiresAt: expiresAt,
+            isAdmin,
           });
           setAccessToken(token);
         }
@@ -95,13 +106,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
         const token = session.access_token;
-        const subscriptions = await fetchSubscriptions(session.user.id, token);
+        const { subscriptions, expiresAt } = await fetchSubscriptions(session.user.id, token);
+        
+        // Check admin status
+        const isAdmin = session.user.user_metadata?.role === 'admin' || false;
         
         setUser({
           id: session.user.id,
           email: session.user.email!,
           name: session.user.user_metadata?.name,
           subscriptions,
+          subscriptionExpiresAt: expiresAt,
+          isAdmin,
         });
         setAccessToken(token);
       } else if (event === 'SIGNED_OUT') {
@@ -147,13 +163,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (data.session?.user) {
         const token = data.session.access_token;
-        const subscriptions = await fetchSubscriptions(data.session.user.id, token);
+        const { subscriptions, expiresAt } = await fetchSubscriptions(data.session.user.id, token);
+        
+        // Check admin status
+        const isAdmin = data.session.user.user_metadata?.role === 'admin' || false;
         
         setUser({
           id: data.session.user.id,
           email: data.session.user.email!,
           name: data.session.user.user_metadata?.name,
           subscriptions,
+          subscriptionExpiresAt: expiresAt,
+          isAdmin,
         });
         setAccessToken(token);
       }
@@ -174,13 +195,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (data.session?.user) {
         const token = data.session.access_token;
-        const subscriptions = await fetchSubscriptions(data.session.user.id, token);
+        const { subscriptions, expiresAt } = await fetchSubscriptions(data.session.user.id, token);
+        
+        // Check admin status
+        const isAdmin = data.session.user.user_metadata?.role === 'admin' || false;
         
         setUser({
           id: data.session.user.id,
           email: data.session.user.email!,
           name: data.session.user.user_metadata?.name,
           subscriptions,
+          subscriptionExpiresAt: expiresAt,
+          isAdmin,
         });
         setAccessToken(token);
       }
@@ -219,8 +245,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refreshSubscriptions = async () => {
     if (!user || !accessToken) return;
     
-    const subscriptions = await fetchSubscriptions(user.id, accessToken);
-    setUser({ ...user, subscriptions });
+    const { subscriptions, expiresAt } = await fetchSubscriptions(user.id, accessToken);
+    setUser({ ...user, subscriptions, subscriptionExpiresAt: expiresAt });
   };
 
   const deleteAccount = async () => {
@@ -253,6 +279,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const checkAdminStatus = async () => {
+    if (!user || !accessToken) return;
+    
+    try {
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/check-admin`,
+        {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        setUser(prevUser => prevUser ? { ...prevUser, isAdmin: data.isAdmin || false } : null);
+      }
+    } catch (error) {
+      console.error('Error checking admin status:', error);
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -265,6 +313,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         resetPassword,
         refreshSubscriptions,
         deleteAccount,
+        checkAdminStatus,
       }}
     >
       {children}

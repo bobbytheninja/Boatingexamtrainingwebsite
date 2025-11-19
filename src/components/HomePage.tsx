@@ -1,22 +1,22 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Waves, Ship, Sailboat, Anchor as AnchorIcon, Compass } from 'lucide-react';
 import { ExamType } from '../data/examQuestions';
-import { Language, getTranslation } from '../data/translations';
+import { getTranslation } from '../data/translations';
 import { Navigation } from './Navigation';
 import { Footer } from './Footer';
 import { useAuth } from '../contexts/AuthContext';
 import { useDarkMode } from '../contexts/DarkModeContext';
+import { useLanguage } from '../contexts/LanguageContext';
 
 export function HomePage() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { darkMode, toggleDarkMode } = useDarkMode();
-  const [language, setLanguage] = useState<Language>('English');
-  const [region, setRegion] = useState('Bulgaria');
+  const { darkMode } = useDarkMode();
+  const { language } = useLanguage();
   const t = getTranslation(language);
   const isLoggedIn = !!user;
   
@@ -85,12 +85,6 @@ export function HomePage() {
         onNavigate={handleNavigate}
         isLoggedIn={isLoggedIn}
         transparent={true}
-        language={language}
-        onLanguageChange={setLanguage}
-        region={region}
-        onRegionChange={setRegion}
-        darkMode={darkMode}
-        onDarkModeToggle={toggleDarkMode}
       />
       
       <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">

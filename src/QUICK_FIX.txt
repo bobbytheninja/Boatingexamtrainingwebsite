@@ -1,0 +1,87 @@
+================================================================================
+                         QUICK FIX FOR YOUR ERROR
+================================================================================
+
+ERROR YOU'RE SEEING:
+-------------------
+[ExamPage] Failed to load mock questions: Error: Error fetching mock questions
+
+
+THE PROBLEM:
+-----------
+Backend server is not deployed yet.
+
+
+THE FIX (5 minutes):
+-------------------
+
+STEP 1: Open Terminal/Command Prompt
+   - Mac: Applications → Utilities → Terminal
+   - Windows: Press Win+R, type "cmd", press Enter
+   - VS Code: Menu → Terminal → New Terminal
+
+STEP 2: Navigate to Your Project Folder
+   cd path/to/your/yacht-exam-trainer
+
+STEP 3: Run Deployment Script
+
+   Mac/Linux:
+   ----------
+   chmod +x deploy-backend.sh
+   ./deploy-backend.sh
+
+   Windows:
+   --------
+   deploy-backend.bat
+
+STEP 4: When Asked for "Admin Import Key"
+   Type any secure password: YachtAdmin2024!
+   (You'll need this later to import questions)
+
+STEP 5: Wait for "Deployment Complete" Message
+   Takes 2-3 minutes.
+
+
+VERIFY IT WORKED:
+----------------
+
+Option A: Open this URL in browser
+https://abtrsjhvjfgcxxpkszwi.supabase.co/functions/v1/make-server-d36f8f91/health
+
+Should show:
+{"status":"ok","timestamp":"...","version":"1.0.0"}
+
+
+Option B: Test in Admin Panel
+1. Go to your site
+2. Log in as admin
+3. Admin Panel → API Keys tab
+4. Click "Test Server Connection"
+5. Should show: ✅ Server is running!
+
+
+THEN IMPORT YOUR QUESTIONS:
+---------------------------
+
+1. Admin Panel → Import Questions tab
+2. Enter admin key: YachtAdmin2024! (or whatever you chose)
+3. Select exam type: Jet Ski
+4. Upload your Excel file
+5. Click Import
+6. Repeat for other 4 exam types
+
+
+DONE! 🎉
+--------
+Mock exams will now use questions 1-10 from your Excel files!
+
+
+STILL STUCK?
+-----------
+Read: ERROR_EXPLAINED.md (detailed guide)
+Or: TROUBLESHOOTING.md (full debug guide)
+
+
+================================================================================
+                         THAT'S IT! DEPLOY NOW 🚀
+================================================================================

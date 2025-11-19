@@ -1,26 +1,25 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { ExternalLink, GraduationCap } from 'lucide-react';
-import { Language, getTranslation } from '../data/translations';
+import { getTranslation } from '../data/translations';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { Navigation } from './Navigation';
 import { Footer } from './Footer';
 import { useDarkMode } from '../contexts/DarkModeContext';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface PartnersPageProps {
   onNavigate: (page: string) => void;
-  language: Language;
   selectedPartnerIndex?: number;
   isLoggedIn?: boolean;
 }
 
-export function PartnersPage({ onNavigate, language, selectedPartnerIndex = 0, isLoggedIn = false }: PartnersPageProps) {
+export function PartnersPage({ onNavigate, selectedPartnerIndex = 0, isLoggedIn = false }: PartnersPageProps) {
+  const { language } = useLanguage();
   const t = getTranslation(language);
-  const { darkMode, toggleDarkMode } = useDarkMode();
+  const { darkMode } = useDarkMode();
   const partnerRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const [region, setRegion] = useState('Bulgaria');
-  const [currentLanguage, setCurrentLanguage] = useState<Language>(language);
 
   const handleNavigate = (page: string) => {
     if (page === 'partners') return;
@@ -39,10 +38,10 @@ export function PartnersPage({ onNavigate, language, selectedPartnerIndex = 0, i
   const partners = [
     {
       name: 'Maritime Academy Bulgaria',
-      description: currentLanguage === 'English' 
+      description: language === 'English' 
         ? 'Leading maritime training institution offering comprehensive sailing courses, yacht certifications, and professional skipper training. With over 15 years of experience and certified instructors, we provide hands-on training in modern vessels and state-of-the-art facilities.'
         : 'Водеща институция за морско обучение, предлагаща цялостни курсове по ветроходство, сертификати за яхти и професионално обучение за капитани. С над 15 години опит и сертифицирани инструктори, ние предоставяме практическо обучение в модерни плавателни съдове и най-съвременни съоръжения.',
-      specializations: currentLanguage === 'English'
+      specializations: language === 'English'
         ? ['RYA Certified Courses', 'Yacht Charter Qualifications', 'Advanced Navigation', 'Safety at Sea Training', 'VHF Radio Operator License']
         : ['RYA Сертифицирани Курсове', 'Квалификации за Чартър на Яхти', 'Напреднала Навигация', 'Обучение за Безопасност на Море', 'Лиценз за VHF Радио Оператор'],
       website: 'https://maritime-academy-bg.com',
@@ -51,10 +50,10 @@ export function PartnersPage({ onNavigate, language, selectedPartnerIndex = 0, i
     },
     {
       name: 'Black Sea Yacht Charters',
-      description: currentLanguage === 'English' 
+      description: language === 'English' 
         ? 'Premium yacht charter service with a fleet of modern sailing and motor yachts. We offer bareboat and skippered charters along the Bulgarian and Greek coastlines. Perfect for practicing your newly acquired skills in real-world conditions.'
         : 'Премиум услуга за чартър на яхти с флот от модерни ветроходни и моторни яхти. Предлагаме чартър без екипаж и със скипер по българското и гръцкото крайбрежие. Перфектно за практикуване на новопридобитите ви умения в реални условия.',
-      specializations: currentLanguage === 'English'
+      specializations: language === 'English'
         ? ['Bareboat Charter', 'Skippered Charter', 'Sailing Holidays', 'Team Building Events', 'Corporate Charters']
         : ['Чартър без Екипаж', 'Чартър със Скипер', 'Ветроходни Ваканции', 'Тийм Билдинг Събития', 'Корпоративни Чартъри'],
       website: 'https://blacksea-yachts.com',
@@ -63,10 +62,10 @@ export function PartnersPage({ onNavigate, language, selectedPartnerIndex = 0, i
     },
     {
       name: 'Neptune Marine Equipment',
-      description: currentLanguage === 'English' 
+      description: language === 'English' 
         ? 'Your one-stop shop for all maritime safety and navigation equipment. We supply professional-grade gear for exam preparation including safety equipment, navigation tools, and communication devices. Special discounts for our partner exam students.'
         : 'Вашият магазин на едно място за всички морски безопасност и навигационно оборудване. Предлагаме професионално оборудване за подготовка за изпити, включително оборудване за безопасност, навигационни инструменти и комуникационни устройства. Специални отстъпки за студенти от партньорски изпити.',
-      specializations: currentLanguage === 'English'
+      specializations: language === 'English'
         ? ['Safety Equipment', 'Navigation Instruments', 'VHF Radios', 'Life Jackets & Safety Gear', 'Electronic Charts']
         : ['Оборудване за Безопасност', 'Навигационни Инструменти', 'VHF Радиостанции', 'Спасителни Жилетки', 'Електронни Карти'],
       website: 'https://neptune-marine.bg',
@@ -96,12 +95,6 @@ export function PartnersPage({ onNavigate, language, selectedPartnerIndex = 0, i
         onNavigate={handleNavigate}
         isLoggedIn={isLoggedIn}
         transparent={false}
-        language={currentLanguage}
-        onLanguageChange={setCurrentLanguage}
-        region={region}
-        onRegionChange={setRegion}
-        darkMode={darkMode}
-        onDarkModeToggle={toggleDarkMode}
       />
       
       <div className="min-h-screen pt-24 pb-20 bg-gradient-to-br from-slate-50 via-blue-50/50 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
@@ -199,10 +192,10 @@ export function PartnersPage({ onNavigate, language, selectedPartnerIndex = 0, i
             <CardContent className="p-8 text-center">
               <div className="text-4xl mb-3">🤝</div>
               <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">
-                {currentLanguage === 'English' ? 'Interested in Partnering?' : 'Интересувате ли се от партньорство?'}
+                {language === 'English' ? 'Interested in Partnering?' : 'Интересувате ли се от партньорство?'}
               </h3>
               <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 max-w-2xl mx-auto">
-                {currentLanguage === 'English' 
+                {language === 'English' 
                   ? 'We\'re always looking to collaborate with quality maritime training providers. Contact us to discuss partnership opportunities.'
                   : 'Винаги търсим да сътрудничим с качествени доставчици на морско обучение. Свържете се с нас, за да обсъдим възможности за партньорство.'}
               </p>
@@ -210,7 +203,7 @@ export function PartnersPage({ onNavigate, language, selectedPartnerIndex = 0, i
                 onClick={() => onNavigate('/contact')}
                 className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-md"
               >
-                {currentLanguage === 'English' ? 'Get in Touch' : 'Свържете се с нас'}
+                {language === 'English' ? 'Get in Touch' : 'Свържете се с нас'}
               </Button>
             </CardContent>
           </Card>

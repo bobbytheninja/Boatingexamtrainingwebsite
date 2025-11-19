@@ -5,10 +5,11 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Check, BookOpen, FileText, ArrowLeft } from 'lucide-react';
 import { ExamType, examData } from '../data/examQuestions';
-import { Language, getTranslation } from '../data/translations';
+import { getTranslation } from '../data/translations';
 import { Navigation } from './Navigation';
 import { Footer } from './Footer';
 import { useDarkMode } from '../contexts/DarkModeContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'sonner@2.0.3';
 
@@ -19,9 +20,8 @@ export function ExamModeSelection() {
   const { examType: examTypeParam } = useParams<{ examType: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { darkMode, toggleDarkMode } = useDarkMode();
-  const [language, setLanguage] = useState<Language>('English');
-  const [region, setRegion] = useState('Bulgaria');
+  const { darkMode } = useDarkMode();
+  const { language } = useLanguage();
   const t = getTranslation(language);
   
   const examType = examTypeParam as ExamType;
@@ -60,12 +60,6 @@ export function ExamModeSelection() {
         onNavigate={handleNavigate}
         isLoggedIn={!!user}
         transparent={false}
-        language={language}
-        onLanguageChange={setLanguage}
-        region={region}
-        onRegionChange={setRegion}
-        darkMode={darkMode}
-        onDarkModeToggle={toggleDarkMode}
       />
       
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 pt-24 pb-12 px-4">

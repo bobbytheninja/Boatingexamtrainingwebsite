@@ -1,0 +1,98 @@
+╔══════════════════════════════════════════════════════════════════════════╗
+║                                                                          ║
+║                       🚨 SEEING AN ERROR? START HERE 🚨                   ║
+║                                                                          ║
+╚══════════════════════════════════════════════════════════════════════════╝
+
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│ YOUR ERROR:                                                              │
+│                                                                          │
+│   [ExamPage] Failed to load mock questions                              │
+│   ⚠️ Using demo questions. For real exam questions...                   │
+│                                                                          │
+└──────────────────────────────────────────────────────────────────────────┘
+
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│ WHY?                                                                     │
+│                                                                          │
+│   Backend server not deployed yet.                                      │
+│   Your code is ready, but the server needs to be launched!              │
+│                                                                          │
+└──────────────────────────────────────────────────────────────────────────┘
+
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│ FIX IT IN 5 MINUTES:                                                     │
+│                                                                          │
+│   1. Open Terminal/Command Prompt                                       │
+│   2. Navigate to your project folder                                    │
+│   3. Run:                                                                │
+│                                                                          │
+│      Mac/Linux:                                                          │
+│      -----------                                                         │
+│      chmod +x deploy-backend.sh                                          │
+│      ./deploy-backend.sh                                                 │
+│                                                                          │
+│      Windows:                                                            │
+│      ---------                                                           │
+│      deploy-backend.bat                                                  │
+│                                                                          │
+│   4. When asked for admin key, type: YachtAdmin2024!                    │
+│   5. Wait for "Deployment Complete"                                      │
+│   6. Done! ✅                                                             │
+│                                                                          │
+└──────────────────────────────────────────────────────────────────────────┘
+
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│ TEST IT WORKED:                                                          │
+│                                                                          │
+│   Open this URL in your browser:                                        │
+│   https://abtrsjhvjfgcxxpkszwi.supabase.co/functions/v1/make-server-d36f8f91/health
+│                                                                          │
+│   Should show: {"status":"ok",...}                                       │
+│                                                                          │
+└──────────────────────────────────────────────────────────────────────────┘
+
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│ THEN IMPORT YOUR QUESTIONS:                                              │
+│                                                                          │
+│   1. Go to Admin Panel → Import Questions                               │
+│   2. Enter admin key: YachtAdmin2024!                                   │
+│   3. Select exam type (Jet Ski, etc.)                                   │
+│   4. Upload your Excel file                                              │
+│   5. Click "Import Questions"                                            │
+│   6. Repeat for all 5 exam types                                        │
+│                                                                          │
+└──────────────────────────────────────────────────────────────────────────┘
+
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│ RESULT:                                                                  │
+│                                                                          │
+│   ✅ Mock exams show questions 1-10 from YOUR Excel files               │
+│   ✅ No more warning messages                                            │
+│   ✅ Ready for production!                                               │
+│                                                                          │
+└──────────────────────────────────────────────────────────────────────────┘
+
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│ NEED MORE HELP?                                                          │
+│                                                                          │
+│   📄 QUICK_FIX.txt         - Fast solution                              │
+│   📄 ERROR_EXPLAINED.md    - Detailed explanation                       │
+│   📄 TROUBLESHOOTING.md    - Full debug guide                           │
+│   📄 FIXES_SUMMARY.md      - Technical details                          │
+│                                                                          │
+└──────────────────────────────────────────────────────────────────────────┘
+
+
+╔══════════════════════════════════════════════════════════════════════════╗
+║                                                                          ║
+║                    🚀 RUN: ./deploy-backend.sh NOW 🚀                     ║
+║                                                                          ║
+╚══════════════════════════════════════════════════════════════════════════╝

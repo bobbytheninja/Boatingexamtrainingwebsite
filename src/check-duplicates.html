@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check for Duplicate Questions</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2563eb;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #1d4ed8;
+        }
+        button:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+        }
+        button.danger {
+            background: #ef4444;
+        }
+        button.danger:hover {
+            background: #dc2626;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .success {
+            background: #d1fae5;
+            border: 1px solid #10b981;
+            color: #065f46;
+        }
+        .error {
+            background: #fee2e2;
+            border: 1px solid #ef4444;
+            color: #991b1b;
+        }
+        .warning {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            color: #92400e;
+        }
+        .info {
+            background: #dbeafe;
+            border: 1px solid #3b82f6;
+            color: #1e40af;
+        }
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #2563eb;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #2563eb;
+            color: white;
+        }
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        .duplicate-row {
+            background-color: #fee2e2;
+        }
+        .admin-section {
+            background: #fef3c7;
+            border: 2px solid #f59e0b;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Duplicate Questions Checker</h1>
+        <p class="subtitle">Check if questions were accidentally imported twice</p>
+        
+        <div>
+            <button onclick="checkDuplicates()">🔍 Check for Duplicates</button>
+            <button onclick="checkAllStats()">📊 Show All Stats</button>
+        </div>
+
+        <div id="results"></div>
+
+        <div id="cleanup-section" style="display: none;" class="admin-section">
+            <h3>⚠️ Duplicates Found - Cleanup Options</h3>
+            <p>It looks like some questions were imported more than once. You can clean this up:</p>
+            
+            <div style="margin-top: 20px;">
+                <label for="adminKey" style="display: block; margin-bottom: 10px;">Admin Key:</label>
+                <input type="password" id="adminKey" placeholder="Enter your admin import key" 
+                       style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 6px; margin-bottom: 15px;">
+                
+                <button class="danger" onclick="deleteAllAndReimport()">
+                    🗑️ Delete ALL Questions (You'll need to re-import)
+                </button>
+                
+                <p style="margin-top: 10px; font-size: 14px; color: #92400e;">
+                    <strong>Note:</strong> This will delete all questions from the database. 
+                    You'll need to re-import your Excel files (only once this time!).
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const projectId = 'abtrsjhvjfgcxxpkszwi';
+        const publicAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFidHJzamh2amZnY3h4cGtzendpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzExNTAzMjYsImV4cCI6MjA0NjcyNjMyNn0.gqoZFHrfpQ47RBBq7Sl14D3RBHG6vfIKJMKVJVSsRQE';
+        const baseUrl = `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91`;
+        const examTypes = ['jet', 'small', 'big', 'yacht', 'navigation'];
+
+        function showResult(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.innerHTML = message;
+            results.appendChild(div);
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        async function checkAllStats() {
+            clearResults();
+            showResult('📊 Fetching question statistics...', 'info');
+            
+            let totalQuestions = 0;
+            let statsHtml = '<table><tr><th>Exam Type</th><th>Question Count</th><th>Expected</th><th>Status</th></tr>';
+            
+            for (const examType of examTypes) {
+                try {
+                    const response = await fetch(`${baseUrl}/questions/${examType}/count`, {
+                        headers: { 'Authorization': `Bearer ${publicAnonKey}` }
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        const count = data.count || 0;
+                        totalQuestions += count;
+                        
+                        const expected = 120; // Assuming 120 questions per type
+                        const status = count === expected ? '✅' : 
+                                     count > expected ? '⚠️ Too many!' : 
+                                     count < expected ? '❓ Missing' : '?';
+                        
+                        const rowClass = count > expected ? 'duplicate-row' : '';
+                        statsHtml += `<tr class="${rowClass}">
+                            <td>${examType}</td>
+                            <td>${count}</td>
+                            <td>${expected}</td>
+                            <td>${status}</td>
+                        </tr>`;
+                    }
+                } catch (error) {
+                    console.error(`Error fetching ${examType}:`, error);
+                }
+            }
+            
+            statsHtml += `<tr style="font-weight: bold; background: #f0f0f0;">
+                <td>TOTAL</td>
+                <td>${totalQuestions}</td>
+                <td>${120 * examTypes.length}</td>
+                <td>${totalQuestions === 120 * examTypes.length ? '✅' : '⚠️'}</td>
+            </tr></table>`;
+            
+            showResult(statsHtml, totalQuestions > 600 ? 'warning' : 'success');
+            
+            if (totalQuestions > 600) {
+                showResult(`\n⚠️ DUPLICATES DETECTED!\n\nExpected: ${120 * examTypes.length} questions\nFound: ${totalQuestions} questions\n\nYou have ${totalQuestions - 600} extra questions in the database.`, 'error');
+                document.getElementById('cleanup-section').style.display = 'block';
+            } else {
+                showResult('\n✅ No duplicates detected! Question counts look good.', 'success');
+            }
+        }
+
+        async function checkDuplicates() {
+            clearResults();
+            showResult('🔍 Checking for duplicate questions by question text...', 'info');
+            
+            try {
+                const response = await fetch(`${baseUrl}/diagnostics/questions`, {
+                    headers: { 'Authorization': `Bearer ${publicAnonKey}` }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+                }
+                
+                const data = await response.json();
+                
+                // Analyze for duplicates
+                let duplicatesFound = false;
+                let analysisHtml = '<h3>Duplicate Analysis:</h3>';
+                
+                for (const [examType, info] of Object.entries(data.questions)) {
+                    const questions = info.sample || [];
+                    
+                    // Check for duplicate question texts
+                    const questionTexts = {};
+                    questions.forEach(q => {
+                        const text = q.questionText?.substring(0, 50);
+                        if (text) {
+                            questionTexts[text] = (questionTexts[text] || 0) + 1;
+                        }
+                    });
+                    
+                    const dups = Object.entries(questionTexts).filter(([_, count]) => count > 1);
+                    
+                    if (dups.length > 0) {
+                        duplicatesFound = true;
+                        analysisHtml += `\n<strong>${examType}:</strong> ${dups.length} questions appear multiple times in sample\n`;
+                    }
+                }
+                
+                if (!duplicatesFound) {
+                    showResult('✅ No obvious duplicates found in sample data!', 'success');
+                } else {
+                    showResult(analysisHtml, 'warning');
+                }
+                
+                // Also show the count-based check
+                await checkAllStats();
+                
+            } catch (error) {
+                showResult(`❌ Error checking duplicates: ${error.message}`, 'error');
+            }
+        }
+
+        async function deleteAllAndReimport() {
+            const adminKey = document.getElementById('adminKey').value;
+            
+            if (!adminKey) {
+                alert('Please enter your admin key!');
+                return;
+            }
+            
+            if (!confirm('⚠️ WARNING! This will DELETE ALL QUESTIONS from the database!\n\nYou will need to re-import all your Excel files.\n\nAre you absolutely sure?')) {
+                return;
+            }
+            
+            if (!confirm('Last chance! This cannot be undone. Continue?')) {
+                return;
+            }
+            
+            clearResults();
+            showResult('🗑️ Deleting all questions...', 'info');
+            
+            try {
+                const response = await fetch(`${baseUrl}/admin/delete-all-questions`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${publicAnonKey}`
+                    },
+                    body: JSON.stringify({ adminKey })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.message || 'Failed to delete questions');
+                }
+                
+                showResult(`✅ ${data.message}\n\nDeleted: ${data.deleted} questions\n\nNow go to Admin Panel → Import Questions to re-import your Excel files.`, 'success');
+                document.getElementById('cleanup-section').style.display = 'none';
+                
+                // Refresh stats
+                setTimeout(checkAllStats, 2000);
+                
+            } catch (error) {
+                showResult(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Auto-run on load
+        window.addEventListener('load', () => {
+            setTimeout(checkAllStats, 500);
+        });
+    </script>
+</body>
+</html>

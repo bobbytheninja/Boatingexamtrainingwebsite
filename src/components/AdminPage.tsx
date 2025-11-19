@@ -12,7 +12,7 @@ import { ArrowLeft, Database, Users, Key, UserPlus, AlertCircle, CheckCircle, Sh
 import { useAuth } from '../contexts/AuthContext';
 import { useDarkMode } from '../contexts/DarkModeContext';
 import { toast } from 'sonner@2.0.3';
-import { ButtonSpinner } from './LoadingSpinner';
+import { ButtonSpinner, LoadingSpinner } from './LoadingSpinner';
 import { projectId, publicAnonKey } from '../utils/supabase/info';
 import { Navigation } from './Navigation';
 import { Footer } from './Footer';
@@ -37,7 +37,11 @@ export function AdminPage({ onBack }: AdminPageProps) {
   const [adminKeyInput, setAdminKeyInput] = useState('');
   const [makingAdmin, setMakingAdmin] = useState(false);
   const [isAlreadyAdmin, setIsAlreadyAdmin] = useState(false);
-  const [checkingAdminStatus, setCheckingAdminStatus] = useState(false);
+  const [checkingAdminStatus, setCheckingAdminStatus] = useState(true); // Start as true to show loading
+  const [backendError, setBackendError] = useState<string | null>(null);
+
+  // Check if user is admin from user metadata
+  const userIsAdmin = user?.isAdmin || false;
 
   // Check admin status on mount
   useEffect(() => {
@@ -45,10 +49,13 @@ export function AdminPage({ onBack }: AdminPageProps) {
       if (!user || !accessToken) {
         setIsAlreadyAdmin(false);
         setCheckingAdminStatus(false);
+        setBackendError(null);
         return;
       }
       
       setCheckingAdminStatus(true);
+      setBackendError(null);
+      
       try {
         const response = await fetch(
           `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/check-admin`,
@@ -62,12 +69,19 @@ export function AdminPage({ onBack }: AdminPageProps) {
         if (response.ok) {
           const data = await response.json();
           setIsAlreadyAdmin(data.isAdmin || false);
+          setBackendError(null);
         } else {
           setIsAlreadyAdmin(false);
+          // Don't set error for 404 or unauthorized - just means not admin
+          if (response.status !== 404 && response.status !== 401 && response.status !== 403) {
+            setBackendError(`Backend returned status ${response.status}`);
+          }
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error checking admin status:', error);
         setIsAlreadyAdmin(false);
+        // Network error - backend probably not deployed
+        setBackendError(error.message || 'Backend connection failed');
       } finally {
         setCheckingAdminStatus(false);
       }
@@ -79,19 +93,69 @@ export function AdminPage({ onBack }: AdminPageProps) {
   const handleTestConnection = async () => {
     setTestingConnection(true);
     try {
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/health`
+      // Test 1: Health check
+      console.log('[Admin] Testing health endpoint...');
+      const healthResponse = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/health`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
       );
       
-      if (response.ok) {
-        const data = await response.json();
-        toast.success(`✅ Server is running! Status: ${data.status}`);
-      } else {
-        toast.error(`❌ Server responded with status ${response.status}`);
+      if (!healthResponse.ok) {
+        const errorText = await healthResponse.text().catch(() => 'No error details');
+        console.error('Server test failed:', healthResponse.status, errorText);
+        toast.error(`❌ Health check failed with status ${healthResponse.status}`);
+        return;
       }
+      
+      const healthData = await healthResponse.json();
+      console.log('[Admin] Health check passed:', healthData);
+      
+      // Test 2: Mock questions endpoint
+      console.log('[Admin] Testing mock questions endpoint...');
+      const mockResponse = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/questions/jet/mock`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      
+      let mockStatus = 'Unknown';
+      if (mockResponse.ok) {
+        const mockData = await mockResponse.json();
+        mockStatus = `Found ${mockData.questions?.length || 0} questions`;
+        console.log('[Admin] Mock questions test:', mockStatus);
+      } else if (mockResponse.status === 404) {
+        mockStatus = 'No questions imported yet';
+        console.log('[Admin] Mock questions test: No questions found (expected if not imported)');
+      } else {
+        mockStatus = `Error: ${mockResponse.status}`;
+        console.error('[Admin] Mock questions test failed:', mockResponse.status);
+      }
+      
+      // Success message with details
+      toast.success(`✅ Server is running!\n\nHealth: ${healthData.status}\nMock Questions: ${mockStatus}`, {
+        duration: 5000,
+      });
+      
     } catch (error: any) {
       console.error('Connection test error:', error);
-      toast.error(`❌ Cannot reach server: ${error.message}`);
+      
+      let errorMessage = error.message || 'Unknown error';
+      if (errorMessage.includes('Failed to fetch') || errorMessage.includes('NetworkError')) {
+        errorMessage = 'Cannot connect to backend. Is it deployed? Run: ./deploy-backend.sh';
+      }
+      
+      toast.error(`❌ Cannot reach server\n\n${errorMessage}`, {
+        duration: 7000,
+      });
     } finally {
       setTestingConnection(false);
     }
@@ -256,6 +320,40 @@ export function AdminPage({ onBack }: AdminPageProps) {
     }
   };
 
+  // Show loading state while checking admin status
+  if (checkingAdminStatus) {
+    return (
+      <>
+        <Navigation
+          currentPage="admin"
+          onNavigate={handleNavigate}
+          isLoggedIn={true}
+          transparent={false}
+          language={language}
+          onLanguageChange={setLanguage}
+          region={region}
+          onRegionChange={setRegion}
+          darkMode={darkMode}
+          onDarkModeToggle={toggleDarkMode}
+        />
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/50 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 pt-24 pb-12 px-4">
+          <div className="container mx-auto max-w-6xl flex items-center justify-center min-h-[60vh]">
+            <Card className="max-w-md w-full dark:bg-slate-700 dark:border-slate-600">
+              <CardContent className="pt-6 flex flex-col items-center space-y-4">
+                <LoadingSpinner size="lg" />
+                <h3 className="text-xl dark:text-gray-100">Loading Admin Panel...</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
+                  Checking admin permissions
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+        <Footer />
+      </>
+    );
+  }
+
   return (
     <>
       <Navigation
@@ -305,6 +403,49 @@ export function AdminPage({ onBack }: AdminPageProps) {
           </div>
         </div>
 
+        {/* Backend Error Alert */}
+        {backendError && (
+          <Alert className="mb-6 border-red-500 bg-red-50 dark:bg-red-900/20 dark:border-red-700">
+            <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
+            <AlertDescription className="text-red-900 dark:text-red-200">
+              <strong className="block mb-2">⚠️ Backend Connection Error</strong>
+              <p className="text-sm mb-2">
+                Could not connect to the backend server: {backendError}
+              </p>
+              <p className="text-sm mb-3">
+                This usually means the backend hasn't been deployed yet. Please deploy the backend by running:
+              </p>
+              <div className="bg-gray-900 text-green-400 p-3 rounded font-mono text-xs mb-3">
+                ./deploy-backend.sh
+              </div>
+              <p className="text-xs">
+                Note: You can still use the Admin Panel, but some features may not work until the backend is deployed.
+              </p>
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Limited Access Notice for Non-Admin Users */}
+        {user && !userIsAdmin && !backendError && (
+          <Alert className="mb-6 border-yellow-500 bg-yellow-50 dark:bg-yellow-900/20 dark:border-yellow-700">
+            <Shield className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+            <AlertDescription className="text-yellow-900 dark:text-yellow-200">
+              <strong className="block mb-2">⚠️ Limited Access</strong>
+              <p className="text-sm mb-2">
+                You currently have limited access to the admin panel. To unlock all admin features:
+              </p>
+              <ol className="text-sm space-y-1 ml-5 list-decimal">
+                <li>Go to the <strong>"API Keys"</strong> tab below</li>
+                <li>Enter the admin key in the "Grant Admin Access" section</li>
+                <li>Click "Make Me An Admin"</li>
+              </ol>
+              <p className="text-xs mt-2">
+                💡 Default admin key: <code className="bg-yellow-100 dark:bg-yellow-900/40 px-1 rounded">change-this-key</code>
+              </p>
+            </AlertDescription>
+          </Alert>
+        )}
+
         {/* Important Notice */}
         {!user ? (
           <Alert className="mb-6 border-amber-500 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-700">
@@ -320,35 +461,41 @@ export function AdminPage({ onBack }: AdminPageProps) {
               </ul>
             </AlertDescription>
           </Alert>
-        ) : (
+        ) : userIsAdmin ? (
           <Alert className="mb-6 border-purple-500 bg-purple-50 dark:bg-purple-900/20 dark:border-purple-700">
             <Shield className="h-5 w-5 text-purple-600 dark:text-purple-400" />
             <AlertDescription className="text-purple-900 dark:text-purple-200">
-              <strong className="block mb-1">🛡️ Admin Setup Required</strong>
+              <strong className="block mb-1">🛡️ Admin Access Granted</strong>
               <p className="text-sm mb-2">
-                To access the full admin features (User Management, license control), go to the <strong>API Keys</strong> tab and grant yourself admin access using the admin key.
+                You have full admin access. Use the tabs below to manage users, grant licenses, import questions, and configure the platform.
               </p>
               <p className="text-xs text-purple-800 dark:text-purple-300">
-                💡 Once you're an admin, you'll see a "Manage Users" tab where you can control all user licenses.
+                💡 Visit the "Manage Users" tab to control user licenses and the "Questions" tab to import exam questions.
               </p>
             </AlertDescription>
           </Alert>
-        )}
+        ) : null}
 
-        <Tabs defaultValue="diagnostics" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 max-w-4xl mx-auto">
-            <TabsTrigger value="diagnostics">
-              <AlertCircle className="w-4 h-4 mr-2" />
-              Diagnostics
-            </TabsTrigger>
-            <TabsTrigger value="import">
-              <Database className="w-4 h-4 mr-2" />
-              Import Questions
-            </TabsTrigger>
-            <TabsTrigger value="users">
-              <Users className="w-4 h-4 mr-2" />
-              Manage Users
-            </TabsTrigger>
+        {/* Show admin panel to all logged-in users, but limit features based on admin status */}
+        {user && (
+        <Tabs defaultValue={userIsAdmin ? "diagnostics" : "keys"} className="space-y-6">
+          <TabsList className={`grid w-full max-w-4xl mx-auto ${userIsAdmin ? 'grid-cols-5' : 'grid-cols-2'}`}>
+            {userIsAdmin && (
+              <>
+                <TabsTrigger value="diagnostics">
+                  <AlertCircle className="w-4 h-4 mr-2" />
+                  Diagnostics
+                </TabsTrigger>
+                <TabsTrigger value="import">
+                  <Database className="w-4 h-4 mr-2" />
+                  Import Questions
+                </TabsTrigger>
+                <TabsTrigger value="users">
+                  <Users className="w-4 h-4 mr-2" />
+                  Manage Users
+                </TabsTrigger>
+              </>
+            )}
             <TabsTrigger value="test">
               <UserPlus className="w-4 h-4 mr-2" />
               Test Auth
@@ -359,17 +506,21 @@ export function AdminPage({ onBack }: AdminPageProps) {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="diagnostics">
-            <DatabaseDiagnostics />
-          </TabsContent>
+          {userIsAdmin && (
+            <>
+              <TabsContent value="diagnostics">
+                <DatabaseDiagnostics />
+              </TabsContent>
 
-          <TabsContent value="import">
-            <QuestionImporter />
-          </TabsContent>
+              <TabsContent value="import">
+                <QuestionImporter />
+              </TabsContent>
 
-          <TabsContent value="users">
-            <UserManagement />
-          </TabsContent>
+              <TabsContent value="users">
+                <UserManagement />
+              </TabsContent>
+            </>
+          )}
 
           <TabsContent value="test">
             <Card className="dark:bg-slate-700 dark:border-slate-600">
@@ -673,6 +824,7 @@ export function AdminPage({ onBack }: AdminPageProps) {
             </Card>
           </TabsContent>
         </Tabs>
+        )}
       </div>
     </div>
     

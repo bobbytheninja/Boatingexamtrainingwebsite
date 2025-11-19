@@ -4,10 +4,11 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { User, Calendar, CreditCard, Package, ArrowLeft, Trash2 } from 'lucide-react';
 import { ExamType, examData } from '../data/examQuestions';
-import { Language, getTranslation } from '../data/translations';
+import { getTranslation } from '../data/translations';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
 import { useAuth } from '../contexts/AuthContext';
 import { useDarkMode } from '../contexts/DarkModeContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { toast } from 'sonner@2.0.3';
 import { ButtonSpinner } from './LoadingSpinner';
 import { Navigation } from './Navigation';
@@ -16,29 +17,36 @@ import { Footer } from './Footer';
 interface AccountPageProps {
   userEmail: string;
   paidExams: ExamType[];
+  subscriptionExpiresAt?: number | null;
   onNavigate: (page: string) => void;
   onStartExam: (examType: ExamType, mode?: 'exam' | 'study') => void;
   onLogout: () => void;
-  language: Language;
 }
 
-export function AccountPage({ userEmail, paidExams, onNavigate, onStartExam, onLogout, language }: AccountPageProps) {
+export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNavigate, onStartExam, onLogout }: AccountPageProps) {
+  const { language } = useLanguage();
   const t = getTranslation(language);
   const { deleteAccount } = useAuth();
-  const { darkMode, toggleDarkMode } = useDarkMode();
+  const { darkMode } = useDarkMode();
   const [isDeleting, setIsDeleting] = useState(false);
-  const [currentLanguage, setCurrentLanguage] = useState<Language>(language);
-  const [region, setRegion] = useState('Bulgaria');
   
-  // Calculate expiry dates (30 days from now for demo)
+  // Calculate expiry dates from the subscriptionExpiresAt timestamp
   const getExpiryDate = () => {
-    const date = new Date();
-    date.setDate(date.getDate() + 30);
+    if (!subscriptionExpiresAt) {
+      return 'N/A';
+    }
+    const date = new Date(subscriptionExpiresAt);
     return date.toLocaleDateString(language === 'English' ? 'en-US' : 'bg-BG', { year: 'numeric', month: 'long', day: 'numeric' });
   };
 
   const getDaysRemaining = () => {
-    return 30; // Demo: 30 days remaining
+    if (!subscriptionExpiresAt) {
+      return 0;
+    }
+    const now = Date.now();
+    const diffInMs = subscriptionExpiresAt - now;
+    const daysRemaining = Math.ceil(diffInMs / (24 * 60 * 60 * 1000));
+    return Math.max(0, daysRemaining);
   };
 
   const handleDeleteAccount = async () => {
@@ -80,12 +88,6 @@ export function AccountPage({ userEmail, paidExams, onNavigate, onStartExam, onL
         onNavigate={handleNavigate}
         isLoggedIn={true}
         transparent={false}
-        language={currentLanguage}
-        onLanguageChange={setCurrentLanguage}
-        region={region}
-        onRegionChange={setRegion}
-        darkMode={darkMode}
-        onDarkModeToggle={toggleDarkMode}
       />
       
       <div className="min-h-screen pt-24 pb-20 bg-gradient-to-br from-slate-50 via-blue-50/50 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
@@ -136,7 +138,7 @@ export function AccountPage({ userEmail, paidExams, onNavigate, onStartExam, onL
               <Card className="border-2 border-blue-200 dark:border-blue-800 bg-gradient-to-br from-blue-50 to-white dark:from-blue-900/30 dark:to-slate-700 shadow-xl">
                 <CardContent className="pt-6 space-y-4">
                   <Button
-                    onClick={() => onNavigate('pricing')}
+                    onClick={() => onNavigate('/payment')}
                     className="w-full bg-gradient-to-r from-sky-500 via-sky-600 to-blue-600 hover:from-sky-600 hover:via-sky-700 hover:to-blue-700 shadow-lg font-semibold"
                   >
                     <Package className="w-4 h-4 mr-2" />
@@ -164,7 +166,7 @@ export function AccountPage({ userEmail, paidExams, onNavigate, onStartExam, onL
                   <p className="text-sm text-gray-700 dark:text-gray-300">
                     {language === 'English' 
                       ? 'Once you delete your account, there is no going back. All your data including subscriptions, exam results, and progress will be permanently deleted.' 
-                      : 'След като изтриете акаунта си, няма връщане назад. Всички ваши данни включително абонаменти, резултати от изпити и прогрес ��е бъдат перманентно изтрити.'}
+                      : 'След като изтриете акаунта си, няма връщане назад. Всички ваши данни включително абонаменти, резултати от изпити и прогрес е бъдат перманентно изтрити.'}
                   </p>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
@@ -288,14 +290,14 @@ export function AccountPage({ userEmail, paidExams, onNavigate, onStartExam, onL
                                   <Button
                                     onClick={() => onStartExam(examType, 'exam')}
                                     variant="outline"
-                                    className="border-2 border-sky-600 text-sky-700 hover:bg-sky-50 dark:border-sky-500 dark:text-sky-400 dark:hover:bg-sky-900/30 font-semibold whitespace-nowrap"
+                                    className="border-2 border-blue-500 bg-orange-50/60 text-orange-700 hover:bg-orange-100/80 dark:border-blue-400 dark:bg-orange-900/20 dark:text-orange-400 dark:hover:bg-orange-900/40 font-semibold whitespace-nowrap"
                                   >
                                     {t.startExam}
                                   </Button>
                                   <Button
                                     onClick={() => onStartExam(examType, 'study')}
                                     variant="outline"
-                                    className="border-2 border-emerald-600 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-500 dark:text-emerald-400 dark:hover:bg-emerald-900/30 font-semibold whitespace-nowrap"
+                                    className="border-2 border-blue-500 text-blue-700 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-900/30 font-semibold whitespace-nowrap"
                                   >
                                     {t.startStudy}
                                   </Button>

@@ -2,14 +2,30 @@
 
 A comprehensive web application for yacht exam training with multiple exam categories, payment integration, and question management.
 
+## 📚 **Documentation Guide**
+
+Choose the guide that matches what you want to do:
+
+### 🏠 Working Locally (Development)
+- **[README.md](./README.md)** ← You are here! Local development guide
+
+### 🌐 Host on the Web (Production)
+- **[HOSTING_GUIDE.md](./HOSTING_GUIDE.md)** ⭐ **START HERE** - One guide to rule them all!
+- **[DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md)** - Detailed technical guide (2+ hours)
+- **[QUICK_START.md](./QUICK_START.md)** - Speed run version (30 min)
+
+### ✅ Before You Launch
+- **[PRE_LAUNCH_CHECKLIST.md](./PRE_LAUNCH_CHECKLIST.md)** - Final checklist before going live
+
 ---
 
-## ✅ Latest Fix (Just Applied)
+## 🚨 First Time Here?
 
-**Fixed:** "Missing authorization header" error during signup
-- The signup request now properly includes the Authorization header
-- Demo account creation should work correctly now
-- Test it: Admin → Test Auth → Create Demo Account
+**If you want to host this on the web RIGHT NOW:**
+👉 **[Read HOSTING_GUIDE.md](./HOSTING_GUIDE.md)** 👈
+
+**If you're just testing locally:**
+Keep reading this file!
 
 ---
 

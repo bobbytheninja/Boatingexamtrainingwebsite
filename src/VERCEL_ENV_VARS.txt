@@ -1,0 +1,33 @@
+========================================
+VERCEL ENVIRONMENT VARIABLES
+Copy these exactly when deploying to Vercel
+========================================
+
+Variable 1:
+-----------
+Name:  VITE_SUPABASE_URL
+Value: https://abtrsjhvjfgcxxpkszwi.supabase.co
+
+
+Variable 2:
+-----------
+Name:  VITE_SUPABASE_ANON_KEY
+Value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFidHJzamh2amZnY3h4cGtzendpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIwOTgwODcsImV4cCI6MjA3NzY3NDA4N30.V6JxIrjjr3b1rxcdpNrrCEgh-cOuEl9HIAMDMHSOZWw
+
+
+Variable 3:
+-----------
+Name:  VITE_STRIPE_PUBLISHABLE_KEY
+Value: pk_test_51SP7XPQyfKnmTYnIk5mOWeTqsekl04C6gydyJLZRMHW8nPHdcImcybnUiIQjz92YFurcOjA0ul9BUAyAoxtECp6h00nsPAZvho
+
+
+========================================
+IMPORTANT NOTES:
+========================================
+
+1. Add ALL THREE variables in Vercel
+2. Make sure there are NO extra spaces
+3. Apply to: Production, Preview, and Development
+4. After adding, click "Deploy" to rebuild
+
+========================================

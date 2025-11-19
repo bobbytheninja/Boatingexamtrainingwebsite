@@ -2,6 +2,8 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useParams, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { DarkModeProvider, useDarkMode } from './contexts/DarkModeContext';
+import { LanguageProvider } from './contexts/LanguageContext';
+import { RegionProvider } from './contexts/RegionContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Toaster } from './components/ui/sonner';
 import { LoginPage } from './components/LoginPage';
@@ -34,7 +36,6 @@ function LoadingFallback() {
 // Wrapper for LoginPage that provides required props
 function LoginPageWrapper() {
   const navigate = useNavigate();
-  const [language] = React.useState<Language>('English');
 
   const handleLogin = () => {
     navigate('/account');
@@ -44,34 +45,31 @@ function LoginPageWrapper() {
     navigate(page === 'home' ? '/' : `/${page}`);
   };
 
-  return <LoginPage onLogin={handleLogin} onNavigate={handleNavigate} language={language} />;
+  return <LoginPage onLogin={handleLogin} onNavigate={handleNavigate} />;
 }
 
 // Wrapper for PricingPage
 function PricingPageWrapper() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [language] = React.useState<Language>('English');
 
-  return <PricingPage onNavigate={navigate} isLoggedIn={!!user} language={language} />;
+  return <PricingPage onNavigate={navigate} isLoggedIn={!!user} />;
 }
 
 // Wrapper for PartnersPage
 function PartnersPageWrapper() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [language] = React.useState<Language>('English');
 
-  return <PartnersPage onNavigate={navigate} language={language} isLoggedIn={!!user} />;
+  return <PartnersPage onNavigate={navigate} isLoggedIn={!!user} />;
 }
 
 // Wrapper for ContactPage
 function ContactPageWrapper() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [language] = React.useState<Language>('English');
 
-  return <ContactPage onNavigate={navigate} language={language} isLoggedIn={!!user} />;
+  return <ContactPage onNavigate={navigate} isLoggedIn={!!user} />;
 }
 
 // Wrapper for ExamPage
@@ -79,7 +77,6 @@ function ExamPageWrapper() {
   const { examType } = useParams<{ examType: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  const [language] = React.useState<Language>('English');
   
   // Get mode and tier from location state
   const mode = (location.state as any)?.mode || 'study';
@@ -98,14 +95,34 @@ function ExamPageWrapper() {
     navigate('/payment');
   };
 
+  const handleNavigate = (page: string) => {
+    if (page === 'home') {
+      navigate('/');
+    } else if (page === 'account') {
+      navigate('/account');
+    } else if (page === 'contact') {
+      navigate('/contact');
+    } else if (page === 'partners') {
+      navigate('/partners');
+    } else if (page === 'pricing') {
+      navigate('/pricing');
+    } else if (page === 'admin') {
+      navigate('/admin');
+    } else if (page === 'login') {
+      navigate('/login');
+    } else {
+      navigate(`/${page}`);
+    }
+  };
+
   return (
     <ExamPage
       examType={examType as any}
       mode={mode}
       tier={tier}
       onBackToHome={handleBackToHome}
+      onNavigate={handleNavigate}
       onNeedPayment={handleNeedPayment}
-      language={language}
     />
   );
 }
@@ -114,7 +131,6 @@ function ExamPageWrapper() {
 function AccountPageWrapper() {
   const navigate = useNavigate();
   const { user, signOut, loading } = useAuth();
-  const [language] = React.useState<Language>('English');
 
   // Show loading state while checking auth
   if (loading) {
@@ -133,17 +149,23 @@ function AccountPageWrapper() {
   };
 
   const handleStartExam = (examType: any, mode?: 'exam' | 'study') => {
-    navigate(`/exam-mode/${examType}`);
+    // Navigate directly to the exam with full access (paid tier) and specified mode
+    navigate(`/exam/${examType}`, { 
+      state: { 
+        mode: mode || 'exam',
+        tier: 'paid' 
+      } 
+    });
   };
 
   return (
     <AccountPage
       userEmail={user.email}
       paidExams={user.subscriptions}
+      subscriptionExpiresAt={user.subscriptionExpiresAt}
       onNavigate={navigate}
       onStartExam={handleStartExam}
       onLogout={handleLogout}
-      language={language}
     />
   );
 }
@@ -151,6 +173,21 @@ function AccountPageWrapper() {
 // Wrapper for AdminPage
 function AdminPageWrapper() {
   const navigate = useNavigate();
+  const { user, loading } = useAuth();
+
+  // Show loading state while checking auth
+  if (loading) {
+    return <LoadingFallback />;
+  }
+
+  // Redirect to login if not authenticated
+  if (!user) {
+    navigate('/login');
+    return null;
+  }
+
+  // Don't check isAdmin here - let AdminPage handle it internally
+  // This allows the admin panel to show helpful error messages
 
   const handleBack = () => {
     navigate('/home');
@@ -194,7 +231,6 @@ function PaymentPageWrapper() {
 function ExamReviewPageWrapper() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [language] = React.useState<Language>('English');
 
   // Get review data from location state
   const reviewData = (location.state as any) || {};
@@ -216,7 +252,6 @@ function ExamReviewPageWrapper() {
       examQuestions={reviewData.examQuestions}
       answeredQuestions={reviewData.answeredQuestions}
       onBackToHome={handleBackToHome}
-      language={language}
     />
   );
 }
@@ -371,9 +406,13 @@ function App() {
     <ErrorBoundary>
       <AuthProvider>
         <DarkModeProvider>
-          <BrowserRouter>
-            <AppContent />
-          </BrowserRouter>
+          <LanguageProvider>
+            <RegionProvider>
+              <BrowserRouter>
+                <AppContent />
+              </BrowserRouter>
+            </RegionProvider>
+          </LanguageProvider>
         </DarkModeProvider>
       </AuthProvider>
     </ErrorBoundary>

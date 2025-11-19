@@ -12,8 +12,8 @@ export function Footer() {
   const t = getTranslation(language);
   const currentYear = new Date().getFullYear();
   
-  // Check if user is admin (you can adjust this logic)
-  const isAdmin = user?.email === 'admin@yachtexamtrainer.com';
+  // Check if user is admin
+  const isAdmin = user?.isAdmin || false;
 
   return (
     <footer className="bg-slate-100 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 py-6">
@@ -57,13 +57,13 @@ export function Footer() {
 
             {/* Policy Links */}
             <div className="flex items-center gap-3 text-gray-600 dark:text-gray-400">
-              {user && (
+              {isAdmin && (
                 <>
                   <button
                     onClick={() => navigate('/admin')}
                     className="hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors flex items-center gap-1"
                   >
-                    {isAdmin && <span className="text-purple-500">🛡️</span>}
+                    <span className="text-purple-500">🛡️</span>
                     Admin
                   </button>
                   <span className="text-gray-300 dark:text-gray-600">|</span>
