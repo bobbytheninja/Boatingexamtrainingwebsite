@@ -20,6 +20,7 @@ import { PartnersPage } from './components/PartnersPage';
 import { PricingPage } from './components/PricingPage';
 import { Language } from './data/translations';
 import { AppDiagnostics } from './components/AppDiagnostics';
+import { ApiTest } from './pages/ApiTest';
 
 // Simple loading component
 function LoadingFallback() {
@@ -306,6 +307,7 @@ function AppContent() {
         <Route path="/pricing" element={<PricingPageWrapper />} />
         <Route path="/partners" element={<PartnersPageWrapper />} />
         <Route path="/contact" element={<ContactPageWrapper />} />
+        <Route path="/api-test" element={<ApiTest />} />
         
         {/* Redirect /home to root */}
         <Route path="/home" element={<Navigate to="/" replace />} />
