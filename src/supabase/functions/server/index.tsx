@@ -1021,6 +1021,8 @@ app.get("/make-server-d36f8f91/diagnostics/questions", async (c) => {
             id: q.id,
             questionText: q.questionText?.substring(0, 100) || 'No text',
             examType: q.examType,
+            imageUrl: q.imageUrl || 'No image',
+            hasImage: !!q.imageUrl,
           };
         }
       }

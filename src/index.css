@@ -1942,6 +1942,10 @@
     border-color: var(--color-teal-300);
   }
 
+  .border-teal-500 {
+    border-color: var(--color-teal-500);
+  }
+
   .border-transparent {
     border-color: #0000;
   }
