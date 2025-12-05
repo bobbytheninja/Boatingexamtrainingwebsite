@@ -116,6 +116,26 @@ export const api = {
     );
   },
 
+  updateQuestionImages: async (examType: string, imageLinks: { questionNumber: number; url: string }[], adminKey: string) => {
+    return apiCall<{ message: string; updated: number }>(
+      '/questions/update-images',
+      {
+        method: 'POST',
+        body: JSON.stringify({ examType, imageLinks, adminKey }),
+      }
+    );
+  },
+
+  uploadImage: async (examType: string, questionNumber: number, base64Data: string, fileExt: string, mimeType: string, adminKey: string) => {
+    return apiCall<{ url: string; message: string }>(
+      '/images/upload',
+      {
+        method: 'POST',
+        body: JSON.stringify({ examType, questionNumber, base64Data, fileExt, mimeType, adminKey }),
+      }
+    );
+  },
+
   // Subscription endpoints
   getSubscriptions: async (token: string) => {
     return apiCall<{ subscriptions: string[] }>(

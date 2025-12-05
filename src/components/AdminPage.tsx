@@ -4,11 +4,14 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
 import { Alert, AlertDescription } from './ui/alert';
 import { QuestionImporter } from './QuestionImporter';
+import { ImageUploader } from './ImageUploader';
+import { ImageDiagnostics } from './ImageDiagnostics';
 import { UserManagement } from './UserManagement';
 import { DatabaseDiagnostics } from './DatabaseDiagnostics';
-import { ArrowLeft, Database, Users, Key, UserPlus, AlertCircle, CheckCircle, Shield } from 'lucide-react';
+import { ArrowLeft, Database, Users, Key, UserPlus, AlertCircle, CheckCircle, Shield, Image as ImageIcon } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useDarkMode } from '../contexts/DarkModeContext';
 import { toast } from 'sonner@2.0.3';
@@ -479,41 +482,117 @@ export function AdminPage({ onBack }: AdminPageProps) {
         {/* Show admin panel to all logged-in users, but limit features based on admin status */}
         {user && (
         <Tabs defaultValue={userIsAdmin ? "diagnostics" : "keys"} className="space-y-6">
-          <TabsList className={`grid w-full max-w-4xl mx-auto ${userIsAdmin ? 'grid-cols-5' : 'grid-cols-2'}`}>
+          <TabsList className={`grid w-full max-w-4xl mx-auto gap-2 ${userIsAdmin ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-5' : 'grid-cols-1 sm:grid-cols-2'} h-auto`}>
             {userIsAdmin && (
               <>
-                <TabsTrigger value="diagnostics">
-                  <AlertCircle className="w-4 h-4 mr-2" />
-                  Diagnostics
+                <TabsTrigger value="diagnostics" className="flex items-center justify-center gap-2">
+                  <AlertCircle className="w-4 h-4" />
+                  <span className="hidden sm:inline">Diagnostics</span>
+                  <span className="sm:hidden">Diag</span>
                 </TabsTrigger>
-                <TabsTrigger value="import">
-                  <Database className="w-4 h-4 mr-2" />
-                  Import Questions
+                <TabsTrigger value="import" className="flex items-center justify-center gap-2">
+                  <Database className="w-4 h-4" />
+                  <span className="hidden sm:inline">Import Questions</span>
+                  <span className="sm:hidden">Import</span>
                 </TabsTrigger>
-                <TabsTrigger value="users">
-                  <Users className="w-4 h-4 mr-2" />
-                  Manage Users
+                <TabsTrigger value="users" className="flex items-center justify-center gap-2">
+                  <Users className="w-4 h-4" />
+                  <span className="hidden sm:inline">Manage Users</span>
+                  <span className="sm:hidden">Users</span>
                 </TabsTrigger>
               </>
             )}
-            <TabsTrigger value="test">
-              <UserPlus className="w-4 h-4 mr-2" />
-              Test Auth
+            <TabsTrigger value="keys" className="flex items-center justify-center gap-2">
+              <Key className="w-4 h-4" />
+              <span className="hidden sm:inline">Admin Keys</span>
+              <span className="sm:hidden">Keys</span>
             </TabsTrigger>
-            <TabsTrigger value="keys">
-              <Key className="w-4 h-4 mr-2" />
-              API Keys
+            <TabsTrigger value="demo" className="flex items-center justify-center gap-2">
+              <UserPlus className="w-4 h-4" />
+              <span className="hidden sm:inline">Demo Accounts</span>
+              <span className="sm:hidden">Demo</span>
             </TabsTrigger>
           </TabsList>
 
           {userIsAdmin && (
             <>
               <TabsContent value="diagnostics">
-                <DatabaseDiagnostics />
+                <div className="space-y-4">
+                  <DatabaseDiagnostics />
+                  
+                  {/* Quick Link to Image Diagnostics */}
+                  <Card className="border-2 border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-950/30">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        🖼️ Image Diagnostics
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm mb-4">
+                        Check if images are properly saved and displaying in questions.
+                      </p>
+                      <Button
+                        onClick={() => window.open('/image-diagnostics', '_blank')}
+                        className="w-full"
+                        variant="default"
+                      >
+                        Open Image Diagnostics Page
+                      </Button>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                        Or manually visit: <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">/image-diagnostics</code>
+                      </p>
+                    </CardContent>
+                  </Card>
+                </div>
               </TabsContent>
 
               <TabsContent value="import">
-                <QuestionImporter />
+                <Accordion type="single" collapsible className="space-y-4">
+                  <AccordionItem value="questions" className="border border-gray-200 dark:border-gray-700 rounded-lg px-4">
+                    <AccordionTrigger className="hover:no-underline">
+                      <div className="flex items-center gap-3">
+                        <Database className="w-5 h-5 text-blue-500" />
+                        <div className="text-left">
+                          <h3 className="font-semibold">📊 Import Questions from Excel</h3>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">Upload Excel files to import exam questions</p>
+                        </div>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <QuestionImporter />
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="images" className="border border-gray-200 dark:border-gray-700 rounded-lg px-4">
+                    <AccordionTrigger className="hover:no-underline">
+                      <div className="flex items-center gap-3">
+                        <ImageIcon className="w-5 h-5 text-purple-500" />
+                        <div className="text-left">
+                          <h3 className="font-semibold">🖼️ Upload Question Images</h3>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">Link images to questions by question number</p>
+                        </div>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <ImageUploader />
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="diagnostics" className="border border-gray-200 dark:border-gray-700 rounded-lg px-4">
+                    <AccordionTrigger className="hover:no-underline">
+                      <div className="flex items-center gap-3">
+                        <AlertCircle className="w-5 h-5 text-green-500" />
+                        <div className="text-left">
+                          <h3 className="font-semibold">🔍 Check Image Status</h3>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">Verify if images are properly uploaded and linked</p>
+                        </div>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <ImageDiagnostics />
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
               </TabsContent>
 
               <TabsContent value="users">
@@ -522,7 +601,7 @@ export function AdminPage({ onBack }: AdminPageProps) {
             </>
           )}
 
-          <TabsContent value="test">
+          <TabsContent value="demo">
             <Card className="dark:bg-slate-700 dark:border-slate-600">
               <CardHeader>
                 <CardTitle className="dark:text-gray-100">Test Authentication</CardTitle>

@@ -20,8 +20,8 @@ import { PartnersPage } from './components/PartnersPage';
 import { PricingPage } from './components/PricingPage';
 import { Language } from './data/translations';
 import { AppDiagnostics } from './components/AppDiagnostics';
-import { ApiTest } from './pages/ApiTest';
-import { ImageDiagnostics } from './pages/ImageDiagnostics';
+import { ApiTest } from './components/ApiTest';
+import { ImageDiagnostics } from './components/ImageDiagnostics';
 
 // Simple loading component
 function LoadingFallback() {

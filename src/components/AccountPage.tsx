@@ -30,6 +30,17 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
   const { darkMode } = useDarkMode();
   const [isDeleting, setIsDeleting] = useState(false);
   
+  // Debug logging
+  React.useEffect(() => {
+    console.log('[AccountPage] Mounted with props:', {
+      userEmail,
+      paidExams,
+      subscriptionExpiresAt,
+      language,
+      darkMode
+    });
+  }, [userEmail, paidExams, subscriptionExpiresAt, language, darkMode]);
+
   // Calculate expiry dates from the subscriptionExpiresAt timestamp
   const getExpiryDate = () => {
     if (!subscriptionExpiresAt) {

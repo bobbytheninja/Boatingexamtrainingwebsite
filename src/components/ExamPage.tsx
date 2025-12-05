@@ -17,7 +17,8 @@ import {
   Home, 
   Clock, 
   AlertCircle,
-  BookOpen
+  BookOpen,
+  RefreshCw
 } from 'lucide-react';
 import { ExamType, examData, Question } from '../data/examQuestions';
 import { ExamMode, ExamTier } from './ExamModeSelection';
@@ -155,10 +156,8 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
           console.log(`[ExamPage] Received ${response.questions?.length || 0} mock questions from API`);
           
           if (!response.questions || response.questions.length === 0) {
-            // Fallback to local mock data if no questions in database
-            console.log(`[ExamPage] No mock questions in database, using local fallback`);
-            const mockQuestions = examData[examType].questions.slice(0, 10);
-            setExamQuestions(mockQuestions);
+            // Show error - no fallback to demo questions
+            setQuestionLoadError(`No questions available for ${examType} exam. Please check the Admin Panel > Diagnostics tab to verify questions were imported.`);
             setLoadingQuestions(false);
             return;
           }
@@ -194,14 +193,11 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
             examType,
           });
           
-          // Show user-friendly warning
-          toast.warning('⚠️ Using demo questions. For real exam questions, ask admin to import questions via Admin Panel.');
-          
-          // Fallback to local mock data on error
-          console.log(`[ExamPage] Error loading mock questions, using local fallback`);
-          const mockQuestions = examData[examType].questions.slice(0, 10);
-          setExamQuestions(mockQuestions);
+          // Show error - no fallback to demo questions
+          const errorMsg = error.message || 'Failed to load questions';
+          setQuestionLoadError(`Error loading questions: ${errorMsg}. Please try again or contact support.`);
           setLoadingQuestions(false);
+          toast.error('Failed to load exam questions. Please try again.');
         }
       }
     };
@@ -521,20 +517,44 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                 </Card>
               )}
 
-              <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex flex-col gap-3">
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Button
+                    onClick={() => {
+                      setShowReview(true);
+                      setShowResults(false);
+                    }}
+                    variant="outline"
+                    className="flex-1 shadow-md border-blue-500 text-blue-600 hover:bg-blue-50"
+                  >
+                    <BookOpen className="w-4 h-4 mr-2" />
+                    {t.reviewAnswers}
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setShowResults(false);
+                      setShowReview(false);
+                      setCurrentQuestionIndex(0);
+                      setSelectedAnswer(null);
+                      setSelectedAnswers([]);
+                      setAnsweredQuestions({});
+                      setTimeRemaining(60 * 60);
+                      setShowAnswerFeedback(false);
+                      setExamStarted(true);
+                      // Clear localStorage
+                      const storageKey = `exam_progress_${examType}_${mode}_${tier}`;
+                      localStorage.removeItem(storageKey);
+                    }}
+                    variant="outline"
+                    className="flex-1 shadow-md border-teal-500 text-teal-600 hover:bg-teal-50"
+                  >
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    {t.retakeExam}
+                  </Button>
+                </div>
                 <Button
                   onClick={() => {
-                    setShowReview(true);
-                    setShowResults(false);
-                  }}
-                  variant="outline"
-                  className="flex-1 shadow-md border-blue-500 text-blue-600 hover:bg-blue-50"
-                >
-                  <BookOpen className="w-4 h-4 mr-2" />
-                  {t.reviewAnswers}
-                </Button>
-                <Button
-                  onClick={() => {
+                    // Reset and start a new exam of the same type
                     setShowResults(false);
                     setShowReview(false);
                     setCurrentQuestionIndex(0);
@@ -543,22 +563,15 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                     setAnsweredQuestions({});
                     setTimeRemaining(60 * 60);
                     setShowAnswerFeedback(false);
-                    setExamStarted(true);
+                    setExamStarted(false);
                     // Clear localStorage
                     const storageKey = `exam_progress_${examType}_${mode}_${tier}`;
                     localStorage.removeItem(storageKey);
                   }}
-                  variant="outline"
-                  className="flex-1 shadow-md"
-                >
-                  {t.retakeExam}
-                </Button>
-                <Button
-                  onClick={onBackToHome}
-                  className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg"
+                  className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg"
                 >
                   <Home className="w-4 h-4 mr-2" />
-                  {t.backToHome}
+                  Take New Exam (Same Type)
                 </Button>
               </div>
 
@@ -824,6 +837,15 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
             )}
             
             <div className="flex flex-col gap-2">
+              {questionLoadError.includes('subscription') && (
+                <Button 
+                  onClick={() => handleNavigate('payment')} 
+                  className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800"
+                >
+                  <AlertCircle className="w-4 h-4 mr-2" />
+                  {language === 'English' ? 'Buy Access' : 'Купи достъп'}
+                </Button>
+              )}
               {questionLoadError.includes('No questions') && (
                 <Button 
                   onClick={() => window.location.href = '/admin'} 
@@ -992,7 +1014,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
         </div>
 
         <Card className="mb-4 border-2 shadow-xl bg-white dark:bg-slate-700 dark:border-slate-600">
-          <CardHeader className="bg-gradient-to-br from-slate-50 to-white dark:from-slate-600 dark:to-slate-700 pb-3 pt-4 px-3 md:px-6">
+          <CardHeader className="bg-gradient-to-br from-slate-50 to-white dark:from-slate-600 dark:to-slate-700 pb-2 pt-4 px-3 md:px-6">
             <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 md:gap-4">
               <CardTitle className="flex-1 text-base md:text-lg dark:text-gray-100 max-h-[120px] overflow-y-auto">{currentQuestion.question}</CardTitle>
               <div className="flex flex-row md:flex-col gap-2 md:gap-1.5 md:items-end flex-shrink-0">
@@ -1005,13 +1027,13 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
               </div>
             </div>
           </CardHeader>
-          <CardContent className="space-y-4 pt-4 px-3 md:px-6">
+          <CardContent className="space-y-2 pt-2 px-3 md:px-6">
             {currentQuestion.image && (
-              <div className="rounded-lg overflow-hidden shadow-lg border-2">
+              <div className="rounded-lg overflow-hidden shadow-lg border-2 bg-gray-50 dark:bg-gray-900 p-4 mb-2">
                 <ImageWithFallback
                   src={currentQuestion.image}
                   alt="Question illustration"
-                  className="w-full h-48 object-cover"
+                  className="w-full max-h-52 object-contain mx-auto"
                 />
               </div>
             )}

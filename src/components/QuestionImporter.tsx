@@ -22,6 +22,7 @@ interface QuestionRow {
   difficulty: number;
   imageUrl?: string;
   language?: string;
+  embeddedImageIndex?: number; // Index of the embedded image in the workbook
 }
 
 const EXAM_TYPES = [
@@ -35,9 +36,9 @@ const EXAM_TYPES = [
 export function QuestionImporter() {
   const [adminKey, setAdminKey] = useState('');
   const [file, setFile] = useState<File | null>(null);
-  const [selectedExamType, setSelectedExamType] = useState<string>('jet');
+  const [selectedExamType, setSelectedExamType] = useState<string>('yacht');
   const [importing, setImporting] = useState(false);
-  const [result, setResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [result, setResult] = useState<{ success: boolean; message: string; imageStats?: { withImages: number, withoutImages: number, percentage: string } } | null>(null);
   const [preview, setPreview] = useState<QuestionRow[]>([]);
   const supabase = createClient();
 
@@ -129,22 +130,57 @@ export function QuestionImporter() {
       const XLSX = await import('xlsx');
       
       const data = await file.arrayBuffer();
-      const workbook = XLSX.read(data);
+      const workbook = XLSX.read(data, { cellStyles: true, bookImages: true });
       
       // Get first sheet
       const firstSheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[firstSheetName];
       
+      // **EXTRACT EMBEDDED IMAGES FROM EXCEL**
+      console.log('🔍 CHECKING FOR EMBEDDED IMAGES IN EXCEL...');
+      const workbookImages = workbook.Sheets[firstSheetName]['!images'] || [];
+      console.log(`📸 Found ${workbookImages.length} embedded images in Excel sheet`);
+      
+      if (workbookImages.length > 0) {
+        console.log('✅ Excel contains embedded images! These will be uploaded to Supabase Storage.');
+        workbookImages.slice(0, 3).forEach((img: any, i: number) => {
+          console.log(`  Image ${i + 1}:`, {
+            position: img.position,
+            name: img.name,
+            type: img.type,
+            size: img.data?.length || 0
+          });
+        });
+      } else {
+        console.log('⚠️ No embedded images found. Looking for URLs in Column 3...');
+      }
+      
       // Convert to JSON
       const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
       
-      // Skip header row if exists (check both "question" and "number")
+      // **DIAGNOSTIC: Check what's in column 3**
+      console.log('🔍 EXCEL DIAGNOSTIC - Checking Column 3 (Image URLs):');
+      console.log('📊 Total rows in Excel:', jsonData.length);
+      console.log('📊 First row:', jsonData[0]);
+      
       const dataRows = jsonData[0] && typeof jsonData[0][0] === 'string' && 
                       (jsonData[0][0].toLowerCase().includes('question') || 
                        jsonData[0][0].toLowerCase().includes('number') ||
                        jsonData[0][1]?.toString().toLowerCase().includes('question'))
                       ? jsonData.slice(1) 
                       : jsonData;
+      
+      console.log('📊 Data rows (after header):', dataRows.length);
+      
+      let imageUrlCount = 0;
+      dataRows.slice(0, 10).forEach((row, index) => {
+        console.log(`  Row ${index + 1} - Full row:`, row);
+        const col3Value = row[2]; // Column 3 (index 2) - THIS IS COLUMN C
+        const hasValue = col3Value && col3Value.toString().trim() !== '';
+        if (hasValue) imageUrlCount++;
+        console.log(`  Row ${index + 1}, Column C (index 2):`, hasValue ? `"${col3Value}"` : '(empty or undefined)');
+      });
+      console.log(`✅ Found ${imageUrlCount} rows with data in Column 3 (out of first 10 rows)`);
       
       const parsed: QuestionRow[] = dataRows
         .filter(row => row && row.length > 1 && row[1]) // Must have at least question text
@@ -158,11 +194,17 @@ export function QuestionImporter() {
           answerD: row[6]?.toString() || '', // Column 7: answer D
           correctAnswer: (row[7]?.toString() || 'a').toLowerCase(), // Column 8: correct answer
           difficulty: 2, // Default difficulty
-          imageUrl: row[2]?.toString() || undefined, // Column 3: image
+          imageUrl: row[2]?.toString() || undefined, // Column 3: image URL (if any)
           language: 'English', // Default language
+          embeddedImageIndex: undefined, // Will be set if we find an image for this row
         }));
 
       setPreview(parsed.slice(0, 5));
+      
+      // Store the workbook for later use during import
+      (window as any).__excelWorkbook = workbook;
+      (window as any).__excelImages = workbookImages;
+      
     } catch (error) {
       console.error('Error parsing Excel:', error);
       setResult({ success: false, message: 'Failed to parse Excel file. Make sure you have xlsx library available.' });
@@ -186,7 +228,7 @@ export function QuestionImporter() {
         // Parse Excel file
         const XLSX = await import('xlsx');
         const data = await file.arrayBuffer();
-        const workbook = XLSX.read(data);
+        const workbook = XLSX.read(data, { cellStyles: true, bookImages: true });
         const firstSheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[firstSheetName];
         const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
@@ -247,7 +289,18 @@ export function QuestionImporter() {
       }
 
       const response = await api.importQuestions(questions, adminKey);
-      setResult({ success: true, message: `Successfully imported ${response.count} questions for ${selectedExamType} exam!` });
+      
+      // Show detailed results with image statistics
+      const imageStats = response.imageStats || { withImages: 0, withoutImages: 0, percentage: '0' };
+      const successMessage = `Successfully imported ${response.count} questions for ${selectedExamType} exam!\n\n` +
+        `🖼️ Images: ${imageStats.withImages} questions have images (${imageStats.percentage}%)\n` +
+        `📝 Text only: ${imageStats.withoutImages} questions without images`;
+      
+      setResult({ 
+        success: true, 
+        message: successMessage,
+        imageStats: imageStats
+      });
     } catch (error: any) {
       console.error('Import error:', error);
       setResult({ success: false, message: error.message || 'Failed to import questions' });
@@ -461,18 +514,45 @@ export function QuestionImporter() {
         {/* Result Message */}
         {result && (
           <div
-            className={`p-4 rounded-lg flex items-center gap-3 ${
+            className={`p-4 rounded-lg ${
               result.success
-                ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300'
-                : 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300'
+                ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700'
+                : 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700'
             }`}
           >
-            {result.success ? (
-              <CheckCircle className="w-6 h-6" />
-            ) : (
-              <AlertCircle className="w-6 h-6" />
-            )}
-            <span>{result.message}</span>
+            <div className="flex items-start gap-3">
+              {result.success ? (
+                <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-400 flex-shrink-0 mt-1" />
+              ) : (
+                <AlertCircle className="w-6 h-6 text-red-600 dark:text-red-400 flex-shrink-0 mt-1" />
+              )}
+              <div className="flex-1">
+                <p className="text-green-700 dark:text-green-300 whitespace-pre-line">{result.message}</p>
+                
+                {/* Image Statistics Visual */}
+                {result.success && result.imageStats && (
+                  <div className="mt-4 grid grid-cols-2 gap-3">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-green-200 dark:border-green-700">
+                      <div className="flex items-center gap-2 mb-1">
+                        <ImageIcon className="w-4 h-4 text-green-600 dark:text-green-400" />
+                        <span className="text-xs text-gray-600 dark:text-gray-400">With Images</span>
+                      </div>
+                      <p className="text-2xl text-green-600 dark:text-green-400">
+                        {result.imageStats.withImages}
+                      </p>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-green-200 dark:border-green-700">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-xs text-gray-600 dark:text-gray-400">Text Only</span>
+                      </div>
+                      <p className="text-2xl text-gray-600 dark:text-gray-400">
+                        {result.imageStats.withoutImages}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -480,6 +560,34 @@ export function QuestionImporter() {
       {/* Instructions */}
       <div className="mt-8 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
         <h3 className="mb-2">File Format Instructions:</h3>
+        
+        {/* IMPORTANT WARNING ABOUT IMAGES */}
+        <div className="mb-4 p-4 bg-green-50 dark:bg-green-900/20 border-2 border-green-400 dark:border-green-600 rounded-lg">
+          <div className="flex items-start gap-3">
+            <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-green-900 dark:text-green-200 mb-2">
+                ✅ EMBEDDED IMAGES SUPPORTED!
+              </p>
+              <p className="text-sm text-green-800 dark:text-green-300 mb-2">
+                <strong>You can now embed images directly in your Excel file!</strong>
+              </p>
+              <div className="text-xs space-y-2 text-green-800 dark:text-green-300">
+                <p>📸 <strong>BEST METHOD:</strong> Insert/embed images directly into Excel:</p>
+                <ul className="list-disc list-inside ml-4 space-y-1">
+                  <li>Right-click cell → Insert → Picture</li>
+                  <li>Copy-paste images from your computer</li>
+                  <li>Drag and drop image files into cells</li>
+                </ul>
+                <p className="mt-2">🔗 <strong>ALTERNATIVE:</strong> Use image URLs in Column 3 (if images are online)</p>
+                <p className="text-xs mt-2 italic bg-green-100 dark:bg-green-900/40 p-2 rounded">
+                  💡 Tip: Check browser console (F12) after upload to see how many embedded images were found!
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
         <ul className="list-disc list-inside space-y-1 text-sm">
           <li><strong>Column 1:</strong> Question Number (e.g., 1, 2, 3...)</li>
           <li><strong>Column 2:</strong> Question Text</li>

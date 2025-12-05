@@ -955,6 +955,7 @@ app.get("/make-server-d36f8f91/questions/:examType/mock", async (c) => {
     }
 
     // Get first 10 questions (sorted by question number)
+    console.log(`[Mock Questions API] Calling getFirstQuestions for ${examType}...`);
     const mockQuestions = await questions.getFirstQuestions(examType, 10);
     console.log(`[Mock Questions API] Found ${mockQuestions.length} mock questions for ${examType}`);
 
@@ -966,7 +967,17 @@ app.get("/make-server-d36f8f91/questions/:examType/mock", async (c) => {
     return c.json({ questions: mockQuestions });
   } catch (error: any) {
     console.error('[Mock Questions API] Error fetching mock questions:', error);
-    return c.json({ message: 'Error fetching mock questions', error: error.message }, 500);
+    console.error('[Mock Questions API] Error stack:', error.stack);
+    console.error('[Mock Questions API] Error details:', {
+      message: error.message,
+      name: error.name,
+      stack: error.stack
+    });
+    return c.json({ 
+      message: `Failed to fetch mock questions: ${error.message}`,
+      error: error.message,
+      details: error.stack 
+    }, 500);
   }
 });
 
@@ -987,16 +998,187 @@ app.post("/make-server-d36f8f91/questions/import", async (c) => {
       return c.json({ message: 'Invalid questions data' }, 400);
     }
 
+    // **COUNT IMAGES BEFORE IMPORT**
+    const questionsWithImages = questionsToImport.filter(q => q.imageUrl && q.imageUrl.trim() !== '');
+    const imageCount = questionsWithImages.length;
+    const imagePercentage = ((imageCount / questionsToImport.length) * 100).toFixed(1);
+
+    console.log(`[Import API] 🖼️ IMAGE STATS: ${imageCount}/${questionsToImport.length} questions have images (${imagePercentage}%)`);
+
     // Save all questions
     await questions.saveQuestions(questionsToImport);
 
     return c.json({ 
       message: 'Questions imported successfully',
       count: questionsToImport.length,
+      imageCount: imageCount,
+      imagePercentage: imagePercentage,
+      imageStats: {
+        total: questionsToImport.length,
+        withImages: imageCount,
+        withoutImages: questionsToImport.length - imageCount,
+        percentage: imagePercentage,
+      }
     });
   } catch (error: any) {
     console.error('Error importing questions:', error);
     return c.json({ message: 'Error importing questions', error: error.message }, 500);
+  }
+});
+
+// Update question images (admin endpoint - requires special authorization)
+app.post("/make-server-d36f8f91/questions/update-images", async (c) => {
+  try {
+    const body = await c.req.json();
+    const { examType, imageLinks, adminKey } = body;
+
+    // Simple admin key check
+    const ADMIN_KEY = Deno.env.get('ADMIN_IMPORT_KEY') || 'change-this-key';
+    
+    if (adminKey !== ADMIN_KEY) {
+      return c.json({ message: 'Unauthorized - Invalid admin key' }, 401);
+    }
+
+    if (!examType || !Array.isArray(imageLinks) || imageLinks.length === 0) {
+      return c.json({ message: 'Invalid request data' }, 400);
+    }
+
+    console.log(`[Update Images API] Updating ${imageLinks.length} questions for ${examType} exam...`);
+
+    let updatedCount = 0;
+
+    // Update each question with its image URL
+    for (const { questionNumber, url } of imageLinks) {
+      const paddedNumber = String(questionNumber).padStart(3, '0');
+      const questionId = `${examType}_${paddedNumber}`;
+      
+      // Get existing question
+      const existingQuestion = await kv.get(questionId);
+      
+      if (existingQuestion) {
+        // Update with image URL
+        await kv.set(questionId, {
+          ...existingQuestion,
+          imageUrl: url,
+        });
+        updatedCount++;
+        console.log(`  ✅ Updated question ${questionNumber} with image: ${url}`);
+      } else {
+        console.warn(`  ⚠️ Question ${questionNumber} (${questionId}) not found - skipping`);
+      }
+    }
+
+    console.log(`[Update Images API] Successfully updated ${updatedCount}/${imageLinks.length} questions`);
+
+    return c.json({ 
+      message: `Successfully updated ${updatedCount} questions with images`,
+      updated: updatedCount,
+      total: imageLinks.length,
+    });
+  } catch (error: any) {
+    console.error('Error updating question images:', error);
+    return c.json({ message: 'Error updating question images', error: error.message }, 500);
+  }
+});
+
+// Upload single image to Supabase Storage
+app.post("/make-server-d36f8f91/images/upload", async (c) => {
+  try {
+    const body = await c.req.json();
+    const { examType, questionNumber, base64Data, fileExt, mimeType, adminKey } = body;
+
+    // Simple admin key check
+    const ADMIN_KEY = Deno.env.get('ADMIN_IMPORT_KEY') || 'change-this-key';
+    
+    if (adminKey !== ADMIN_KEY) {
+      return c.json({ message: 'Unauthorized - Invalid admin key' }, 401);
+    }
+
+    if (!examType || !questionNumber || !base64Data || !fileExt) {
+      return c.json({ message: 'Missing required fields' }, 400);
+    }
+
+    if (!supabase) {
+      return c.json({ message: 'Supabase client not initialized' }, 500);
+    }
+
+    const bucketName = 'make-d36f8f91-exam-images';
+
+    // Ensure bucket exists
+    const { data: buckets } = await supabase.storage.listBuckets();
+    const bucketExists = buckets?.some((bucket: any) => bucket.name === bucketName);
+    
+    if (!bucketExists) {
+      console.log(`[Upload] Creating storage bucket: ${bucketName}`);
+      const { error: bucketError } = await supabase.storage.createBucket(bucketName, {
+        public: true,
+      });
+      
+      if (bucketError) {
+        console.error('[Upload] Bucket creation error:', bucketError);
+        return c.json({ message: `Failed to create storage bucket: ${bucketError.message}` }, 500);
+      }
+      
+      console.log(`[Upload] ✅ Bucket created: ${bucketName}`);
+    }
+
+    // Convert base64 to Uint8Array
+    const binaryString = atob(base64Data);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+
+    // Upload file
+    const fileName = `${examType}/q${questionNumber}.${fileExt}`;
+    
+    console.log(`[Upload] Uploading ${fileName} (${bytes.length} bytes)`);
+    
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from(bucketName)
+      .upload(fileName, bytes, {
+        contentType: mimeType,
+        upsert: true, // Replace if exists
+      });
+
+    if (uploadError) {
+      console.error('[Upload] Upload error:', uploadError);
+      return c.json({ message: `Failed to upload image: ${uploadError.message}` }, 500);
+    }
+
+    // Get public URL
+    const { data: urlData } = supabase.storage
+      .from(bucketName)
+      .getPublicUrl(fileName);
+
+    const publicUrl = urlData.publicUrl;
+
+    console.log(`[Upload] ✅ Uploaded ${fileName}: ${publicUrl}`);
+
+    // Update question with image URL using the questions module
+    const paddedNumber = String(questionNumber).padStart(3, '0');
+    const questionId = `${examType}_${paddedNumber}`;
+    
+    const existingQuestion = await questions.getQuestion(questionId);
+    
+    if (existingQuestion) {
+      await kv.set(`question:${questionId}`, {
+        ...existingQuestion,
+        imageUrl: publicUrl,
+      });
+      console.log(`[Upload] ✅ Updated question ${questionId} in database`);
+    } else {
+      console.warn(`[Upload] ⚠️ Question ${questionNumber} not found in database (will add image URL anyway)`);
+    }
+
+    return c.json({
+      message: 'Image uploaded successfully',
+      url: publicUrl,
+    });
+
+  } catch (error: any) {
+    console.error('[Upload] Error:', error);
+    return c.json({ message: `Error uploading image: ${error.message}` }, 500);
   }
 });
 
@@ -1007,21 +1189,20 @@ app.get("/make-server-d36f8f91/diagnostics/questions", async (c) => {
     const diagnostics: any = {};
 
     for (const examType of examTypes) {
-      const count = await questions.getQuestionCount(examType);
       const questionIds = await questions.getQuestionIds(examType);
+      const count = questionIds.length;
       
-      // Get one sample question
-      const sampleQuestionId = questionIds.length > 0 ? questionIds[0] : null;
+      let sampleQuestionId = null;
       let sampleQuestion = null;
-      
-      if (sampleQuestionId) {
-        const q = await questions.getQuestion(sampleQuestionId);
+
+      if (questionIds.length > 0) {
+        sampleQuestionId = questionIds[0];
+        const q = await kv.get(sampleQuestionId);
+        
         if (q) {
           sampleQuestion = {
-            id: q.id,
-            questionText: q.questionText?.substring(0, 100) || 'No text',
-            examType: q.examType,
-            imageUrl: q.imageUrl || 'No image',
+            id: sampleQuestionId,
+            questionNumber: q.questionNumber,
             hasImage: !!q.imageUrl,
           };
         }
@@ -1042,6 +1223,90 @@ app.get("/make-server-d36f8f91/diagnostics/questions", async (c) => {
   } catch (error: any) {
     console.error('Error running diagnostics:', error);
     return c.json({ message: 'Error running diagnostics', error: error.message }, 500);
+  }
+});
+
+// Check specific question and image status
+app.post("/make-server-d36f8f91/diagnostics/check-question", async (c) => {
+  try {
+    const body = await c.req.json();
+    const { examType, questionNumber } = body;
+
+    if (!examType || !questionNumber) {
+      return c.json({ message: 'Missing examType or questionNumber' }, 400);
+    }
+
+    const paddedNumber = String(questionNumber).padStart(3, '0');
+    const questionId = `${examType}_${paddedNumber}`;
+
+    console.log(`[Diagnostics] Checking question: ${questionId}`);
+
+    // Get question from database using the questions module
+    const question = await questions.getQuestion(questionId);
+
+    if (!question) {
+      // Check if there are ANY questions for this exam type
+      const questionIds = await questions.getQuestionIds(examType);
+      
+      return c.json({
+        found: false,
+        questionId,
+        examType,
+        questionNumber,
+        message: `Question #${questionNumber} not found in database`,
+        examTypeHasQuestions: questionIds.length > 0,
+        totalQuestionsInExam: questionIds.length,
+        suggestion: questionIds.length === 0 
+          ? `No questions found for ${examType} exam. Please import questions first.`
+          : `Question #${questionNumber} doesn't exist. Available questions: 1-${questionIds.length}`,
+      });
+    }
+
+    // Check if image URL exists
+    const hasImageUrl = !!question.imageUrl;
+    let imageStatus = 'no_image';
+    let imageAccessible = false;
+
+    if (hasImageUrl) {
+      // Try to check if image is accessible
+      try {
+        const response = await fetch(question.imageUrl, { method: 'HEAD' });
+        imageAccessible = response.ok;
+        imageStatus = imageAccessible ? 'image_ok' : 'image_url_exists_but_not_accessible';
+      } catch (error) {
+        imageStatus = 'image_url_exists_but_not_accessible';
+      }
+    }
+
+    return c.json({
+      found: true,
+      questionId,
+      question: {
+        questionNumber: question.questionNumber,
+        questionText: question.questionText,
+        answerA: question.answerA,
+        answerB: question.answerB,
+        answerC: question.answerC,
+        answerD: question.answerD,
+        correctAnswer: question.correctAnswer,
+        difficulty: question.difficulty,
+        imageUrl: question.imageUrl,
+      },
+      imageStatus: {
+        hasImageUrl,
+        imageUrl: question.imageUrl || null,
+        imageAccessible,
+        status: imageStatus,
+        message: imageStatus === 'image_ok' 
+          ? '✅ Image is uploaded and accessible'
+          : hasImageUrl 
+            ? '⚠️ Image URL exists but file may not be accessible'
+            : '❌ No image uploaded for this question',
+      },
+    });
+  } catch (error: any) {
+    console.error('[Diagnostics] Error:', error);
+    return c.json({ message: `Error checking question: ${error.message}` }, 500);
   }
 });
 

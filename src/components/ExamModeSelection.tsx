@@ -86,13 +86,13 @@ export function ExamModeSelection() {
             <div>
               <h3 className="mb-6 text-center text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">{t.selectModeTitle}</h3>
               <div className="flex justify-center mb-8">
-                <div className="inline-flex rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-700 p-1 shadow-lg">
+                <div className="inline-flex rounded-lg border-2 border-sky-300 dark:border-sky-600 bg-sky-100/50 dark:bg-slate-800 p-1 shadow-lg">
                   <button
                     onClick={() => setSelectedMode('study')}
                     className={`flex items-center gap-2 px-6 py-3 rounded-md transition-all ${
                       selectedMode === 'study'
-                        ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md'
-                        : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600'
+                        ? 'bg-gradient-to-r from-sky-500 to-cyan-600 text-white shadow-md'
+                        : 'text-gray-700 dark:text-gray-300 hover:bg-sky-200/50 dark:hover:bg-slate-700'
                     }`}
                   >
                     <BookOpen className="w-5 h-5" />
@@ -102,8 +102,8 @@ export function ExamModeSelection() {
                     onClick={() => setSelectedMode('exam')}
                     className={`flex items-center gap-2 px-6 py-3 rounded-md transition-all ${
                       selectedMode === 'exam'
-                        ? 'bg-gradient-to-r from-orange-600 to-orange-700 text-white shadow-md'
-                        : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600'
+                        ? 'bg-gradient-to-r from-sky-500 to-cyan-600 text-white shadow-md'
+                        : 'text-gray-700 dark:text-gray-300 hover:bg-sky-200/50 dark:hover:bg-slate-700'
                     }`}
                   >
                     <FileText className="w-5 h-5" />
@@ -112,21 +112,17 @@ export function ExamModeSelection() {
                 </div>
               </div>
               <div className="max-w-2xl mx-auto">
-                <Card className={`border-2 shadow-xl transition-all ${
-                  selectedMode === 'study' 
-                    ? 'border-blue-400 bg-gradient-to-br from-blue-50 to-white dark:from-slate-700 dark:to-slate-600' 
-                    : 'border-orange-400 bg-gradient-to-br from-orange-50 to-white dark:from-slate-700 dark:to-slate-600'
-                }`}>
+                <Card className="border-2 shadow-xl transition-all border-sky-400 bg-gradient-to-br from-sky-50 to-white dark:from-slate-700 dark:to-slate-600">
                   <CardHeader className="text-center">
                     <CardTitle className="flex items-center justify-center gap-2 text-xl">
                       {selectedMode === 'study' ? (
                         <>
-                          <BookOpen className="w-6 h-6 text-blue-600" />
+                          <BookOpen className="w-6 h-6 text-sky-600" />
                           <span>{t.studyMode}</span>
                         </>
                       ) : (
                         <>
-                          <FileText className="w-6 h-6 text-orange-600" />
+                          <FileText className="w-6 h-6 text-sky-600" />
                           <span>{t.examMode}</span>
                         </>
                       )}
@@ -181,12 +177,12 @@ export function ExamModeSelection() {
                 {t.selectExamType}
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <Card className="relative overflow-hidden border-2 border-green-300 dark:border-green-600 bg-gradient-to-br from-green-50 to-white dark:from-slate-700 dark:to-slate-600 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-green-400/20 to-transparent rounded-full blur-2xl"></div>
+                <Card className="relative overflow-hidden border-2 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border-sky-300 dark:border-sky-600 bg-gradient-to-br from-sky-50 to-white dark:from-slate-700 dark:to-slate-600">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br rounded-full blur-2xl from-sky-400/20 to-transparent"></div>
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <CardTitle className="dark:text-gray-100">{t.freePractice}</CardTitle>
-                      <Badge className="bg-gradient-to-r from-green-600 to-green-700 shadow-md">{t.free.toUpperCase()}</Badge>
+                      <Badge className="bg-gradient-to-r from-sky-500 to-cyan-600 shadow-md">{t.free.toUpperCase()}</Badge>
                     </div>
                     <CardDescription className="text-gray-700 dark:text-gray-300">
                       {t.freePracticeDesc}
@@ -195,22 +191,22 @@ export function ExamModeSelection() {
                   <CardContent className="space-y-4">
                     <ul className="space-y-2 text-sm mb-4">
                       <li className="flex items-start gap-2">
-                        <Check className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                        <Check className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
                         <span>{t.tenQuestions}</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <Check className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                        <Check className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
                         <span>{t.bothStudyExamModes}</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <Check className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                        <Check className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
                         <span>{t.noCardRequired}</span>
                       </li>
                     </ul>
                     <div className="space-y-3 relative">
                       <Button
                         onClick={() => handleStart(selectedMode, 'mock')}
-                        className="w-full h-12 bg-gradient-to-r from-green-600 via-green-700 to-green-800 hover:from-green-700 hover:via-green-800 hover:to-green-900 shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02] font-semibold"
+                        className="w-full h-12 bg-gradient-to-r from-sky-500 via-cyan-600 to-blue-600 hover:from-sky-600 hover:via-cyan-700 hover:to-blue-700 shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02] font-semibold"
                         size="lg"
                       >
                         {t.startFree} - {selectedMode === 'study' ? t.studyMode : t.examMode}
@@ -219,12 +215,12 @@ export function ExamModeSelection() {
                   </CardContent>
                 </Card>
 
-                <Card className="relative overflow-hidden border-2 border-blue-300 dark:border-blue-600 bg-gradient-to-br from-blue-50 to-white dark:from-slate-700 dark:to-slate-600 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-400/20 to-transparent rounded-full blur-2xl"></div>
+                <Card className="relative overflow-hidden border-2 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border-sky-300 dark:border-sky-600 bg-gradient-to-br from-sky-50 to-white dark:from-slate-700 dark:to-slate-600">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br rounded-full blur-2xl from-sky-400/20 to-transparent"></div>
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <CardTitle className="dark:text-gray-100">{t.fullAccessTitle}</CardTitle>
-                      <Badge className="bg-gradient-to-r from-blue-600 to-blue-700 shadow-md">€5{t.perMonth}</Badge>
+                      <Badge className="shadow-md bg-gradient-to-r from-amber-400 to-sky-500">€5{t.perMonth}</Badge>
                     </div>
                     <CardDescription className="text-gray-700 dark:text-gray-300">
                       {t.fullAccessDescription}
@@ -248,7 +244,7 @@ export function ExamModeSelection() {
                     <div className="space-y-3 relative">
                       <Button
                         onClick={() => handleStart(selectedMode, 'paid')}
-                        className="w-full h-12 bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 hover:from-blue-700 hover:via-blue-800 hover:to-blue-900 shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02] font-semibold"
+                        className="w-full h-12 shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02] font-semibold bg-gradient-to-r from-amber-400 via-yellow-500 to-sky-500 hover:from-amber-500 hover:via-yellow-600 hover:to-sky-600"
                         size="lg"
                       >
                         {t.startFull} - {selectedMode === 'study' ? t.studyMode : t.examMode}

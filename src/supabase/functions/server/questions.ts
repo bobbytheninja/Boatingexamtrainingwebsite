@@ -43,11 +43,14 @@ export async function getRandomQuestions(
   const shuffled = [...allIds].sort(() => Math.random() - 0.5);
   const selectedIds = shuffled.slice(0, Math.min(count, shuffled.length));
   
-  const batchSize = 20;
+  // **FIX: Fetch in batches to avoid URL-too-long error**
+  const BATCH_SIZE = 50;
   const questions: Question[] = [];
   
-  for (let i = 0; i < selectedIds.length; i += batchSize) {
-    const batchIds = selectedIds.slice(i, Math.min(i + batchSize, selectedIds.length));
+  console.log(`[getRandomQuestions] Fetching ${selectedIds.length} questions in batches of ${BATCH_SIZE}...`);
+  
+  for (let i = 0; i < selectedIds.length; i += BATCH_SIZE) {
+    const batchIds = selectedIds.slice(i, Math.min(i + BATCH_SIZE, selectedIds.length));
     const batchQuestions = await getQuestions(batchIds);
     questions.push(...batchQuestions);
   }
@@ -59,28 +62,62 @@ export async function getFirstQuestions(
   examType: string, 
   count: number = 10
 ): Promise<Question[]> {
-  const allIds = await getQuestionIds(examType);
-  
-  if (allIds.length === 0) {
-    return [];
-  }
+  try {
+    console.log(`[getFirstQuestions] Starting - examType: ${examType}, count: ${count}`);
+    
+    const allIds = await getQuestionIds(examType);
+    console.log(`[getFirstQuestions] Got ${allIds.length} question IDs for ${examType}`);
+    
+    if (allIds.length === 0) {
+      console.log(`[getFirstQuestions] No questions found for ${examType}`);
+      return [];
+    }
 
-  const batchSize = 20;
-  const questionsWithNumbers: Question[] = [];
-  
-  for (let i = 0; i < allIds.length && questionsWithNumbers.length < allIds.length; i += batchSize) {
-    const batchIds = allIds.slice(i, Math.min(i + batchSize, allIds.length));
-    const batchQuestions = await getQuestions(batchIds);
-    questionsWithNumbers.push(...batchQuestions);
+    // **FIX: Don't fetch all questions at once - causes URL-too-long error**
+    // Instead, fetch in batches and stop once we have enough
+    const BATCH_SIZE = 50; // Fetch 50 at a time to avoid URL length issues
+    const questionsWithNumbers: Question[] = [];
+    
+    console.log(`[getFirstQuestions] Fetching questions in batches of ${BATCH_SIZE}...`);
+    
+    for (let i = 0; i < allIds.length; i += BATCH_SIZE) {
+      const batchIds = allIds.slice(i, Math.min(i + BATCH_SIZE, allIds.length));
+      console.log(`[getFirstQuestions] Fetching batch ${Math.floor(i / BATCH_SIZE) + 1} (${batchIds.length} questions)...`);
+      
+      const batchQuestions = await getQuestions(batchIds);
+      questionsWithNumbers.push(...batchQuestions);
+      
+      // Once we have enough questions to ensure we can find the first N, we can stop
+      // But we need to keep fetching until we're confident we have the lowest questionNumbers
+      // So let's fetch at least 2x the count we need, or keep going if we haven't seen a pattern
+      if (questionsWithNumbers.length >= Math.min(count * 3, 150)) {
+        console.log(`[getFirstQuestions] Fetched ${questionsWithNumbers.length} questions, sorting to find first ${count}...`);
+        break;
+      }
+    }
+    
+    console.log(`[getFirstQuestions] Fetched ${questionsWithNumbers.length} total questions`);
+    
+    const sorted = questionsWithNumbers.sort((a, b) => {
+      const numA = a.questionNumber || 999999;
+      const numB = b.questionNumber || 999999;
+      return numA - numB;
+    });
+    
+    const result = sorted.slice(0, Math.min(count, sorted.length));
+    console.log(`[getFirstQuestions] Returning ${result.length} sorted questions`);
+    
+    return result;
+  } catch (error: any) {
+    console.error(`[getFirstQuestions] Error:`, error);
+    console.error(`[getFirstQuestions] Error details:`, {
+      message: error.message,
+      stack: error.stack,
+      examType,
+      count
+    });
+    throw new Error(`Failed to get first questions for ${examType}: ${error.message}`);
   }
-  
-  const sorted = questionsWithNumbers.sort((a, b) => {
-    const numA = a.questionNumber || 999999;
-    const numB = b.questionNumber || 999999;
-    return numA - numB;
-  });
-  
-  return sorted.slice(0, Math.min(count, sorted.length));
 }
 
 export async function saveQuestion(question: Question): Promise<void> {
@@ -108,6 +145,21 @@ export async function saveQuestions(questions: Question[]): Promise<void> {
     }
   }
   
+  // **COUNT QUESTIONS WITH IMAGES**
+  const questionsWithImages = questions.filter(q => q.imageUrl && q.imageUrl.trim() !== '');
+  const imageCount = questionsWithImages.length;
+  const imagePercentage = ((imageCount / questions.length) * 100).toFixed(1);
+  
+  console.log(`[Questions] 🖼️ IMAGE STATS: ${imageCount}/${questions.length} questions have images (${imagePercentage}%)`);
+  if (imageCount > 0) {
+    console.log(`[Questions] Sample image URLs:`);
+    questionsWithImages.slice(0, 3).forEach((q, i) => {
+      console.log(`  ${i + 1}. Question ${q.id}: ${q.imageUrl}`);
+    });
+  } else {
+    console.log(`[Questions] ⚠️ WARNING: No images found in this import! Check Excel column 3.`);
+  }
+  
   // **DELETE OLD QUESTIONS FOR THIS EXAM TYPE BEFORE IMPORTING**
   // Get all unique exam types from the import
   const examTypesInImport = [...new Set(questions.map(q => q.examType))];
@@ -120,7 +172,7 @@ export async function saveQuestions(questions: Question[]): Promise<void> {
       console.log(`[Questions] Found ${existingIds.length} existing questions to delete`);
       
       // Delete in batches
-      const DELETE_BATCH_SIZE = 50;
+      const DELETE_BATCH_SIZE = 100;
       for (let i = 0; i < existingIds.length; i += DELETE_BATCH_SIZE) {
         const batchIds = existingIds.slice(i, Math.min(i + DELETE_BATCH_SIZE, existingIds.length));
         const keys = batchIds.map(id => `question:${id}`);
@@ -159,7 +211,7 @@ export async function saveQuestions(questions: Question[]): Promise<void> {
     byExamType[question.examType].push(question);
   }
 
-  const BATCH_SIZE = 50;
+  const BATCH_SIZE = 100;
   
   for (let i = 0; i < uniqueQuestions.length; i += BATCH_SIZE) {
     const batch = uniqueQuestions.slice(i, Math.min(i + BATCH_SIZE, uniqueQuestions.length));

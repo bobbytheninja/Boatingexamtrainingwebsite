@@ -107,7 +107,7 @@ export function ExamReviewPage({
         </div>
 
         <Card className="mb-4 border-2 shadow-xl bg-white dark:bg-slate-700 dark:border-slate-600">
-          <CardHeader className={`pb-3 pt-4 ${
+          <CardHeader className={`pb-2 pt-4 ${
             isCorrect 
               ? 'bg-gradient-to-br from-green-50 to-white dark:from-green-900/30 dark:to-slate-700' 
               : 'bg-gradient-to-br from-red-50 to-white dark:from-red-900/30 dark:to-slate-700'
@@ -131,13 +131,13 @@ export function ExamReviewPage({
               </div>
             </div>
           </CardHeader>
-          <CardContent className="space-y-4 pt-4">
+          <CardContent className="space-y-2 pt-2">
             {currentQuestion.image && (
-              <div className="rounded-lg overflow-hidden shadow-lg border-2">
+              <div className="rounded-lg overflow-hidden shadow-lg border-2 bg-gray-50 dark:bg-gray-900 p-4 mb-2">
                 <ImageWithFallback
                   src={currentQuestion.image}
                   alt="Question illustration"
-                  className="w-full h-48 object-cover"
+                  className="w-full max-h-52 object-contain mx-auto"
                 />
               </div>
             )}
