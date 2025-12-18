@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backend Deployment Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        .test-section {
+            margin-bottom: 25px;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #555;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status.pending {
+            background: #ffc107;
+            color: #000;
+        }
+        .status.success {
+            background: #4caf50;
+            color: white;
+        }
+        .status.error {
+            background: #f44336;
+            color: white;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 6px;
+            background: white;
+            border-left: 4px solid #667eea;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .result.success {
+            border-left-color: #4caf50;
+        }
+        .result.error {
+            border-left-color: #f44336;
+        }
+        .env-vars {
+            margin-top: 20px;
+            padding: 15px;
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 6px;
+        }
+        .env-vars h4 {
+            margin-top: 0;
+            color: #856404;
+        }
+        .env-vars ul {
+            margin: 10px 0;
+        }
+        .env-vars code {
+            background: #fff;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+        .summary {
+            margin-top: 30px;
+            padding: 20px;
+            background: #e3f2fd;
+            border-radius: 8px;
+            border-left: 4px solid #2196f3;
+        }
+        .summary h3 {
+            margin-top: 0;
+            color: #1976d2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚤 Backend Deployment Test</h1>
+        <p class="subtitle">Testing your Supabase Edge Function after deployment</p>
+
+        <!-- Test 1: Health Check -->
+        <div class="test-section">
+            <h3>
+                <span id="test1-status" class="status pending">PENDING</span>
+                Test 1: Health Check
+            </h3>
+            <p>Tests if the backend server is responding at all.</p>
+            <button id="test1-btn" onclick="runTest1()">Run Health Check</button>
+            <div id="test1-result"></div>
+        </div>
+
+        <!-- Test 2: Admin Check -->
+        <div class="test-section">
+            <h3>
+                <span id="test2-status" class="status pending">PENDING</span>
+                Test 2: Admin Endpoint Check
+            </h3>
+            <p>Tests if the admin check endpoint is working (doesn't require auth).</p>
+            <button id="test2-btn" onclick="runTest2()">Test Admin Check</button>
+            <div id="test2-result"></div>
+        </div>
+
+        <!-- Test 3: Question Stats -->
+        <div class="test-section">
+            <h3>
+                <span id="test3-status" class="status pending">PENDING</span>
+                Test 3: Question Statistics
+            </h3>
+            <p>Tests if questions endpoint is working and shows question counts.</p>
+            <button id="test3-btn" onclick="runTest3()">Get Question Stats</button>
+            <div id="test3-result"></div>
+        </div>
+
+        <!-- Environment Variables Info -->
+        <div class="env-vars">
+            <h4>⚙️ Environment Variables Status</h4>
+            <p>You mentioned these are already set:</p>
+            <ul>
+                <li>✅ <code>SUPABASE_URL</code></li>
+                <li>✅ <code>SUPABASE_ANON_KEY</code></li>
+                <li>✅ <code>SUPABASE_SERVICE_ROLE_KEY</code></li>
+                <li>✅ <code>SUPABASE_DB_URL</code></li>
+                <li>✅ <code>STRIPE_SECRET_KEY</code></li>
+            </ul>
+            <p><strong>Still needed (optional but recommended):</strong></p>
+            <ul>
+                <li>⚠️ <code>STRIPE_WEBHOOK_SECRET</code> - Required for Stripe webhook verification</li>
+                <li>⚠️ <code>ADMIN_IMPORT_KEY</code> - Currently using default 'change-this-key'</li>
+            </ul>
+        </div>
+
+        <!-- Summary Section -->
+        <div id="summary" class="summary" style="display:none;">
+            <h3>📊 Test Summary</h3>
+            <div id="summary-content"></div>
+        </div>
+    </div>
+
+    <script>
+        // Get Supabase info from your project
+        const SUPABASE_PROJECT_ID = 'hrqhqxhekdqklipizfzm'; // Replace with your actual project ID
+        const BASE_URL = `https://${SUPABASE_PROJECT_ID}.supabase.co/functions/v1/make-server-d36f8f91`;
+
+        async function runTest1() {
+            const btn = document.getElementById('test1-btn');
+            const status = document.getElementById('test1-status');
+            const result = document.getElementById('test1-result');
+            
+            btn.disabled = true;
+            status.className = 'status pending';
+            status.textContent = 'TESTING...';
+            result.innerHTML = '';
+
+            try {
+                const response = await fetch(`${BASE_URL}/health`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    status.className = 'status success';
+                    status.textContent = '✅ SUCCESS';
+                    result.innerHTML = `<div class="result success">
+Backend is LIVE! ✅
+
+Response: ${JSON.stringify(data, null, 2)}
+
+Status Code: ${response.status}
+Timestamp: ${new Date().toISOString()}
+                    </div>`;
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${JSON.stringify(data)}`);
+                }
+            } catch (error) {
+                status.className = 'status error';
+                status.textContent = '❌ FAILED';
+                result.innerHTML = `<div class="result error">
+Health check failed ❌
+
+Error: ${error.message}
+
+This means the backend is NOT responding. Possible causes:
+1. Deployment didn't complete successfully
+2. Wrong project ID in this test file
+3. Edge function not started
+
+Check your Supabase dashboard: Functions → server
+                </div>`;
+            } finally {
+                btn.disabled = false;
+                updateSummary();
+            }
+        }
+
+        async function runTest2() {
+            const btn = document.getElementById('test2-btn');
+            const status = document.getElementById('test2-status');
+            const result = document.getElementById('test2-result');
+            
+            btn.disabled = true;
+            status.className = 'status pending';
+            status.textContent = 'TESTING...';
+            result.innerHTML = '';
+
+            try {
+                const response = await fetch(`${BASE_URL}/check-admin`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    status.className = 'status success';
+                    status.textContent = '✅ SUCCESS';
+                    result.innerHTML = `<div class="result success">
+Admin endpoint is working! ✅
+
+Response: ${JSON.stringify(data, null, 2)}
+
+Status Code: ${response.status}
+Note: isAdmin is false because we're not logged in (expected)
+                    </div>`;
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${JSON.stringify(data)}`);
+                }
+            } catch (error) {
+                status.className = 'status error';
+                status.textContent = '❌ FAILED';
+                result.innerHTML = `<div class="result error">
+Admin check failed ❌
+
+Error: ${error.message}
+                </div>`;
+            } finally {
+                btn.disabled = false;
+                updateSummary();
+            }
+        }
+
+        async function runTest3() {
+            const btn = document.getElementById('test3-btn');
+            const status = document.getElementById('test3-status');
+            const result = document.getElementById('test3-result');
+            
+            btn.disabled = true;
+            status.className = 'status pending';
+            status.textContent = 'TESTING...';
+            result.innerHTML = '';
+
+            try {
+                const response = await fetch(`${BASE_URL}/questions/stats`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    status.className = 'status success';
+                    status.textContent = '✅ SUCCESS';
+                    
+                    let statsDisplay = 'Question Statistics:\n\n';
+                    if (data.stats && typeof data.stats === 'object') {
+                        for (const [examType, count] of Object.entries(data.stats)) {
+                            statsDisplay += `${examType}: ${count} questions\n`;
+                        }
+                        statsDisplay += `\nTotal: ${data.total || 0} questions`;
+                    } else {
+                        statsDisplay = JSON.stringify(data, null, 2);
+                    }
+                    
+                    result.innerHTML = `<div class="result success">
+Questions endpoint is working! ✅
+
+${statsDisplay}
+
+Status Code: ${response.status}
+                    </div>`;
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${JSON.stringify(data)}`);
+                }
+            } catch (error) {
+                status.className = 'status error';
+                status.textContent = '❌ FAILED';
+                result.innerHTML = `<div class="result error">
+Question stats failed ❌
+
+Error: ${error.message}
+
+This might mean:
+1. Questions table is empty (import questions via admin panel)
+2. Questions endpoint has an issue
+3. Database connection problem
+                </div>`;
+            } finally {
+                btn.disabled = false;
+                updateSummary();
+            }
+        }
+
+        function updateSummary() {
+            const test1 = document.getElementById('test1-status').textContent;
+            const test2 = document.getElementById('test2-status').textContent;
+            const test3 = document.getElementById('test3-status').textContent;
+            
+            const tests = [test1, test2, test3];
+            const completed = tests.filter(t => t.includes('SUCCESS') || t.includes('FAILED')).length;
+            
+            if (completed > 0) {
+                const summary = document.getElementById('summary');
+                const content = document.getElementById('summary-content');
+                
+                const passed = tests.filter(t => t.includes('SUCCESS')).length;
+                const failed = tests.filter(t => t.includes('FAILED')).length;
+                const pending = tests.filter(t => t.includes('PENDING')).length;
+                
+                let message = `
+<p><strong>Tests Completed:</strong> ${completed}/3</p>
+<p>
+    ✅ Passed: ${passed} | 
+    ❌ Failed: ${failed} | 
+    ⏳ Pending: ${pending}
+</p>
+                `;
+                
+                if (failed === 0 && completed === 3) {
+                    message += `
+<p style="color: #4caf50; font-weight: bold; font-size: 18px; margin-top: 15px;">
+    🎉 ALL TESTS PASSED! Your backend is working perfectly!
+</p>
+<p><strong>Next Steps:</strong></p>
+<ol>
+    <li>Import your exam questions via the Admin Panel</li>
+    <li>Test the full application flow</li>
+    <li>Set up Stripe webhook secret (if using payments)</li>
+    <li>Deploy to production hosting for custom domain</li>
+</ol>
+                    `;
+                } else if (test1.includes('FAILED')) {
+                    message += `
+<p style="color: #f44336; font-weight: bold; margin-top: 15px;">
+    ⚠️ Health check failed - backend is not responding!
+</p>
+<p><strong>Action Required:</strong></p>
+<ol>
+    <li>Check your Supabase dashboard (Functions → server)</li>
+    <li>Verify the function deployed successfully</li>
+    <li>Check for deployment errors in Supabase logs</li>
+    <li>Make sure project ID is correct in this test</li>
+</ol>
+                    `;
+                } else if (completed === 3 && failed > 0) {
+                    message += `
+<p style="color: #ff9800; font-weight: bold; margin-top: 15px;">
+    ⚠️ Some tests failed - review the errors above
+</p>
+                    `;
+                }
+                
+                content.innerHTML = message;
+                summary.style.display = 'block';
+            }
+        }
+
+        // Auto-run health check on load
+        window.addEventListener('load', () => {
+            console.log('Backend Test Page Loaded');
+            console.log('Click "Run Health Check" to test your deployment');
+        });
+    </script>
+</body>
+</html>
