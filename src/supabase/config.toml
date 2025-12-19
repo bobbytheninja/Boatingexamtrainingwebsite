@@ -1,0 +1,7 @@
+[project]
+# Replace with your project ID
+id = "abtrsjhvjfgcxxpkszwi"
+
+[functions.server]
+# Disable JWT verification for all routes
+verify_jwt = false
