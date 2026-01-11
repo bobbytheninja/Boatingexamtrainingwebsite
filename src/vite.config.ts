@@ -19,9 +19,13 @@ export default defineConfig({
           vendor: ['react', 'react-dom'],
           supabase: ['@supabase/supabase-js'],
           stripe: ['@stripe/stripe-js'],
+          xlsx: ['xlsx'],
         },
       },
     },
+  },
+  optimizeDeps: {
+    include: ['xlsx'],
   },
   server: {
     port: 5173,
