@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backend Diagnostics</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1e293b;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin: 25px 0;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border-left: 4px solid #3b82f6;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #1e293b;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        button:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success {
+            background: #d1fae5;
+            border: 2px solid #10b981;
+            color: #065f46;
+        }
+        .error {
+            background: #fee2e2;
+            border: 2px solid #ef4444;
+            color: #991b1b;
+        }
+        .info {
+            background: #dbeafe;
+            border: 2px solid #3b82f6;
+            color: #1e40af;
+        }
+        .warning {
+            background: #fef3c7;
+            border: 2px solid #f59e0b;
+            color: #92400e;
+        }
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .status-card {
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px solid #e2e8f0;
+            background: white;
+        }
+        .status-card h4 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            color: #64748b;
+        }
+        .status-card .value {
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .status-ok { border-color: #10b981; color: #10b981; }
+        .status-fail { border-color: #ef4444; color: #ef4444; }
+        .status-unknown { border-color: #f59e0b; color: #f59e0b; }
+        .commands {
+            background: #1e293b;
+            color: #94a3b8;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            margin: 15px 0;
+        }
+        .commands .cmd {
+            color: #38bdf8;
+        }
+        .step {
+            margin: 15px 0;
+            padding: 15px;
+            background: white;
+            border-radius: 6px;
+            border-left: 4px solid #10b981;
+        }
+        .step-number {
+            display: inline-block;
+            background: #3b82f6;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 24px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Backend Diagnostics</h1>
+        <p>Let's diagnose what's wrong with your backend and get it running!</p>
+
+        <!-- Status Overview -->
+        <div class="test-section">
+            <h3>📊 Current Status</h3>
+            <div class="status-grid">
+                <div class="status-card" id="statusBackend">
+                    <h4>Backend Server</h4>
+                    <div class="value status-unknown">TESTING...</div>
+                </div>
+                <div class="status-card" id="statusAuth">
+                    <h4>Authentication</h4>
+                    <div class="value status-unknown">PENDING</div>
+                </div>
+                <div class="status-card" id="statusStripe">
+                    <h4>Stripe Config</h4>
+                    <div class="value status-unknown">PENDING</div>
+                </div>
+            </div>
+            <button onclick="runAllTests()">🔄 Run All Tests</button>
+        </div>
+
+        <!-- Test 1: Backend Health -->
+        <div class="test-section">
+            <h3>Test 1: Backend Health Check</h3>
+            <p>Checking if the backend is deployed and responding...</p>
+            <button onclick="testHealth()" id="btnHealth">Test Health Endpoint</button>
+            <div id="resultHealth"></div>
+        </div>
+
+        <!-- Test 2: Signup Endpoint -->
+        <div class="test-section">
+            <h3>Test 2: Signup Endpoint</h3>
+            <p>Testing if user registration endpoint is working...</p>
+            <button onclick="testSignup()" id="btnSignup">Test Signup</button>
+            <div id="resultSignup"></div>
+        </div>
+
+        <!-- Test 3: Question Count -->
+        <div class="test-section">
+            <h3>Test 3: Questions Endpoint</h3>
+            <p>Testing if question endpoints are responding...</p>
+            <button onclick="testQuestions()" id="btnQuestions">Test Questions</button>
+            <div id="resultQuestions"></div>
+        </div>
+
+        <!-- Deployment Instructions -->
+        <div class="test-section">
+            <h3>🚀 Deploy/Redeploy Backend</h3>
+            <p>If tests above fail, run these commands in your terminal:</p>
+            
+            <div class="step">
+                <span class="step-number">1</span>
+                <strong>Login to Supabase:</strong>
+                <div class="commands"><span class="cmd">npx supabase login</span></div>
+            </div>
+
+            <div class="step">
+                <span class="step-number">2</span>
+                <strong>Link your project (if not already linked):</strong>
+                <div class="commands"><span class="cmd">npx supabase link --project-ref abtrsjhvjfgcxxpkszwi</span></div>
+            </div>
+
+            <div class="step">
+                <span class="step-number">3</span>
+                <strong>Deploy the backend:</strong>
+                <div class="commands"><span class="cmd">npx supabase functions deploy server --no-verify-jwt</span></div>
+            </div>
+
+            <div class="step">
+                <span class="step-number">4</span>
+                <strong>After deployment completes, click "Run All Tests" above</strong>
+            </div>
+        </div>
+
+        <!-- Detailed Logs -->
+        <div class="test-section">
+            <h3>📋 Full Diagnostic Report</h3>
+            <button onclick="generateReport()">Generate Report</button>
+            <div id="reportResult"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://abtrsjhvjfgcxxpkszwi.supabase.co/functions/v1/make-server-d36f8f91';
+        const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFidHJzamh2amZnY3h4cGtzendpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIwOTgwODcsImV4cCI6MjA3NzY3NDA4N30.V6JxIrjjr3b1rxcdpNrrCEgh-cOuEl9HIAMDMHSOZWw';
+
+        const results = {
+            health: null,
+            signup: null,
+            questions: null
+        };
+
+        function showResult(elementId, message, type = 'info') {
+            const resultDiv = document.getElementById(elementId);
+            resultDiv.innerHTML = `<div class="result ${type}">${message}</div>`;
+        }
+
+        function updateStatus(cardId, status, text) {
+            const card = document.getElementById(cardId);
+            const valueEl = card.querySelector('.value');
+            valueEl.className = `value status-${status}`;
+            valueEl.textContent = text;
+        }
+
+        async function testHealth() {
+            const btn = document.getElementById('btnHealth');
+            btn.disabled = true;
+            showResult('resultHealth', '⏳ Testing backend health...', 'info');
+
+            try {
+                const startTime = Date.now();
+                const response = await fetch(`${API_URL}/health`, {
+                    headers: { 'Authorization': `Bearer ${ANON_KEY}` }
+                });
+                const elapsed = Date.now() - startTime;
+
+                const data = await response.json();
+                results.health = { success: response.ok, data, status: response.status, elapsed };
+                
+                if (response.ok && data.status === 'ok') {
+                    const message = `✅ Backend is HEALTHY!\n\nResponse Time: ${elapsed}ms\nStatus: ${data.status}\nTimestamp: ${new Date(data.timestamp).toLocaleString()}\n\nFull Response:\n${JSON.stringify(data, null, 2)}`;
+                    showResult('resultHealth', message, 'success');
+                    updateStatus('statusBackend', 'ok', '✅ ONLINE');
+                } else {
+                    const message = `⚠️ Backend responded but with issues:\n\nStatus: ${response.status}\nResponse:\n${JSON.stringify(data, null, 2)}`;
+                    showResult('resultHealth', message, 'warning');
+                    updateStatus('statusBackend', 'fail', '⚠️ ISSUES');
+                }
+            } catch (error) {
+                results.health = { success: false, error: error.message };
+                const message = `❌ Backend is NOT responding!\n\nError: ${error.message}\n\n🔧 This means:\n1. Backend is not deployed, OR\n2. Backend crashed during startup, OR\n3. Network/connectivity issue\n\n📋 Next Steps:\n1. Run: npx supabase functions deploy server --no-verify-jwt\n2. Wait for deployment to complete\n3. Click "Test Health Endpoint" again`;
+                showResult('resultHealth', message, 'error');
+                updateStatus('statusBackend', 'fail', '❌ OFFLINE');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        async function testSignup() {
+            const btn = document.getElementById('btnSignup');
+            btn.disabled = true;
+            showResult('resultSignup', '⏳ Testing signup endpoint...', 'info');
+
+            try {
+                const testEmail = `test-${Date.now()}@example.com`;
+                const response = await fetch(`${API_URL}/signup`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${ANON_KEY}`
+                    },
+                    body: JSON.stringify({
+                        email: testEmail,
+                        password: 'TestPassword123!',
+                        name: 'Test User'
+                    })
+                });
+
+                const data = await response.json();
+                results.signup = { success: response.ok, data, status: response.status };
+                
+                if (response.ok) {
+                    const message = `✅ Signup endpoint is WORKING!\n\nTest email: ${testEmail}\nResponse:\n${JSON.stringify(data, null, 2)}`;
+                    showResult('resultSignup', message, 'success');
+                    updateStatus('statusAuth', 'ok', '✅ WORKING');
+                } else {
+                    const message = `⚠️ Signup endpoint responded with error:\n\nStatus: ${response.status}\nResponse:\n${JSON.stringify(data, null, 2)}`;
+                    showResult('resultSignup', message, 'warning');
+                    updateStatus('statusAuth', 'fail', '⚠️ ISSUES');
+                }
+            } catch (error) {
+                results.signup = { success: false, error: error.message };
+                const message = `❌ Signup endpoint failed!\n\nError: ${error.message}`;
+                showResult('resultSignup', message, 'error');
+                updateStatus('statusAuth', 'fail', '❌ FAILED');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        async function testQuestions() {
+            const btn = document.getElementById('btnQuestions');
+            btn.disabled = true;
+            showResult('resultQuestions', '⏳ Testing questions endpoint...', 'info');
+
+            try {
+                const response = await fetch(`${API_URL}/questions/jet/count`, {
+                    headers: { 'Authorization': `Bearer ${ANON_KEY}` }
+                });
+
+                const data = await response.json();
+                results.questions = { success: response.ok, data, status: response.status };
+                
+                if (response.ok) {
+                    const message = `✅ Questions endpoint is WORKING!\n\nJet ski questions count: ${data.count}\nResponse:\n${JSON.stringify(data, null, 2)}`;
+                    showResult('resultQuestions', message, 'success');
+                } else {
+                    const message = `⚠️ Questions endpoint responded with error:\n\nStatus: ${response.status}\nResponse:\n${JSON.stringify(data, null, 2)}`;
+                    showResult('resultQuestions', message, 'warning');
+                }
+            } catch (error) {
+                results.questions = { success: false, error: error.message };
+                const message = `❌ Questions endpoint failed!\n\nError: ${error.message}`;
+                showResult('resultQuestions', message, 'error');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        async function runAllTests() {
+            updateStatus('statusBackend', 'unknown', 'TESTING...');
+            updateStatus('statusAuth', 'unknown', 'TESTING...');
+            updateStatus('statusStripe', 'unknown', 'TESTING...');
+            
+            await testHealth();
+            
+            if (results.health?.success) {
+                await testSignup();
+                await testQuestions();
+                // Stripe test would go here
+                updateStatus('statusStripe', 'unknown', 'PENDING');
+            } else {
+                showResult('resultSignup', '⚠️ Skipped - Backend is offline', 'warning');
+                showResult('resultQuestions', '⚠️ Skipped - Backend is offline', 'warning');
+                updateStatus('statusAuth', 'unknown', 'PENDING');
+                updateStatus('statusStripe', 'unknown', 'PENDING');
+            }
+        }
+
+        function generateReport() {
+            const report = `
+🔍 BACKEND DIAGNOSTIC REPORT
+Generated: ${new Date().toLocaleString()}
+Project ID: abtrsjhvjfgcxxpkszwi
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 TEST RESULTS:
+
+1️⃣ Health Check: ${results.health?.success ? '✅ PASSED' : '❌ FAILED'}
+${results.health ? JSON.stringify(results.health, null, 2) : 'Not tested yet'}
+
+2️⃣ Signup Endpoint: ${results.signup?.success ? '✅ PASSED' : '❌ FAILED'}
+${results.signup ? JSON.stringify(results.signup, null, 2) : 'Not tested yet'}
+
+3️⃣ Questions Endpoint: ${results.questions?.success ? '✅ PASSED' : '❌ FAILED'}
+${results.questions ? JSON.stringify(results.questions, null, 2) : 'Not tested yet'}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 RECOMMENDATIONS:
+
+${!results.health?.success ? `
+❌ CRITICAL: Backend is offline!
+   → Run: npx supabase functions deploy server --no-verify-jwt
+   → Then click "Run All Tests" again
+` : '✅ Backend is healthy!'}
+
+${results.health?.success && !results.signup?.success ? `
+⚠️ WARNING: Auth endpoints have issues
+   → Check Supabase logs: npx supabase functions logs server
+   → Verify Supabase Auth is enabled in dashboard
+` : ''}
+
+${results.health?.success && results.signup?.success ? `
+✅ ALL SYSTEMS OPERATIONAL!
+   → You can now use login/signup
+   → Set up Stripe keys for payments
+   → Ready to deploy frontend!
+` : ''}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📞 SUPPORT INFO:
+Backend URL: ${API_URL}
+Dashboard: https://supabase.com/dashboard/project/abtrsjhvjfgcxxpkszwi
+            `;
+
+            showResult('reportResult', report, 'info');
+        }
+
+        // Auto-run tests on page load
+        window.addEventListener('load', () => {
+            setTimeout(runAllTests, 500);
+        });
+    </script>
+</body>
+</html>

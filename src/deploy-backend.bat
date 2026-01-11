@@ -1,104 +1,63 @@
 @echo off
-REM Yacht Exam Trainer - Backend Deployment Script (Windows)
-REM This script deploys your Supabase Edge Functions
+REM Backend Deployment Script for Windows
+REM Run this to deploy your backend to Supabase
 
-echo.
-echo 🚀 Deploying Yacht Exam Trainer Backend...
+echo ====================================
+echo   Backend Deployment to Supabase
+echo ====================================
 echo.
 
-REM Check if Supabase CLI is installed
-where supabase >nul 2>nul
-if %ERRORLEVEL% NEQ 0 (
-    echo ❌ Supabase CLI not found. Please install it first:
+echo Step 1: Logging in to Supabase...
+echo.
+call npx supabase login
+
+if errorlevel 1 (
     echo.
-    echo    npm install -g supabase
-    echo.
-    echo Or with scoop:
-    echo    scoop install supabase
-    echo.
-    exit /b 1
-)
-
-echo ✅ Supabase CLI found
-echo.
-
-REM Check if logged in
-echo 📝 Checking Supabase login status...
-supabase projects list >nul 2>nul
-if %ERRORLEVEL% NEQ 0 (
-    echo ❌ Not logged in to Supabase
-    echo Running: supabase login
-    echo.
-    supabase login
-)
-
-echo ✅ Logged in to Supabase
-echo.
-
-REM Link to project
-echo 🔗 Linking to your Supabase project...
-set PROJECT_ID=abtrsjhvjfgcxxpkszwi
-
-supabase link --project-ref %PROJECT_ID%
-
-if %ERRORLEVEL% NEQ 0 (
-    echo ❌ Failed to link project
-    exit /b 1
-)
-
-echo ✅ Project linked
-echo.
-
-REM Set secrets
-echo 🔐 Configuring secrets...
-echo.
-echo The following secrets should already be configured:
-echo   ✅ SUPABASE_URL
-echo   ✅ SUPABASE_ANON_KEY
-echo   ✅ SUPABASE_SERVICE_ROLE_KEY
-echo   ✅ SUPABASE_DB_URL
-echo   ✅ STRIPE_SECRET_KEY
-echo.
-
-REM Set ADMIN_IMPORT_KEY
-echo Setting ADMIN_IMPORT_KEY for question imports...
-set /p ADMIN_KEY="Enter your admin import key (choose a secure password): "
-
-if "%ADMIN_KEY%"=="" (
-    echo ⚠️  Using default key
-    set ADMIN_KEY=change-this-key-12345
-)
-
-supabase secrets set ADMIN_IMPORT_KEY=%ADMIN_KEY%
-
-echo.
-echo ✅ Secrets configured
-echo.
-
-REM Deploy functions
-echo 🚀 Deploying Edge Functions...
-echo.
-
-supabase functions deploy server
-
-if %ERRORLEVEL% NEQ 0 (
-    echo ❌ Deployment failed
+    echo ERROR: Login failed! Please try again.
+    pause
     exit /b 1
 )
 
 echo.
-echo ✅ Backend deployed successfully!
+echo Step 2: Linking to project...
 echo.
-echo 📍 Your API endpoint:
-echo    https://%PROJECT_ID%.supabase.co/functions/v1/make-server-d36f8f91/
-echo.
-echo 🔑 Your Admin Import Key: %ADMIN_KEY%
-echo    (Save this - you'll need it to import questions)
-echo.
-echo Next steps:
-echo   1. Deploy frontend (see DEPLOYMENT_GUIDE.md)
-echo   2. Configure Stripe webhook
-echo   3. Import your questions via Admin Panel
-echo.
+call npx supabase link --project-ref abtrsjhvjfgcxxpkszwi
 
+echo.
+echo Step 3: Deploying server function...
+echo.
+call npx supabase functions deploy server --no-verify-jwt
+
+if errorlevel 1 (
+    echo.
+    echo ERROR: Deployment failed!
+    echo.
+    echo Troubleshooting:
+    echo   1. Check your internet connection
+    echo   2. Make sure you're logged in
+    echo   3. Try running: npx supabase functions deploy server --no-verify-jwt --debug
+    echo.
+    pause
+    exit /b 1
+)
+
+echo.
+echo ====================================
+echo   Deployment Successful!
+echo ====================================
+echo.
+echo Testing backend health...
+timeout /t 2 /nobreak >nul
+
+curl -s -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFidHJzamh2amZnY3h4cGtzendpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIwOTgwODcsImV4cCI6MjA3NzY3NDA4N30.V6JxIrjjr3b1rxcdpNrrCEgh-cOuEl9HIAMDMHSOZWw" https://abtrsjhvjfgcxxpkszwi.supabase.co/functions/v1/make-server-d36f8f91/health
+
+echo.
+echo.
+echo ====================================
+echo   Next Steps:
+echo ====================================
+echo   1. Open diagnose-backend.html in your browser
+echo   2. Try logging in to your app
+echo   3. Set up Stripe keys (see FINISH_PAYMENT_TODAY.md)
+echo.
 pause

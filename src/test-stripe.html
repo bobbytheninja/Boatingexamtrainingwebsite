@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stripe Configuration Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1e293b;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #64748b;
+            margin-bottom: 30px;
+        }
+        .section {
+            margin: 25px 0;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border-left: 4px solid #3b82f6;
+        }
+        .section h3 {
+            margin-top: 0;
+            color: #1e293b;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        button:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+            word-break: break-word;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .success {
+            background: #d1fae5;
+            border: 2px solid #10b981;
+            color: #065f46;
+        }
+        .error {
+            background: #fee2e2;
+            border: 2px solid #ef4444;
+            color: #991b1b;
+        }
+        .warning {
+            background: #fef3c7;
+            border: 2px solid #f59e0b;
+            color: #92400e;
+        }
+        .info {
+            background: #dbeafe;
+            border: 2px solid #3b82f6;
+            color: #1e40af;
+        }
+        .commands {
+            background: #1e293b;
+            color: #94a3b8;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            margin: 15px 0;
+        }
+        .cmd {
+            color: #38bdf8;
+            display: block;
+            margin: 5px 0;
+        }
+        .step {
+            margin: 15px 0;
+            padding: 15px;
+            background: white;
+            border-radius: 6px;
+            border-left: 4px solid #10b981;
+        }
+        .step-number {
+            display: inline-block;
+            background: #3b82f6;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 28px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .issue-box {
+            background: #fef3c7;
+            border: 2px solid #f59e0b;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .issue-box h3 {
+            margin-top: 0;
+            color: #92400e;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>💳 Stripe Configuration Test</h1>
+        <p class="subtitle">Diagnose and fix your "Failed to start checkout" error</p>
+
+        <!-- Your Current Issue -->
+        <div class="issue-box">
+            <h3>🚨 Your Current Issue</h3>
+            <p><strong>Error:</strong> "Failed to start checkout"</p>
+            <p><strong>Cause:</strong> Stripe API key (STRIPE_SECRET_KEY) is not configured in Supabase</p>
+            <p><strong>Solution:</strong> Follow the steps below to add your Stripe key</p>
+        </div>
+
+        <!-- Step 1: Get Stripe Key -->
+        <div class="section">
+            <h3>Step 1: Get Your Stripe Secret Key</h3>
+            <p>You need to get your API key from Stripe first.</p>
+            
+            <div class="step">
+                <span class="step-number">1</span>
+                <strong>Go to Stripe Dashboard (Test Mode):</strong>
+                <br><br>
+                <a href="https://dashboard.stripe.com/test/apikeys" target="_blank" style="color: #3b82f6; font-weight: bold;">
+                    👉 Click Here: https://dashboard.stripe.com/test/apikeys
+                </a>
+            </div>
+
+            <div class="step">
+                <span class="step-number">2</span>
+                <strong>Find "Secret key" section</strong>
+                <br>
+                <small style="color: #64748b;">(NOT "Publishable key" - that's different!)</small>
+            </div>
+
+            <div class="step">
+                <span class="step-number">3</span>
+                <strong>Click "Reveal test key"</strong>
+                <br>
+                <small style="color: #64748b;">The key starts with: sk_test_...</small>
+            </div>
+
+            <div class="step">
+                <span class="step-number">4</span>
+                <strong>Copy the entire key</strong>
+                <br>
+                <small style="color: #64748b;">You'll use it in Step 2 below</small>
+            </div>
+        </div>
+
+        <!-- Step 2: Add to Supabase -->
+        <div class="section">
+            <h3>Step 2: Add Key to Supabase</h3>
+            <p>Run this command in your terminal (replace with your actual key):</p>
+            
+            <div class="commands">
+                <span class="cmd">npx supabase secrets set STRIPE_SECRET_KEY=sk_test_YOUR_KEY_HERE</span>
+            </div>
+
+            <p style="margin-top: 15px;"><strong>Example:</strong></p>
+            <div class="commands">
+                <span class="cmd">npx supabase secrets set STRIPE_SECRET_KEY=sk_test_51AbC...</span>
+            </div>
+
+            <p style="margin-top: 15px; color: #10b981; font-weight: bold;">✅ Wait for: "Finished supabase secrets set"</p>
+        </div>
+
+        <!-- Step 3: Redeploy Backend -->
+        <div class="section">
+            <h3>Step 3: Redeploy Backend</h3>
+            <p>Backend needs to restart to load the new secret:</p>
+            
+            <div class="commands">
+                <span class="cmd">npx supabase functions deploy server --no-verify-jwt</span>
+            </div>
+
+            <p style="margin-top: 15px; color: #10b981; font-weight: bold;">✅ Wait for: "Deployed Function server"</p>
+        </div>
+
+        <!-- Step 4: Test -->
+        <div class="section">
+            <h3>Step 4: Test Checkout Endpoint</h3>
+            <p>After completing Steps 1-3, test if Stripe is configured:</p>
+            
+            <button onclick="testCheckout()" id="btnTest">🧪 Test Checkout Endpoint</button>
+            <button onclick="checkLogs()" id="btnLogs">📋 View Backend Logs</button>
+            
+            <div id="testResult"></div>
+        </div>
+
+        <!-- Verification -->
+        <div class="section">
+            <h3>✅ Verify Configuration</h3>
+            <p>After steps 1-3, verify your secrets are set:</p>
+            
+            <div class="commands">
+                <span class="cmd">npx supabase secrets list</span>
+            </div>
+
+            <p style="margin-top: 15px;"><strong>Should show:</strong></p>
+            <div class="result info">NAME                    VALUE
+STRIPE_SECRET_KEY      sk_test_...</div>
+
+            <p style="margin-top: 15px;"><strong>If STRIPE_SECRET_KEY is missing:</strong> Go back to Step 2</p>
+        </div>
+
+        <!-- Success Criteria -->
+        <div class="section">
+            <h3>🎯 Success!</h3>
+            <p>You'll know it's working when:</p>
+            <ul>
+                <li>✅ "Test Checkout Endpoint" button above returns success</li>
+                <li>✅ Clicking "Purchase" in your app redirects to Stripe checkout page</li>
+                <li>✅ No more "Failed to start checkout" error</li>
+            </ul>
+        </div>
+
+        <!-- Test Cards -->
+        <div class="section">
+            <h3>💳 Test Credit Cards (After Setup)</h3>
+            <p>Use these test cards in Stripe checkout (test mode only):</p>
+            
+            <div class="result info">✅ Successful Payment:
+Card: 4242 4242 4242 4242
+Expiry: 12/25 (any future date)
+CVC: 123 (any 3 digits)
+ZIP: 12345 (any 5 digits)
+
+❌ Declined Payment (for testing):
+Card: 4000 0000 0000 0002</div>
+
+            <p style="margin-top: 10px;">
+                <a href="https://stripe.com/docs/testing" target="_blank" style="color: #3b82f6;">
+                    More test cards →
+                </a>
+            </p>
+        </div>
+
+        <!-- Checklist -->
+        <div class="section">
+            <h3>📋 Complete Checklist</h3>
+            <div style="font-family: monospace; line-height: 2;">
+                ☐ Got Stripe key from dashboard.stripe.com/test/apikeys<br>
+                ☐ Ran: npx supabase secrets set STRIPE_SECRET_KEY=...<br>
+                ☐ Saw: "Finished supabase secrets set"<br>
+                ☐ Ran: npx supabase functions deploy server --no-verify-jwt<br>
+                ☐ Saw: "Deployed Function server"<br>
+                ☐ Clicked "Test Checkout Endpoint" above - shows ✅<br>
+                ☐ Tried checkout in app - redirects to Stripe<br>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://abtrsjhvjfgcxxpkszwi.supabase.co/functions/v1/make-server-d36f8f91';
+
+        function showResult(message, type = 'info') {
+            const resultDiv = document.getElementById('testResult');
+            resultDiv.innerHTML = `<div class="result ${type}">${message}</div>`;
+        }
+
+        async function testCheckout() {
+            const btn = document.getElementById('btnTest');
+            btn.disabled = true;
+            showResult('⏳ Testing checkout endpoint...\n\nNote: This test will fail with "Unauthorized" which is normal.\nWe just want to see if Stripe is configured.', 'info');
+
+            try {
+                // Make request without auth - we expect it to fail with 401, not 503
+                const response = await fetch(`${API_URL}/create-checkout-session`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        examTypes: ['jet']
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.status === 401) {
+                    // This is GOOD - means Stripe is configured, we just need to log in
+                    const message = `✅ STRIPE IS CONFIGURED!\n\nThe endpoint rejected our request because we're not logged in (401 Unauthorized).\nThis is expected and means Stripe is working!\n\nResponse:\n${JSON.stringify(data, null, 2)}\n\n🎉 Next steps:\n1. Go to your app\n2. Log in\n3. Try purchasing a category\n4. Should redirect to Stripe checkout!`;
+                    showResult(message, 'success');
+                } else if (response.status === 503) {
+                    // Backend says Stripe not configured
+                    const message = `❌ STRIPE NOT CONFIGURED\n\nThe backend says Stripe is not available.\n\nResponse:\n${JSON.stringify(data, null, 2)}\n\n📋 To fix:\n1. Make sure you ran: npx supabase secrets set STRIPE_SECRET_KEY=...\n2. Then redeploy: npx supabase functions deploy server --no-verify-jwt\n3. Wait 30 seconds for backend to restart\n4. Click "Test Checkout Endpoint" again\n\n💡 Hint from backend:\n${data.hint || 'Check STRIPE_SECRET_KEY environment variable'}`;
+                    showResult(message, 'error');
+                } else {
+                    // Unexpected response
+                    const message = `⚠️ UNEXPECTED RESPONSE\n\nStatus: ${response.status}\n\nResponse:\n${JSON.stringify(data, null, 2)}\n\nThis might be a different issue. Check the error message above.`;
+                    showResult(message, 'warning');
+                }
+            } catch (error) {
+                const message = `❌ BACKEND NOT RESPONDING\n\nError: ${error.message}\n\nThe backend might be offline or not deployed.\n\n📋 To fix:\n1. Make sure backend is deployed:\n   npx supabase functions deploy server --no-verify-jwt\n\n2. Check if it's running:\n   Open diagnose-backend.html`;
+                showResult(message, 'error');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        function checkLogs() {
+            const message = `📋 To view backend logs, run this in your terminal:\n\nnpx supabase functions logs server\n\nLook for:\n✅ "Stripe initialized successfully"\n❌ "STRIPE_SECRET_KEY environment variable is not set"\n❌ "Invalid API Key"\n\nLogs will show you exactly what's happening with Stripe.`;
+            showResult(message, 'info');
+        }
+
+        // Auto-test on load
+        window.addEventListener('load', () => {
+            const hint = `💡 Quick Start:\n\n1. Get Stripe key: https://dashboard.stripe.com/test/apikeys\n2. Run: npx supabase secrets set STRIPE_SECRET_KEY=sk_test_...\n3. Run: npx supabase functions deploy server --no-verify-jwt\n4. Click "Test Checkout Endpoint" above\n\nOr follow the step-by-step guide above! 👆`;
+            showResult(hint, 'info');
+        });
+    </script>
+</body>
+</html>

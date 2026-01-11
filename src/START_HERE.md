@@ -1,292 +1,154 @@
-# 🎯 START HERE - Your Complete Deployment Guide
+# 🚨 START HERE - Fix Your Issues
 
-**Welcome!** Your yacht exam training platform is ready to deploy. I've prepared everything you need.
+## ✅ Backend is Working! (Login works now)
 
----
+## 🚨 NEW ISSUE: "Failed to start checkout"
 
-## ✅ **What's Already Done:**
+**Cause:** Stripe API key is not configured yet
 
-- ✅ Supabase backend configured (Project ID: `abtrsjhvjfgcxxpkszwi`)
-- ✅ Complete application code written
-- ✅ Backend API with authentication & payments
-- ✅ Question database system (ready for 600 questions)
-- ✅ Admin panel for management
-- ✅ Deployment scripts created
-- ✅ All documentation ready
-
-**You're 95% there! Just need to deploy it!**
+**Fix:** Takes 5 minutes - follow below
 
 ---
 
-## 🚀 **Quick Path to Launch (15 minutes):**
-
-### **Read This First:**
-👉 **[WHAT_I_NEED_FROM_YOU.md](./WHAT_I_NEED_FROM_YOU.md)** 
-
-This tells you the 3 things I need from you:
-1. Stripe Publishable Key
-2. GitHub Username  
-3. Admin Import Key
-
-### **Then Follow This:**
-👉 **[DEPLOY_NOW.md](./DEPLOY_NOW.md)**
-
-Simple 3-step deployment:
-1. Deploy backend (5 min)
-2. Push to GitHub (5 min)
-3. Deploy frontend on Vercel (5 min)
+## 🎯 Goal: Set Up Stripe Payments (5 minutes)
 
 ---
 
-## 📚 **All Available Documentation:**
+## 🚀 Quick Fix - Add Stripe Key:
 
-| File | Purpose | When to Use |
-|------|---------|-------------|
-| **[START_HERE.md](./START_HERE.md)** | You are here! Overview & navigation | Start here |
-| **[WHAT_I_NEED_FROM_YOU.md](./WHAT_I_NEED_FROM_YOU.md)** | Info needed from you | Read first! |
-| **[DEPLOY_NOW.md](./DEPLOY_NOW.md)** | Simple 3-step deployment | Deploy here! |
-| **[QUICK_START.md](./QUICK_START.md)** | 30-minute fast track | Alternative guide |
-| **[DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md)** | Complete detailed guide | If you need more details |
-| **[PRE_LAUNCH_CHECKLIST.md](./PRE_LAUNCH_CHECKLIST.md)** | Final testing checklist | Before going public |
-| **[DEPLOYMENT_SUMMARY.md](./DEPLOYMENT_SUMMARY.md)** | Overview of everything | Reference |
-| **[README.md](./README.md)** | Project documentation | Local development |
+### Step 1: Get Stripe Secret Key (2 minutes)
 
----
+1. **Go to Stripe Dashboard:**
+   👉 https://dashboard.stripe.com/test/apikeys
 
-## 🎯 **Recommended Path for You:**
+2. **Find "Secret key"** (NOT "Publishable key")
 
-Since you said "take care of everything," here's what to do:
+3. **Click "Reveal test key"** - starts with `sk_test_`
 
-### **Step 1: Give Me Info (2 minutes)**
-Read **[WHAT_I_NEED_FROM_YOU.md](./WHAT_I_NEED_FROM_YOU.md)** and give me:
-- Stripe Publishable Key
-- GitHub Username
-- Admin Import Key (just pick a secure password)
+4. **Copy it** (you'll need it in Step 2)
 
-### **Step 2: I'll Configure Everything**
-Once you give me that info, I will:
-- Update all scripts with your details
-- Create environment variable files
-- Give you exact commands to run
-- Walk you through each step
+### Step 2: Add to Supabase (2 minutes)
 
-### **Step 3: You Run Simple Commands (15 minutes)**
-Just copy-paste the commands I give you:
+Run this in your terminal (replace with your actual key):
+
 ```bash
-./deploy-backend.sh      # Deploy backend
-./setup-github.sh        # Push to GitHub
-# Then click a few buttons on Vercel
+npx supabase secrets set STRIPE_SECRET_KEY=sk_test_YOUR_KEY_HERE
 ```
 
-### **Step 4: You're Live! 🎉**
-Your site will be online and ready to use!
+**Wait for:** `✓ Finished supabase secrets set`
+
+### Step 3: Restart Backend (1 minute)
+
+```bash
+npx supabase functions deploy server --no-verify-jwt
+```
+
+**Wait for:** `Deployed Function server`
+
+### Step 4: Test Checkout
+
+1. **Open `test-stripe.html`** in your browser ⭐
+2. **Click "Test Checkout Endpoint"**
+3. **Should show** ✅ Stripe is configured
+4. **Try purchasing** in your app - should redirect to Stripe!
 
 ---
 
-## 📁 **Deployment Scripts I Created:**
+## 🧪 Testing Payments
 
-### **For Mac/Linux:**
-- `deploy-backend.sh` - Deploys Supabase Edge Functions
-- `setup-github.sh` - Sets up git and pushes to GitHub
+Use these test cards in Stripe checkout:
 
-### **For Windows:**
-- `deploy-backend.bat` - Deploys Supabase Edge Functions
-- (Manual git commands provided in DEPLOY_NOW.md)
+**✅ Successful payment:**
+- Card: `4242 4242 4242 4242`
+- Expiry: `12/25` (any future date)
+- CVC: `123` (any 3 digits)
+- ZIP: `12345` (any 5 digits)
 
-### **Database:**
-- `make-admin.sql` - SQL script to make yourself admin
+**❌ Declined payment:**
+- Card: `4000 0000 0000 0002`
 
----
-
-## 🔧 **What You Need Installed:**
-
-### **Required:**
-- **Node.js** (v16 or higher) - https://nodejs.org
-- **Git** - https://git-scm.com
-- **Supabase CLI** - Install via script or: `npm install -g supabase`
-
-### **Optional:**
-- **Code editor** (VS Code, Sublime, etc.) - For making changes later
+More test cards: https://stripe.com/docs/testing
 
 ---
 
-## 💰 **Cost Breakdown:**
+## 📁 Files to Help You:
 
-### **To Get Started: €0**
-- Supabase Free Tier: €0/month
-- Vercel Free Tier: €0/month
-- Stripe: €0/month (just transaction fees: 1.4% + €0.25)
-- GitHub: €0/month
-
-### **When You Scale (100+ users):**
-- Supabase Pro: €25/month (more database space)
-- Custom Domain: €10-15/year (optional)
-- Vercel: Still €0 (free tier usually sufficient)
-
-**Start with €0, scale only when needed!**
+| File | Purpose |
+|------|---------|
+| **`test-stripe.html`** | 👈 Test if Stripe is working ⭐ |
+| **`STRIPE_QUICK_SETUP.md`** | Detailed Stripe setup guide |
+| `diagnose-backend.html` | Test backend health |
+| `START_HERE.md` | 👈 This file |
+| `FIX_BACKEND_NOW.md` | Backend troubleshooting |
 
 ---
 
-## 🎓 **What Your Site Will Have:**
+## 📋 Complete Checklist
 
-### **For Users:**
-- 5 exam categories (jet ski, small boat, big boat, yacht, navigation)
-- Mock exams (10 questions, free)
-- Full exams (40 questions, €5/month per category)
-- Study mode with instant feedback
-- Exam mode with 60-minute timer
-- Dark mode
-- Multi-language (English, Bulgarian, Spanish, Greek)
-- Responsive design (works on mobile)
+### ✅ Backend (Already Done!)
+- [x] Unpaused Supabase project
+- [x] Deployed backend
+- [x] Login working
 
-### **For You (Admin):**
-- User management dashboard
-- Question import from CSV (bulk import 600 questions)
-- Grant/revoke licenses manually
-- View exam statistics
-- System diagnostics
-- Question database management
-
-### **Technical:**
-- Secure authentication (Supabase)
-- Payment processing (Stripe)
-- Server-side API (Supabase Edge Functions)
-- Database storage (Supabase KV Store)
-- Automatic subscription management
-- Email receipts
+### 🔲 Stripe (Do This Now!)
+- [ ] Got Stripe key from https://dashboard.stripe.com/test/apikeys
+- [ ] Ran: `npx supabase secrets set STRIPE_SECRET_KEY=...`
+- [ ] Saw: "Finished supabase secrets set"
+- [ ] Ran: `npx supabase functions deploy server --no-verify-jwt`
+- [ ] Opened `test-stripe.html` - shows ✅
+- [ ] Tried checkout in app - redirects to Stripe ✅
 
 ---
 
-## ✅ **Pre-Flight Checklist:**
+## 🐛 Troubleshooting
 
-Before starting deployment:
+### "Failed to start checkout" persists
+1. **Verify secret is set:**
+   ```bash
+   npx supabase secrets list
+   ```
+   Should show `STRIPE_SECRET_KEY`
 
-- [ ] I have a computer (Mac, Windows, or Linux)
-- [ ] I have an internet connection
-- [ ] I have 15 minutes available
-- [ ] I've read WHAT_I_NEED_FROM_YOU.md
-- [ ] I have (or can create) a Stripe account
-- [ ] I have (or can create) a GitHub account
-- [ ] I've chosen a secure admin import key
-- [ ] I have my 600 questions ready (or will import later)
+2. **Check backend logs:**
+   ```bash
+   npx supabase functions logs server
+   ```
+   Look for "Stripe initialized" or errors
 
-**All checked?** You're ready to deploy! 🚀
+3. **Open `test-stripe.html`** - it will tell you exactly what's wrong
 
----
-
-## 🆘 **If You Get Stuck:**
-
-### **Quick Troubleshooting:**
-1. Check [DEPLOY_NOW.md](./DEPLOY_NOW.md) troubleshooting section
-2. Check [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md) for detailed steps
-3. View backend logs: `supabase functions logs server`
-4. Check browser console for frontend errors
-5. Verify all environment variables are set
-
-### **Common Issues:**
-
-**"Supabase CLI not found"**
-→ Install: `npm install -g supabase`
-
-**"git not found"**
-→ Install: https://git-scm.com
-
-**"Questions not loading"**
-→ Import questions via Admin Panel first
-
-**"Payment not working"**
-→ Check STRIPE_PUBLISHABLE_KEY in Vercel env vars
+### Can't find Stripe key
+- Make sure you're in **Test mode** (toggle in top right of Stripe dashboard)
+- Look for **"Secret key"** section (NOT "Publishable key")
+- Key starts with `sk_test_` (test) or `sk_live_` (production)
 
 ---
 
-## 🎉 **What Happens After Deployment:**
+## ⚡ TL;DR - Copy/Paste
 
-### **Immediate (Day 1):**
-1. Your site is live on Vercel (e.g., `yacht-exam-trainer.vercel.app`)
-2. Users can sign up and take mock exams
-3. Users can purchase subscriptions via Stripe
-4. Users can take full 40-question exams
-5. You can manage everything via Admin Panel
+```bash
+# 1. Get key from: https://dashboard.stripe.com/test/apikeys
+# 2. Replace YOUR_KEY and run:
 
-### **Next Steps:**
-1. Import your 600 questions
-2. Test all functionality
-3. Configure custom domain (optional)
-4. Set up Stripe webhooks (for auto-subscription updates)
-5. Switch to Stripe live mode when ready
-6. Start marketing!
+npx supabase secrets set STRIPE_SECRET_KEY=sk_test_YOUR_KEY
+npx supabase functions deploy server --no-verify-jwt
+
+# 3. Open test-stripe.html in browser to verify
+# 4. Try checkout in your app!
+```
 
 ---
 
-## 📞 **Support Resources:**
+## 🎯 After Stripe Works
 
-- **Supabase Docs**: https://supabase.com/docs
-- **Stripe Docs**: https://stripe.com/docs  
-- **Vercel Docs**: https://vercel.com/docs
-- **Git Docs**: https://git-scm.com/doc
+You'll be able to:
+- ✅ Purchase exam categories
+- ✅ Test with fake credit cards  
+- ✅ See payments in Stripe dashboard
+- ✅ Access paid content
 
-**Status Pages** (if something's not working):
-- Supabase: https://status.supabase.com
-- Vercel: https://www.vercel-status.com
-- Stripe: https://status.stripe.com
+Then we can set up webhooks for automatic subscription activation!
 
 ---
 
-## 🎯 **Your Action Items:**
-
-### **Right Now:**
-1. ✅ Read [WHAT_I_NEED_FROM_YOU.md](./WHAT_I_NEED_FROM_YOU.md)
-2. ✅ Gather the 3 pieces of info I need
-3. ✅ Send them to me
-
-### **Then I'll:**
-1. ✅ Configure everything with your details
-2. ✅ Give you exact commands to run
-3. ✅ Walk you through deployment
-
-### **Then You'll:**
-1. ✅ Run the commands (15 minutes)
-2. ✅ Test your live site
-3. ✅ Import your questions
-4. ✅ Start getting users!
-
----
-
-## 💡 **Pro Tips:**
-
-1. **Start with test mode** (Stripe) - Don't activate live payments until you've tested everything
-2. **Test on mobile** - Make sure it works on phones/tablets
-3. **Import questions early** - Do this right after deployment
-4. **Set up webhooks** - Automates subscription management (optional but recommended)
-5. **Use private repo** - Keep your code private on GitHub (for security)
-6. **Save all passwords** - Admin key, Stripe keys, etc. (use a password manager)
-
----
-
-## 🚀 **Ready to Launch?**
-
-**Just 3 simple steps:**
-
-1. 📝 Give me the info from [WHAT_I_NEED_FROM_YOU.md](./WHAT_I_NEED_FROM_YOU.md)
-2. ⚡ I'll configure everything
-3. 🚀 You run the commands and go live!
-
-**Let's get your yacht exam training site online!** 🛥️⚓
-
----
-
-## 📊 **Timeline:**
-
-- **Info gathering**: 2-5 minutes (create accounts if needed)
-- **My configuration**: 2 minutes (once you give me info)
-- **Your deployment**: 15 minutes (running commands)
-- **Testing**: 10 minutes (verify everything works)
-- **Question import**: 5 minutes (upload CSV)
-
-**Total: ~30-45 minutes from start to fully functional site!**
-
----
-
-**Questions? Start by reading [WHAT_I_NEED_FROM_YOU.md](./WHAT_I_NEED_FROM_YOU.md) and let me know what you need help with!** 
-
-I'm here to make this as easy as possible for you! 🎯
+**Add your Stripe key now - should work in 5 minutes!** 🚀

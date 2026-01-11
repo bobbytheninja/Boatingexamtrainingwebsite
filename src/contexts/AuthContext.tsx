@@ -106,7 +106,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
         const token = session.access_token;
-        const { subscriptions, expiresAt } = await fetchSubscriptions(session.user.id, token);
+        
+        // Try to fetch subscriptions, but don't fail if backend is down
+        let subscriptions: ExamType[] = [];
+        let expiresAt: number | null = null;
+        
+        try {
+          const result = await fetchSubscriptions(session.user.id, token);
+          subscriptions = result.subscriptions;
+          expiresAt = result.expiresAt;
+        } catch (subError) {
+          console.warn('Could not fetch subscriptions on auth change, continuing with empty subscriptions:', subError);
+        }
         
         // Check admin status
         const isAdmin = session.user.user_metadata?.role === 'admin' || false;
@@ -163,7 +174,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (data.session?.user) {
         const token = data.session.access_token;
-        const { subscriptions, expiresAt } = await fetchSubscriptions(data.session.user.id, token);
+        
+        // Try to fetch subscriptions, but don't fail signup if backend is down
+        let subscriptions: ExamType[] = [];
+        let expiresAt: number | null = null;
+        
+        try {
+          const result = await fetchSubscriptions(data.session.user.id, token);
+          subscriptions = result.subscriptions;
+          expiresAt = result.expiresAt;
+        } catch (subError) {
+          console.warn('Could not fetch subscriptions, continuing with empty subscriptions:', subError);
+          // Signup still succeeds even if subscription fetch fails
+        }
         
         // Check admin status
         const isAdmin = data.session.user.user_metadata?.role === 'admin' || false;
@@ -195,7 +218,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (data.session?.user) {
         const token = data.session.access_token;
-        const { subscriptions, expiresAt } = await fetchSubscriptions(data.session.user.id, token);
+        
+        // Try to fetch subscriptions, but don't fail login if backend is down
+        let subscriptions: ExamType[] = [];
+        let expiresAt: number | null = null;
+        
+        try {
+          const result = await fetchSubscriptions(data.session.user.id, token);
+          subscriptions = result.subscriptions;
+          expiresAt = result.expiresAt;
+        } catch (subError) {
+          console.warn('Could not fetch subscriptions, continuing with empty subscriptions:', subError);
+          // Login still succeeds even if subscription fetch fails
+        }
         
         // Check admin status
         const isAdmin = data.session.user.user_metadata?.role === 'admin' || false;

@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment System Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1e293b;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #64748b;
+            margin-bottom: 30px;
+        }
+        .section {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border-left: 4px solid #3b82f6;
+        }
+        .section h3 {
+            margin-top: 0;
+            color: #1e293b;
+        }
+        .status {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+        .status-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .status-error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .code-block {
+            background: #1e293b;
+            color: #94a3b8;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        .code-block .highlight {
+            color: #38bdf8;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        button:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .success {
+            background: #d1fae5;
+            border: 1px solid #10b981;
+            color: #065f46;
+        }
+        .error {
+            background: #fee2e2;
+            border: 1px solid #ef4444;
+            color: #991b1b;
+        }
+        .info {
+            background: #dbeafe;
+            border: 1px solid #3b82f6;
+            color: #1e40af;
+        }
+        .checklist {
+            margin: 20px 0;
+        }
+        .checklist-item {
+            padding: 10px;
+            margin: 5px 0;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .checklist-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+        }
+        .step-number {
+            display: inline-block;
+            background: #3b82f6;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 28px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>💳 Stripe Payment System Test</h1>
+        <p class="subtitle">Complete setup checklist and test your payment integration</p>
+
+        <!-- Setup Checklist -->
+        <div class="section">
+            <h3>📋 Setup Checklist</h3>
+            <div class="checklist">
+                <div class="checklist-item">
+                    <input type="checkbox" id="check1">
+                    <label for="check1"><strong>Step 1:</strong> Created Stripe account at stripe.com</label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="check2">
+                    <label for="check2"><strong>Step 2:</strong> Got Stripe test API keys (Dashboard → Developers → API keys)</label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="check3">
+                    <label for="check3"><strong>Step 3:</strong> Set STRIPE_SECRET_KEY in Supabase</label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="check4">
+                    <label for="check4"><strong>Step 4:</strong> Redeployed backend with: <code>npx supabase functions deploy server --no-verify-jwt</code></label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Command Guide -->
+        <div class="section">
+            <h3>🔧 Setup Commands</h3>
+            
+            <p><strong>1. Set your Stripe test secret key:</strong></p>
+            <div class="code-block">
+npx supabase secrets set STRIPE_SECRET_KEY=<span class="highlight">sk_test_YOUR_KEY_HERE</span>
+            </div>
+
+            <p><strong>2. Verify secret is set:</strong></p>
+            <div class="code-block">
+npx supabase secrets list
+            </div>
+
+            <p><strong>3. Redeploy backend:</strong></p>
+            <div class="code-block">
+npx supabase functions deploy server --no-verify-jwt
+            </div>
+        </div>
+
+        <!-- Backend Test -->
+        <div class="section">
+            <h3>🏥 Test 1: Backend Health Check</h3>
+            <p>First, verify the backend is running correctly:</p>
+            <button onclick="testBackend()" id="btnBackend">Test Backend</button>
+            <div id="resultBackend"></div>
+        </div>
+
+        <!-- Stripe Configuration Test -->
+        <div class="section">
+            <h3>🔑 Test 2: Stripe Configuration</h3>
+            <p>Check if Stripe is properly configured in the backend:</p>
+            <button onclick="testStripeConfig()" id="btnStripe">Test Stripe Config</button>
+            <div id="resultStripe"></div>
+        </div>
+
+        <!-- Test Cards -->
+        <div class="section">
+            <h3>💳 Stripe Test Cards</h3>
+            <p>Use these cards when testing payments:</p>
+            
+            <div class="code-block">
+<strong>✅ Success Card:</strong>
+Card Number: <span class="highlight">4242 4242 4242 4242</span>
+Expiry: Any future date (e.g., 12/34)
+CVC: Any 3 digits (e.g., 123)
+ZIP: Any 5 digits (e.g., 12345)
+
+<strong>❌ Decline Card:</strong>
+Card Number: <span class="highlight">4000 0000 0000 0002</span>
+            </div>
+        </div>
+
+        <!-- Full Flow Test Instructions -->
+        <div class="section">
+            <h3>🎯 Test 3: Full Payment Flow</h3>
+            <p>After completing steps 1-2 above, test the full payment flow in your app:</p>
+            <ol>
+                <li>Log in to your application</li>
+                <li>Navigate to the Payment page</li>
+                <li>Select one or more exam categories</li>
+                <li>Click "Proceed to Checkout"</li>
+                <li>You should be redirected to Stripe Checkout</li>
+                <li>Use test card: <strong>4242 4242 4242 4242</strong></li>
+                <li>Complete the payment</li>
+                <li>You should be redirected back to the success page</li>
+                <li>Verify your subscription is active in your account</li>
+            </ol>
+        </div>
+
+        <!-- Troubleshooting -->
+        <div class="section">
+            <h3>🔍 Troubleshooting</h3>
+            
+            <p><strong>Error: "Payment system unavailable - Stripe not configured"</strong></p>
+            <ul>
+                <li>STRIPE_SECRET_KEY is not set in Supabase</li>
+                <li>Run: <code>npx supabase secrets set STRIPE_SECRET_KEY=sk_test_...</code></li>
+                <li>Redeploy backend after setting the secret</li>
+            </ul>
+
+            <p><strong>Error: "Missing authorization header"</strong></p>
+            <ul>
+                <li>Make sure you're logged in</li>
+                <li>The access token might have expired - try logging out and back in</li>
+            </ul>
+
+            <p><strong>Checkout session doesn't redirect</strong></p>
+            <ul>
+                <li>Check browser console for errors</li>
+                <li>Verify the response from /create-checkout-session includes a URL</li>
+                <li>Check Supabase Functions logs for backend errors</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://abtrsjhvjfgcxxpkszwi.supabase.co/functions/v1/make-server-d36f8f91';
+        const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFidHJzamh2amZnY3h4cGtzendpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIwOTgwODcsImV4cCI6MjA3NzY3NDA4N30.V6JxIrjjr3b1rxcdpNrrCEgh-cOuEl9HIAMDMHSOZWw';
+
+        function showResult(elementId, message, type = 'info') {
+            const resultDiv = document.getElementById(elementId);
+            resultDiv.innerHTML = `<div class="result ${type}">${message}</div>`;
+        }
+
+        async function testBackend() {
+            const btn = document.getElementById('btnBackend');
+            btn.disabled = true;
+            showResult('resultBackend', '⏳ Testing backend...', 'info');
+
+            try {
+                const response = await fetch(`${API_URL}/health`, {
+                    headers: {
+                        'Authorization': `Bearer ${ANON_KEY}`
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (response.ok && data.status === 'ok') {
+                    const message = `✅ Backend is healthy!\n\nResponse:\n${JSON.stringify(data, null, 2)}`;
+                    showResult('resultBackend', message, 'success');
+                } else {
+                    const message = `⚠️ Unexpected response:\n${JSON.stringify(data, null, 2)}`;
+                    showResult('resultBackend', message, 'error');
+                }
+            } catch (error) {
+                const message = `❌ Backend test failed:\n${error.message}`;
+                showResult('resultBackend', message, 'error');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        async function testStripeConfig() {
+            const btn = document.getElementById('btnStripe');
+            btn.disabled = true;
+            showResult('resultStripe', '⏳ Testing Stripe configuration...', 'info');
+
+            try {
+                // Try to create a checkout session without auth (should fail gracefully)
+                const response = await fetch(`${API_URL}/create-checkout-session`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${ANON_KEY}`
+                    },
+                    body: JSON.stringify({ examTypes: ['jet'] })
+                });
+
+                const data = await response.json();
+                
+                if (response.status === 401) {
+                    // Expected - need to be logged in
+                    const message = `⚠️ Auth Required (Expected)\n\nYou need to be logged in to test checkout.\n\nTo fully test:\n1. Log in to your app\n2. Go to Payment page\n3. Try to purchase an exam\n\nIf you see a Stripe checkout page, Stripe is configured! ✅`;
+                    showResult('resultStripe', message, 'info');
+                } else if (response.status === 503) {
+                    // Stripe not configured
+                    const message = `❌ Stripe Not Configured\n\n${data.message}\n\n${data.hint || ''}\n\nPlease follow the setup steps above.`;
+                    showResult('resultStripe', message, 'error');
+                } else if (response.ok) {
+                    // Success! (shouldn't happen without auth, but good if it does)
+                    const message = `✅ Stripe is configured!\n\nCheckout URL received:\n${data.url ? data.url.substring(0, 50) + '...' : 'N/A'}`;
+                    showResult('resultStripe', message, 'success');
+                } else {
+                    const message = `⚠️ Unexpected response (${response.status}):\n${JSON.stringify(data, null, 2)}`;
+                    showResult('resultStripe', message, 'error');
+                }
+            } catch (error) {
+                const message = `❌ Test failed:\n${error.message}`;
+                showResult('resultStripe', message, 'error');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        // Auto-test backend on load
+        window.addEventListener('load', () => {
+            setTimeout(testBackend, 500);
+        });
+    </script>
+</body>
+</html>
