@@ -1,0 +1,96 @@
+========================================
+🚀 COPY & PASTE THESE COMMANDS
+========================================
+
+STEP 1: Deploy Backend (I fixed the config!)
+---------------------------------------------
+npx supabase functions deploy server --no-verify-jwt
+
+
+STEP 2: Get Stripe Key
+---------------------------------------------
+Open in browser: https://dashboard.stripe.com/test/apikeys
+Click "Reveal test key"
+Copy the key (starts with sk_test_)
+
+
+STEP 3: Set Stripe Key (REPLACE with your actual key!)
+---------------------------------------------
+npx supabase secrets set STRIPE_SECRET_KEY=sk_test_YOUR_ACTUAL_KEY_HERE
+
+
+STEP 4: Redeploy Backend (to load the Stripe key)
+---------------------------------------------
+npx supabase functions deploy server --no-verify-jwt
+
+
+STEP 5: Check Logs (verify Stripe initialized)
+---------------------------------------------
+npx supabase functions logs server
+
+Look for: "✅ Stripe initialized successfully"
+
+
+STEP 6: Refresh Your App & Try Checkout
+---------------------------------------------
+- Refresh browser (Ctrl+Shift+R or Cmd+Shift+R)
+- Click "Purchase" button
+- Should redirect to Stripe immediately!
+
+
+========================================
+✅ SUCCESS CHECKLIST
+========================================
+□ Step 1 done - deployed successfully
+□ Step 2 done - got Stripe key
+□ Step 3 done - set secret
+□ Step 4 done - redeployed
+□ Step 5 done - logs show "Stripe initialized"
+□ Step 6 done - checkout redirects to Stripe!
+
+
+========================================
+🧪 TEST CARD (use after setup)
+========================================
+Card: 4242 4242 4242 4242
+Expiry: 12/25
+CVC: 123
+ZIP: 12345
+
+
+========================================
+🐛 TROUBLESHOOTING
+========================================
+
+If deployment fails:
+→ Try: npx supabase functions deploy server
+
+If checkout still hangs:
+→ Open: FIX_CHECKOUT_HANGING.md
+→ Check browser console (F12)
+
+If Stripe not initializing:
+→ Make sure key starts with sk_test_ (NOT pk_test_)
+→ Run: npx supabase secrets list
+→ Should show STRIPE_SECRET_KEY
+
+
+========================================
+📁 HELPFUL FILES
+========================================
+START_HERE.md              - Main guide
+FIX_CHECKOUT_HANGING.md   - Checkout debugging
+STRIPE_QUICK_SETUP.md     - Detailed Stripe guide
+test-stripe.html          - Test Stripe setup
+
+
+========================================
+💬 START HERE:
+========================================
+
+1. Copy the command from STEP 1 above
+2. Paste in your terminal
+3. Press Enter
+4. Continue through all steps!
+
+🚀 Should take 5 minutes total!
