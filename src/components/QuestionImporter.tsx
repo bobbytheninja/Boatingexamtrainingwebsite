@@ -3,6 +3,7 @@ import { Upload, CheckCircle, AlertCircle, Loader2, Image as ImageIcon } from 'l
 import { api } from '../utils/api';
 import { projectId, publicAnonKey } from '../utils/supabase/info';
 import { createClient } from '../utils/supabase/client';
+import * as XLSX from 'xlsx';
 import {
   Tooltip,
   TooltipContent,
@@ -126,9 +127,6 @@ export function QuestionImporter() {
 
   const parseExcel = async (file: File) => {
     try {
-      // Dynamically import xlsx library
-      const XLSX = await import('xlsx');
-      
       const data = await file.arrayBuffer();
       const workbook = XLSX.read(data, { cellStyles: true, bookImages: true });
       
@@ -226,7 +224,6 @@ export function QuestionImporter() {
 
       if (fileExtension === 'xlsx' || fileExtension === 'xls') {
         // Parse Excel file
-        const XLSX = await import('xlsx');
         const data = await file.arrayBuffer();
         const workbook = XLSX.read(data, { cellStyles: true, bookImages: true });
         const firstSheetName = workbook.SheetNames[0];
