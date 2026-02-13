@@ -7,7 +7,7 @@ import { ScrollArea } from './ui/scroll-area';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { Input } from './ui/input';
 import { Users, Calendar, CheckCircle, XCircle, Shield, Search, ChevronLeft, ChevronRight } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { ButtonSpinner } from './LoadingSpinner';
 import { projectId } from '../utils/supabase/info';
 import { Alert, AlertDescription } from './ui/alert';

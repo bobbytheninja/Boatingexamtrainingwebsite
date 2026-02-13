@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Toaster as Sonner } from "sonner@2.0.3";
+import { Toaster as Sonner } from "sonner";
 
 const Toaster = () => {
   const [theme, setTheme] = useState<'light' | 'dark'>('light');

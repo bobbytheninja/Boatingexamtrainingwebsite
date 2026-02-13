@@ -29,7 +29,7 @@ import { useDarkMode } from '../contexts/DarkModeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { api } from '../utils/api';
 import { LoadingSpinner } from './LoadingSpinner';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { Navigation } from './Navigation';
 import { Footer } from './Footer';
 

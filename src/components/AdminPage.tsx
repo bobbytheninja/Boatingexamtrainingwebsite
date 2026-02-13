@@ -14,7 +14,7 @@ import { DatabaseDiagnostics } from './DatabaseDiagnostics';
 import { ArrowLeft, Database, Users, Key, UserPlus, AlertCircle, CheckCircle, Shield, Image as ImageIcon } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useDarkMode } from '../contexts/DarkModeContext';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { ButtonSpinner, LoadingSpinner } from './LoadingSpinner';
 import { projectId, publicAnonKey } from '../utils/supabase/info';
 import { Navigation } from './Navigation';

@@ -9,7 +9,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useAuth } from '../contexts/AuthContext';
 import { useDarkMode } from '../contexts/DarkModeContext';
 import { useLanguage } from '../contexts/LanguageContext';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { ButtonSpinner } from './LoadingSpinner';
 import { Navigation } from './Navigation';
 import { Footer } from './Footer';

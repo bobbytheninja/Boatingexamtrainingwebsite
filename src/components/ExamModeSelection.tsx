@@ -11,7 +11,7 @@ import { Footer } from './Footer';
 import { useDarkMode } from '../contexts/DarkModeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 export type ExamMode = 'study' | 'exam';
 export type ExamTier = 'mock' | 'paid';
