@@ -145,7 +145,6 @@ export interface Translations {
   paidExamDesc: string;
   questionsAvailable: string;
   unlockAll: string;
-  startExam: string;
   upgradeRequired: string;
   instantFeedback: string;
   learnAsPractice: string;
