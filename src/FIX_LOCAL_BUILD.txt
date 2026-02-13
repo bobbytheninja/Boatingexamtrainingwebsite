@@ -1,0 +1,66 @@
+🔧 FIX LOCAL BUILD ISSUE - STEP BY STEP
+================================================
+
+ERROR: "sh: vite: command not found"
+CAUSE: node_modules not installed yet
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+SOLUTION - Run these commands IN ORDER:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1️⃣ CLEAN EVERYTHING (fixes npm cache corruption):
+
+rm -rf node_modules
+rm -rf dist
+rm -rf .vite
+rm -f package-lock.json
+
+
+2️⃣ INSTALL DEPENDENCIES (this installs vite):
+
+npm install
+
+⏳ Wait for this to complete! Should take 1-2 minutes.
+
+
+3️⃣ TEST BUILD:
+
+npm run build
+
+✅ Should create a 'dist' folder with your app
+
+
+4️⃣ TEST LOCALLY:
+
+npm run preview
+
+Then open: http://localhost:4173
+
+
+5️⃣ NOW INSTALL VERCEL CLI:
+
+npm install -g vercel
+
+
+6️⃣ DEPLOY:
+
+vercel --prod
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+COPY-PASTE THIS (all at once):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+rm -rf node_modules dist .vite package-lock.json && npm install && npm run build
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+If successful, you'll see:
+✓ built in Xms
+✓ dist folder created
+
+Then run: npm install -g vercel
+Then run: vercel --prod
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
