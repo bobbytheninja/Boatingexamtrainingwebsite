@@ -694,11 +694,11 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                   </CardHeader>
                   <CardContent className="space-y-2">
                     {question.image && (
-                      <div className="rounded-lg overflow-hidden shadow-lg border-2 mb-3">
+                      <div className="rounded-lg overflow-hidden shadow-lg border-2 bg-gray-50 dark:bg-gray-900 p-4 mb-3">
                         <ImageWithFallback
                           src={question.image}
                           alt="Question illustration"
-                          className="w-full h-40 object-cover"
+                          className="w-full max-h-52 object-contain mx-auto"
                         />
                       </div>
                     )}

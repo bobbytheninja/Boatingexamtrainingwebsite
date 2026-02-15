@@ -106,17 +106,11 @@ export function ExamReviewPage({
           <Progress value={progress} className="h-2 shadow-sm" />
         </div>
 
-        <Card className="mb-4 border-2 shadow-xl bg-white dark:bg-slate-800 dark:border-slate-600">
-          <CardHeader className={`pb-4 pt-5 border-b-2 ${
-            isCorrect 
-              ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700' 
-              : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-700'
-          }`}>
-            <div className="flex items-start justify-between gap-4">
-              <CardTitle className="flex-1 text-lg dark:text-gray-100 max-h-[120px] overflow-y-auto">
-                {currentQuestion.question}
-              </CardTitle>
-              <div className="flex flex-col gap-1.5 items-end flex-shrink-0">
+        <Card className="mb-4 border-2 shadow-xl bg-white dark:bg-slate-700 dark:border-slate-600">
+          <CardHeader className="bg-gradient-to-br from-slate-50 to-white dark:from-slate-600 dark:to-slate-700 pb-2 pt-4 px-3 md:px-6">
+            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 md:gap-4">
+              <CardTitle className="flex-1 text-base md:text-lg dark:text-gray-100 max-h-[120px] overflow-y-auto">{currentQuestion.question}</CardTitle>
+              <div className="flex flex-row md:flex-col gap-2 md:gap-1.5 md:items-end flex-shrink-0">
                 <Badge variant="outline" className="shadow-sm text-xs dark:border-gray-500 dark:text-gray-200">
                   {currentQuestion.points} {currentQuestion.points === 1 ? t.point : t.points}
                 </Badge>
