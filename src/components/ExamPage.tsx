@@ -205,9 +205,15 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
             examType,
           });
           
-          // Show error - no fallback to demo questions
+          // Show error with helpful message
           const errorMsg = error.message || 'Failed to load questions';
-          setQuestionLoadError(`Error loading questions: ${errorMsg}. Please try again or contact support.`);
+          
+          if (errorMsg.includes('No questions available')) {
+            setQuestionLoadError(`No questions found for ${examType} exam. The admin needs to import questions first. Please check the Admin Panel to upload question files.`);
+          } else {
+            setQuestionLoadError(`Error loading questions: ${errorMsg}. Please try again or contact support.`);
+          }
+          
           setLoadingQuestions(false);
           toast.error('Failed to load exam questions. Please try again.');
         }

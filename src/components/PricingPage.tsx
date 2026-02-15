@@ -106,13 +106,9 @@ export function PricingPage({ onNavigate, isLoggedIn }: PricingPageProps) {
                   <span className="text-xs text-gray-700 dark:text-gray-300">{t.noCardRequired}</span>
                 </li>
               </ul>
-              <Button
-                onClick={() => onNavigate(isLoggedIn ? 'home' : 'login')}
-                className="w-full h-9 border-2 border-green-600 text-green-700 hover:bg-green-50 font-semibold text-sm"
-                variant="outline"
-              >
+              <div className="w-full h-9 flex items-center justify-center border-2 border-green-600 text-green-700 font-semibold text-sm rounded-lg bg-green-50/50 dark:bg-green-900/20 dark:text-green-400 dark:border-green-500">
                 {t.getStartedFree}
-              </Button>
+              </div>
             </CardContent>
           </Card>
 

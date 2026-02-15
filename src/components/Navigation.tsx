@@ -133,10 +133,14 @@ export function Navigation({
                 toggleDarkMode();
               }}
               className={`hidden sm:flex ${
-                transparent
+                darkMode
+                  ? transparent
+                    ? 'bg-white/20 text-white backdrop-blur-md'
+                    : 'bg-sky-50 text-sky-700 dark:bg-sky-900/50 dark:text-sky-300'
+                  : transparent
                   ? 'text-white hover:bg-white/10 backdrop-blur-sm'
                   : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'
-              } px-2 flex-shrink-0`}
+              } px-2 flex-shrink-0 transition-all`}
               style={{ willChange: 'auto' }}
             >
               {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}

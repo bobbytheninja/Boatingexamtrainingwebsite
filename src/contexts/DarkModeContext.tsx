@@ -9,16 +9,18 @@ interface DarkModeContextType {
 const DarkModeContext = createContext<DarkModeContextType | undefined>(undefined);
 
 export function DarkModeProvider({ children }: { children: React.ReactNode }) {
-  // Initialize dark mode from localStorage or default to false
+  // Initialize dark mode from localStorage or default to FALSE (light mode)
+  // For new users, the app will start in light mode
+  // For returning users, it will remember their preference
   const [darkMode, setDarkModeState] = useState<boolean>(() => {
     try {
       const stored = localStorage.getItem('darkMode');
-      const initialValue = stored ? JSON.parse(stored) : false;
+      const initialValue = stored ? JSON.parse(stored) : false; // Default: false = light mode
       console.log('[DarkModeContext] Initializing with:', initialValue);
       return initialValue;
     } catch (error) {
       console.error('[DarkModeContext] Error reading from localStorage:', error);
-      return false;
+      return false; // Default to light mode on error
     }
   });
 

@@ -106,11 +106,11 @@ export function ExamReviewPage({
           <Progress value={progress} className="h-2 shadow-sm" />
         </div>
 
-        <Card className="mb-4 border-2 shadow-xl bg-white dark:bg-slate-700 dark:border-slate-600">
-          <CardHeader className={`pb-2 pt-4 ${
+        <Card className="mb-4 border-2 shadow-xl bg-white dark:bg-slate-800 dark:border-slate-600">
+          <CardHeader className={`pb-4 pt-5 border-b-2 ${
             isCorrect 
-              ? 'bg-gradient-to-br from-green-50 to-white dark:from-green-900/30 dark:to-slate-700' 
-              : 'bg-gradient-to-br from-red-50 to-white dark:from-red-900/30 dark:to-slate-700'
+              ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700' 
+              : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-700'
           }`}>
             <div className="flex items-start justify-between gap-4">
               <CardTitle className="flex-1 text-lg dark:text-gray-100 max-h-[120px] overflow-y-auto">
@@ -131,14 +131,13 @@ export function ExamReviewPage({
               </div>
             </div>
           </CardHeader>
-          <CardContent className="space-y-2 pt-2">
+          <CardContent className="space-y-2 pt-2 px-3 md:px-6">
             {currentQuestion.image && (
-              <div className="rounded-lg shadow-lg border-2 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 p-4 mb-4 flex items-center justify-center">
+              <div className="rounded-lg overflow-hidden shadow-lg border-2 bg-gray-50 dark:bg-gray-900 p-4 mb-2">
                 <ImageWithFallback
                   src={currentQuestion.image}
                   alt="Question illustration"
-                  className="max-w-full max-h-64 object-contain"
-                  style={{ maxWidth: '100%', height: 'auto' }}
+                  className="w-full max-h-52 object-contain mx-auto"
                 />
               </div>
             )}
