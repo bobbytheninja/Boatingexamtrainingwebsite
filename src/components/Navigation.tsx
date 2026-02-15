@@ -124,11 +124,6 @@ export function Navigation({
 
           {/* Right Side - Dark Mode, Language, Region, Account, Mobile Menu */}
           <div className="flex items-center gap-2 flex-shrink-0">
-            {/* Dark Mode Debug Indicator */}
-            <div className="hidden sm:flex items-center gap-1 px-2 py-1 rounded text-xs font-mono bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200">
-              {darkMode ? '🌙 DARK' : '☀️ LIGHT'}
-            </div>
-            
             {/* Dark Mode Toggle - Desktop */}
             <Button
               variant="ghost"
