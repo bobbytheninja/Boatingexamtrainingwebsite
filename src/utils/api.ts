@@ -2,6 +2,9 @@ import { projectId, publicAnonKey } from './supabase/info';
 
 const API_BASE_URL = `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91`;
 
+// Export API_BASE_URL for direct use
+export { API_BASE_URL };
+
 // Helper function to make API calls
 async function apiCall<T>(
   endpoint: string, 
@@ -133,6 +136,14 @@ export const api = {
         method: 'POST',
         body: JSON.stringify({ examType, questionNumber, base64Data, fileExt, mimeType, adminKey }),
       }
+    );
+  },
+
+  // Diagnostics endpoint
+  getDiagnostics: async () => {
+    return apiCall<{ diagnostics: any }>(
+      '/diagnostics/images',
+      { method: 'GET' }
     );
   },
 
