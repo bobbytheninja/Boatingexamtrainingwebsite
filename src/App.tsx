@@ -19,6 +19,7 @@ import { ContactPage } from './components/ContactPage';
 import { AdminPage } from './components/AdminPage';
 import { PartnersPage } from './components/PartnersPage';
 import { PricingPage } from './components/PricingPage';
+import { ResetPasswordPage } from './components/ResetPasswordPage';
 import { Language } from './data/translations';
 import { AppDiagnostics } from './components/AppDiagnostics';
 import { ApiTest } from './pages/ApiTest';
@@ -73,6 +74,17 @@ function ContactPageWrapper() {
   const { user } = useAuth();
 
   return <ContactPage onNavigate={navigate} isLoggedIn={!!user} />;
+}
+
+// Wrapper for ResetPasswordPage
+function ResetPasswordPageWrapper() {
+  const navigate = useNavigate();
+
+  const handleNavigate = (page: string) => {
+    navigate(page === 'home' ? '/' : `/${page}`);
+  };
+
+  return <ResetPasswordPage onNavigate={handleNavigate} />;
 }
 
 // Wrapper for ExamPage
@@ -324,6 +336,7 @@ function AppContent() {
         
         {/* Public routes */}
         <Route path="/login" element={<LoginPageWrapper />} />
+        <Route path="/reset-password" element={<ResetPasswordPageWrapper />} />
         <Route path="/pricing" element={<PricingPageWrapper />} />
         <Route path="/partners" element={<PartnersPageWrapper />} />
         <Route path="/contact" element={<ContactPageWrapper />} />
