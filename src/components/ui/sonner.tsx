@@ -27,8 +27,15 @@ const Toaster = () => {
     <Sonner
       theme={theme}
       className="toaster group"
-      position="top-center"
+      position="top-right"
       richColors
+      closeButton
+      offset={80}
+      toastOptions={{
+        style: {
+          marginTop: '20px',
+        },
+      }}
     />
   );
 };

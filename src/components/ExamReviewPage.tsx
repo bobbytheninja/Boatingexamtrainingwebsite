@@ -133,11 +133,12 @@ export function ExamReviewPage({
           </CardHeader>
           <CardContent className="space-y-2 pt-2">
             {currentQuestion.image && (
-              <div className="rounded-lg overflow-hidden shadow-lg border-2 bg-gray-50 dark:bg-gray-900 p-4 mb-2">
+              <div className="rounded-lg shadow-lg border-2 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 p-4 mb-4 flex items-center justify-center">
                 <ImageWithFallback
                   src={currentQuestion.image}
                   alt="Question illustration"
-                  className="w-full max-h-52 object-contain mx-auto"
+                  className="max-w-full max-h-64 object-contain"
+                  style={{ maxWidth: '100%', height: 'auto' }}
                 />
               </div>
             )}

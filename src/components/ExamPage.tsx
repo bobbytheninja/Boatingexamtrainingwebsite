@@ -86,7 +86,18 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
   // Load questions based on tier
   useEffect(() => {
     const loadQuestions = async () => {
+      console.log('[ExamPage] 🔄 loadQuestions called with:', { examType, tier, hasAccessToken: !!accessToken, questionsLoaded: examQuestions.length });
+      
+      // Prevent duplicate loads
+      if (examQuestions.length > 0) {
+        console.log('[ExamPage] ⚠️ Questions already loaded, skipping duplicate load');
+        return;
+      }
+      
+      setLoadingQuestions(true);
+      
       if (tier === 'paid') {
+        console.log('[ExamPage] 💳 Loading PAID exam (40 questions)...');
         // Fetch from database for paid tier
         if (!accessToken) {
           console.error('[ExamPage] No access token available');
@@ -149,6 +160,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
         }
       } else {
         // Fetch mock questions (first 10) from database for free tier
+        console.log('[ExamPage] 🆓 Loading MOCK exam (10 questions)...');
         try {
           console.log(`[ExamPage] Loading mock questions for exam type: ${examType}`);
           const response = await api.getMockQuestions(examType);
@@ -783,13 +795,13 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
           isLoggedIn={!!user}
         />
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 pt-20">
-          <Card className="max-w-md w-full">
+          <Card className="max-w-md w-full border-2 border-blue-200 dark:border-blue-700 shadow-xl dark:bg-slate-800">
             <CardContent className="pt-6 flex flex-col items-center space-y-4">
               <LoadingSpinner size="lg" />
-              <h3 className="text-xl dark:text-gray-100">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white">
                 {language === 'English' ? 'Loading exam questions...' : 'Зареждане на въпроси...'}
               </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-200 text-center">
                 {language === 'English' 
                   ? 'Please wait while we prepare your exam' 
                   : 'Моля, изчакайте, докато подготвяме вашия изпит'}
@@ -812,25 +824,28 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
           isLoggedIn={!!user}
         />
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 px-4 pt-20">
-        <Card className="max-w-lg w-full border-red-200 dark:border-red-800">
+        <Card className="max-w-lg w-full border-red-300 dark:border-red-700 dark:bg-slate-800">
           <CardContent className="pt-6 space-y-4">
             <div className="flex items-center justify-center">
-              <XCircle className="w-16 h-16 text-red-500" />
+              <XCircle className="w-16 h-16 text-red-600 dark:text-red-400" />
             </div>
-            <h3 className="text-xl text-center dark:text-gray-100">
+            <h3 className="text-xl font-bold text-center text-gray-900 dark:text-white">
               {language === 'English' ? 'Failed to Load Questions' : 'Грешка при зареждане'}
             </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
+            <p className="text-base font-semibold text-gray-800 dark:text-gray-100 text-center bg-gray-100 dark:bg-slate-700 p-4 rounded-lg border-2 border-gray-300 dark:border-gray-600">
               {questionLoadError}
             </p>
             
             {questionLoadError.includes('No questions') && (
-              <Alert className="border-blue-200 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-700">
-                <AlertCircle className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                <AlertDescription className="text-blue-800 dark:text-blue-200 text-sm">
-                  <strong className="block mb-1">💡 Need to import questions?</strong>
-                  <p className="text-xs">
+              <Alert className="border-2 border-blue-500 dark:border-blue-400 bg-blue-100 dark:bg-blue-950 shadow-lg">
+                <AlertCircle className="h-5 w-5 text-blue-700 dark:text-blue-300 flex-shrink-0" />
+                <AlertDescription className="text-blue-950 dark:text-blue-50">
+                  <strong className="block mb-3 text-base font-bold">💡 Need to import questions?</strong>
+                  <p className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-3">
                     Go to the Admin Panel &gt; Diagnostics tab to check the database status and import questions.
+                  </p>
+                  <p className="text-xs font-semibold text-blue-800 dark:text-blue-200 mt-2 bg-blue-50 dark:bg-blue-900/60 p-3 rounded border border-blue-300 dark:border-blue-700">
+                    📢 Note: This platform provides training exams only - no official certification is issued.
                   </p>
                 </AlertDescription>
               </Alert>
@@ -849,8 +864,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
               {questionLoadError.includes('No questions') && (
                 <Button 
                   onClick={() => window.location.href = '/admin'} 
-                  variant="outline"
-                  className="w-full border-blue-500 text-blue-600 hover:bg-blue-50"
+                  className="w-full bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-600 text-white font-semibold shadow-md"
                 >
                   <AlertCircle className="w-4 h-4 mr-2" />
                   {language === 'English' ? 'Open Admin Diagnostics' : 'Отвори диагностика'}
@@ -995,7 +1009,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                   setShowSubmitDialog(false);
                   setShowResults(true);
                 }}
-                className="bg-cyan-600 hover:bg-cyan-700"
+                className="bg-cyan-600 hover:bg-cyan-500 dark:bg-cyan-600 dark:hover:bg-cyan-500 text-white"
               >
                 {t.confirmSubmit}
               </AlertDialogAction>
@@ -1128,7 +1142,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
             onClick={handlePrevious}
             disabled={currentQuestionIndex === 0}
             variant="outline"
-            className="shadow-md"
+            className="shadow-md border-2 dark:border-gray-600 dark:text-gray-100 dark:hover:bg-slate-700 dark:hover:text-white font-semibold"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             {t.previous}

@@ -126,7 +126,7 @@ export function LoginPage({ onLogin, onNavigate }: LoginPageProps) {
   };
 
   return (
-    <div className={darkMode ? 'dark' : ''}>
+    <>
       <Navigation
         currentPage="login"
         onNavigate={handleNavigate}
@@ -357,6 +357,6 @@ export function LoginPage({ onLogin, onNavigate }: LoginPageProps) {
         </div>
       </div>
       <Footer />
-    </div>
+    </>
   );
 }

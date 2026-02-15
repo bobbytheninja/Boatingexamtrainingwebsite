@@ -79,7 +79,7 @@ export function HomePage() {
   };
 
   return (
-    <div className={darkMode ? 'dark' : ''}>
+    <>
       <Navigation
         currentPage="home"
         onNavigate={handleNavigate}
@@ -96,7 +96,7 @@ export function HomePage() {
             className="w-full h-full object-cover"
             style={{ objectPosition: 'center 70%' }}
           />
-          <div className="absolute bottom-0 left-0 right-0 h-[20%] bg-gradient-to-b from-transparent to-gray-50 dark:to-slate-800"></div>
+          <div className="absolute bottom-0 left-0 right-0 h-[20%] bg-gradient-to-b from-transparent to-gray-50 dark:to-slate-900"></div>
         </div>
 
         {/* Exam Types Section */}
@@ -155,6 +155,6 @@ export function HomePage() {
         </div>
         <Footer />
       </div>
-    </div>
+    </>
   );
 }

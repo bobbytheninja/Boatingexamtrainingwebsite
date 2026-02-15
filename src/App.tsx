@@ -6,6 +6,7 @@ import { LanguageProvider } from './contexts/LanguageContext';
 import { RegionProvider } from './contexts/RegionContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Toaster } from './components/ui/sonner';
+import { toast } from 'sonner';
 import { LoginPage } from './components/LoginPage';
 import { HomePage } from './components/HomePage';
 import { ExamModeSelection } from './components/ExamModeSelection';
@@ -83,6 +84,13 @@ function ExamPageWrapper() {
   // Get mode and tier from location state
   const mode = (location.state as any)?.mode || 'study';
   const tier = (location.state as any)?.tier || 'mock';
+  
+  console.log('[ExamPageWrapper] 🎯 Exam initialization:', {
+    examType,
+    mode,
+    tier,
+    locationState: location.state,
+  });
 
   if (!examType) {
     navigate('/home');
@@ -141,9 +149,20 @@ function AccountPageWrapper() {
 
   // Redirect to login if not authenticated
   if (!user) {
+    console.error('[AccountPageWrapper] No user found, redirecting to login');
     navigate('/login');
     return null;
   }
+
+  // Defensive check for user data
+  if (!user.email) {
+    console.error('[AccountPageWrapper] User email is missing!', user);
+    toast.error('Account data is incomplete. Please log in again.');
+    navigate('/login');
+    return null;
+  }
+
+  console.log('[AccountPageWrapper] Rendering with user:', user.email, 'Subscriptions:', user.subscriptions);
 
   const handleLogout = async () => {
     await signOut();
@@ -162,8 +181,8 @@ function AccountPageWrapper() {
 
   return (
     <AccountPage
-      userEmail={user.email}
-      paidExams={user.subscriptions}
+      userEmail={user.email || 'Unknown'}
+      paidExams={user.subscriptions || []}
       subscriptionExpiresAt={user.subscriptionExpiresAt}
       onNavigate={navigate}
       onStartExam={handleStartExam}
@@ -287,19 +306,19 @@ function AppContent() {
   React.useEffect(() => {
     console.log('[YachtExam AppContent] Mounted successfully');
     console.log('[YachtExam AppContent] Current path:', window.location.pathname);
+    console.log('[YachtExam AppContent] Current dark mode:', darkMode);
     
     // Show diagnostics if 'debug' is in URL
     const params = new URLSearchParams(window.location.search);
     if (params.get('debug') === 'true') {
       setShowDiagnostics(true);
     }
-  }, []);
+  }, [darkMode]);
 
   return (
-    <div className={darkMode ? 'dark' : ''}>
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-sky-50/50 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-        {showDiagnostics && <AppDiagnostics />}
-        <Routes>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-sky-50/50 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+      {showDiagnostics && <AppDiagnostics />}
+      <Routes>
         {/* Root route - shows HomePage for both logged in and logged out users */}
         <Route path="/" element={<HomePage />} />
         
@@ -354,7 +373,6 @@ function AppContent() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <Toaster />
-      </div>
     </div>
   );
 }
@@ -395,7 +413,7 @@ function App() {
     
     console.log('%c━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'color: #0ea5e9; font-weight: bold');
     console.log('%c🚤 YACHT EXAM TRAINER - VERSION 111', 'color: #0ea5e9; font-size: 16px; font-weight: bold');
-    console.log('%c━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'color: #0ea5e9; font-weight: bold');
+    console.log('%c━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'color: #0ea5e9; font-weight: bold');
     console.log('%c✓ Application initialized successfully', 'color: #10b981; font-weight: bold');
     console.log('%c✓ Console error filtering enabled', 'color: #10b981; font-weight: bold');
     console.log('%cCurrent URL:', 'color: #6366f1', window.location.href);
