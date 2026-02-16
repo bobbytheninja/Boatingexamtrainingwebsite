@@ -120,7 +120,7 @@ export function PaymentPage({ userEmail, onBack, onComplete, onNavigate }: Payme
         style={{ 
           background: darkMode 
             ? 'linear-gradient(to bottom right, #0f172a, #1e293b, #0f172a)'
-            : 'linear-gradient(to bottom right, #ffffff, #f0f9ff, #ffffff)',
+            : 'linear-gradient(135deg, #f8fafc 0%, #e0f2fe 25%, #f0f9ff 50%, #dbeafe 75%, #f8fafc 100%)',
           transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
         }}
       >
@@ -128,7 +128,13 @@ export function PaymentPage({ userEmail, onBack, onComplete, onNavigate }: Payme
           <Button 
             onClick={onBack} 
             variant="ghost" 
-            className="mb-8 hover:bg-blue-100 dark:hover:bg-slate-700 dark:text-gray-200 transition-colors"
+            className="mb-8 transition-all duration-200 hover:scale-105"
+            style={{
+              color: darkMode ? '#e5e7eb' : '#0f172a',
+              backgroundColor: darkMode ? 'transparent' : '#ffffff',
+              border: darkMode ? 'none' : '1px solid #e2e8f0',
+              boxShadow: darkMode ? 'none' : '0 1px 3px 0 rgb(0 0 0 / 0.1)'
+            }}
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back
@@ -138,8 +144,9 @@ export function PaymentPage({ userEmail, onBack, onComplete, onNavigate }: Payme
             <div 
               className="inline-block mb-4 px-6 py-2 rounded-full border transition-all duration-[400ms]"
               style={{ 
-                backgroundColor: darkMode ? '#1e3a5f' : '#dbeafe',
-                borderColor: darkMode ? '#1e40af' : '#93c5fd',
+                backgroundColor: darkMode ? '#1e3a5f' : '#eff6ff',
+                borderColor: darkMode ? '#1e40af' : '#3b82f6',
+                boxShadow: darkMode ? 'none' : '0 4px 6px -1px rgb(59 130 246 / 0.1), 0 2px 4px -2px rgb(59 130 246 / 0.1)',
                 transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
               }}
             >
@@ -198,13 +205,30 @@ export function PaymentPage({ userEmail, onBack, onComplete, onNavigate }: Payme
                     return (
                       <div
                         key={exam.type}
-                        className={`flex items-start space-x-3 p-4 rounded-lg border-2 transition-all duration-200 ${
+                        className={`flex items-start space-x-3 p-4 rounded-lg border-2 transition-all duration-200 cursor-pointer ${ 
                           isSubscribed
-                            ? 'border-green-400 bg-green-50 dark:bg-green-900/20 dark:border-green-600 cursor-not-allowed opacity-75'
+                            ? 'cursor-not-allowed opacity-75'
                             : selectedExams.includes(exam.type)
-                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 dark:border-blue-400 cursor-pointer shadow-md scale-[1.01]'
-                            : 'border-gray-200 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-500 hover:bg-gray-50 dark:hover:bg-gray-600 hover:shadow-md cursor-pointer'
+                            ? 'shadow-md scale-[1.01]'
+                            : 'hover:shadow-md'
                         }`}
+                        style={{
+                          backgroundColor: isSubscribed
+                            ? (darkMode ? 'rgba(20, 83, 45, 0.2)' : '#f0fdf4')
+                            : selectedExams.includes(exam.type)
+                            ? (darkMode ? 'rgba(30, 58, 138, 0.3)' : '#eff6ff')
+                            : (darkMode ? '#334155' : '#ffffff'),
+                          borderColor: isSubscribed
+                            ? (darkMode ? '#16a34a' : '#4ade80')
+                            : selectedExams.includes(exam.type)
+                            ? (darkMode ? '#60a5fa' : '#3b82f6')
+                            : (darkMode ? '#475569' : '#e5e7eb'),
+                          ...(darkMode && !isSubscribed && !selectedExams.includes(exam.type) && {
+                            ':hover': {
+                              backgroundColor: '#475569'
+                            }
+                          })
+                        }}
                         onClick={() => toggleExam(exam.type)}
                       >
                         <Checkbox
@@ -215,20 +239,36 @@ export function PaymentPage({ userEmail, onBack, onComplete, onNavigate }: Payme
                         />
                         <div className="flex-1">
                           <div className="flex items-center justify-between gap-2 flex-wrap">
-                            <h4 className="dark:text-gray-100">{exam.title}</h4>
+                            <h4 className="font-semibold transition-colors duration-[400ms]" style={{ color: darkMode ? '#f3f4f6' : '#0f172a' }}>{exam.title}</h4>
                             <div className="flex items-center gap-2">
                               {isSubscribed ? (
-                                <Badge className="bg-green-100 text-green-700 hover:bg-green-100 dark:bg-green-900/50 dark:text-green-300">
+                                <Badge 
+                                  className="transition-colors duration-[400ms]"
+                                  style={{
+                                    backgroundColor: darkMode ? 'rgba(34, 197, 94, 0.2)' : '#dcfce7',
+                                    color: darkMode ? '#86efac' : '#166534',
+                                    border: darkMode ? '1px solid #16a34a' : '1px solid #86efac'
+                                  }}
+                                >
                                   ✓ Active until {getExpiryDateString()}
                                 </Badge>
                               ) : (
-                                <Badge variant="secondary" className="dark:bg-slate-600 dark:text-gray-200">€5/month</Badge>
+                                <Badge 
+                                  variant="secondary" 
+                                  style={{
+                                    backgroundColor: darkMode ? '#475569' : '#f1f5f9',
+                                    color: darkMode ? '#e5e7eb' : '#475569',
+                                    border: darkMode ? 'none' : '1px solid #e2e8f0'
+                                  }}
+                                >
+                                  €5/month
+                                </Badge>
                               )}
                             </div>
                           </div>
-                          <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">{exam.description}</p>
+                          <p className="text-sm mt-1 transition-colors duration-[400ms]" style={{ color: darkMode ? '#d1d5db' : '#475569' }}>{exam.description}</p>
                           {!isSubscribed && (
-                            <div className="flex gap-2 mt-2 text-xs text-gray-500 dark:text-gray-400">
+                            <div className="flex gap-2 mt-2 text-xs transition-colors duration-[400ms]" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
                               <span>• 40 Questions</span>
                               <span>• Unlimited Attempts</span>
                               <span>• Study & Exam Modes</span>
@@ -241,22 +281,35 @@ export function PaymentPage({ userEmail, onBack, onComplete, onNavigate }: Payme
                 </CardContent>
               </Card>
 
-              <Card className="border-2 shadow-xl dark:bg-slate-700 dark:border-slate-600">
+              <Card 
+                className="border-2 shadow-xl transition-all duration-[400ms]"
+                style={{
+                  backgroundColor: darkMode ? '#334155' : '#ffffff',
+                  borderColor: darkMode ? '#475569' : '#e2e8f0',
+                  transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
+                }}
+              >
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2 dark:text-gray-100">
+                  <CardTitle 
+                    className="flex items-center gap-2 transition-colors duration-[400ms]"
+                    style={{ color: darkMode ? '#f3f4f6' : '#0f172a' }}
+                  >
                     <CreditCard className="w-5 h-5" />
                     Secure Checkout
                   </CardTitle>
-                  <CardDescription className="dark:text-gray-300">
+                  <CardDescription 
+                    className="transition-colors duration-[400ms]"
+                    style={{ color: darkMode ? '#d1d5db' : '#64748b' }}
+                  >
                     Payment powered by Stripe. Your card details are secure.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-4 space-y-2">
-                    <p className="text-sm text-blue-900 dark:text-blue-200">
+                    <p className="text-sm" style={{ color: darkMode ? '#93c5fd' : '#1e3a8a' }}>
                       You will be redirected to Stripe's secure checkout page to complete your payment.
                     </p>
-                    <ul className="text-xs text-blue-800 dark:text-blue-300 space-y-1 ml-4">
+                    <ul className="text-xs space-y-1 ml-4" style={{ color: darkMode ? '#bfdbfe' : '#1e40af' }}>
                       <li>• Your email: <strong>{userEmail}</strong></li>
                       <li>• Receipt will be sent automatically</li>
                       <li>• 30-day access per category</li>
@@ -290,13 +343,28 @@ export function PaymentPage({ userEmail, onBack, onComplete, onNavigate }: Payme
             </div>
 
             <div className="lg:col-span-1">
-              <Card className="border-2 border-blue-200 dark:border-blue-600 shadow-xl sticky top-6 bg-gradient-to-br from-blue-50 to-white dark:from-slate-700 dark:to-slate-600">
+              <Card 
+                className="border-2 sticky top-6 transition-all duration-[400ms]"
+                style={{ 
+                  background: darkMode 
+                    ? 'linear-gradient(to bottom right, #334155, #475569)'
+                    : 'linear-gradient(to bottom right, #eff6ff, #ffffff)',
+                  borderColor: darkMode ? '#2563eb' : '#bfdbfe',
+                  boxShadow: darkMode 
+                    ? '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)'
+                    : '0 10px 15px -3px rgb(0 0 0 / 0.05), 0 4px 6px -4px rgb(0 0 0 / 0.05)',
+                  transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
+                }}
+              >
                 <CardHeader>
-                  <CardTitle className="dark:text-gray-100">Order Summary</CardTitle>
+                  <CardTitle 
+                    className="transition-colors duration-[400ms]"
+                    style={{ color: darkMode ? '#f3f4f6' : '#0f172a' }}
+                  >Order Summary</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {selectedExams.length === 0 ? (
-                    <p className="text-gray-500 dark:text-gray-400 text-center py-8">
+                    <p style={{ color: darkMode ? '#9ca3af' : '#475569' }} className="text-center py-8">
                       No exams selected
                     </p>
                   ) : (
@@ -305,7 +373,7 @@ export function PaymentPage({ userEmail, onBack, onComplete, onNavigate }: Payme
                         {selectedExams.map((examType) => {
                           const exam = examTypes.find(e => e.type === examType);
                           return (
-                            <div key={examType} className="flex items-center justify-between text-sm dark:text-gray-200">
+                            <div key={examType} className="flex items-center justify-between text-sm" style={{ color: darkMode ? '#e5e7eb' : '#1e293b' }}>
                               <span>{exam?.title}</span>
                               <span className="font-medium">€5/mo</span>
                             </div>
@@ -315,14 +383,14 @@ export function PaymentPage({ userEmail, onBack, onComplete, onNavigate }: Payme
 
                       <div className="border-t dark:border-slate-500 pt-4">
                         <div className="flex items-center justify-between mb-4">
-                          <span className="dark:text-gray-200">Monthly Total</span>
+                          <span style={{ color: darkMode ? '#e5e7eb' : '#1e293b' }}>Monthly Total</span>
                           <span className="text-2xl font-semibold text-blue-600 dark:text-blue-400">€{totalPrice}</span>
                         </div>
                       </div>
 
                       <div className="bg-blue-100 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg p-4 space-y-2">
-                        <p className="text-sm font-medium text-blue-900 dark:text-blue-200">What's included:</p>
-                        <ul className="text-xs text-blue-800 dark:text-blue-300 space-y-1">
+                        <p className="text-sm font-medium" style={{ color: darkMode ? '#93c5fd' : '#1e3a8a' }}>What's included:</p>
+                        <ul className="text-xs space-y-1" style={{ color: darkMode ? '#bfdbfe' : '#1e40af' }}>
                           <li className="flex items-start gap-2">
                             <Check className="w-3 h-3 mt-0.5 flex-shrink-0" />
                             <span>Full access to all questions</span>

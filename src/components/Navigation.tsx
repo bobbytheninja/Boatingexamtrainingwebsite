@@ -306,9 +306,12 @@ export function Navigation({
                   className={`hidden sm:flex ${
                     transparent
                       ? 'text-white hover:bg-white/10 backdrop-blur-sm border border-white/30'
-                      : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 border-2 border-gray-300 dark:border-gray-600'
+                      : 'hover:bg-gray-100 dark:hover:bg-gray-700 border-2 border-gray-300 dark:border-gray-600'
                   } font-semibold min-w-[90px] flex-shrink-0`}
-                  style={{ willChange: 'auto' }}
+                  style={{ 
+                    willChange: 'auto',
+                    color: transparent ? undefined : (darkMode ? '#e5e7eb' : '#1f2937')
+                  }}
                 >
                   {t.login}
                 </Button>

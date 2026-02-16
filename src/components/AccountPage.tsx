@@ -325,8 +325,8 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
                       <div className="inline-flex p-4 bg-gray-100 dark:bg-slate-600 rounded-full mb-4">
                         <Package className="w-8 h-8 text-gray-400 dark:text-gray-300" />
                       </div>
-                      <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">{t.noActiveSubscriptions}</h3>
-                      <p className="text-gray-600 dark:text-gray-300 mb-6">{t.noActiveSubscriptionsDesc}</p>
+                      <h3 className="text-xl font-semibold mb-2 transition-colors duration-[400ms]" style={{ color: darkMode ? '#f3f4f6' : '#0f172a' }}>{t.noActiveSubscriptions}</h3>
+                      <p className="mb-6 transition-colors duration-[400ms]" style={{ color: darkMode ? '#d1d5db' : '#475569' }}>{t.noActiveSubscriptionsDesc}</p>
                       <Button
                         onClick={() => onNavigate('/payment')}
                         className="bg-gradient-to-r from-sky-500 via-sky-600 to-blue-600 hover:from-sky-600 hover:via-sky-700 hover:to-blue-700 shadow-lg font-semibold"
@@ -409,8 +409,8 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
                         <CardContent className="pt-6">
                           <div className="flex items-center justify-between">
                             <div>
-                              <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-1">{t.wantMoreExams}</h4>
-                              <p className="text-sm text-gray-600 dark:text-gray-300">{t.additionalCategories}</p>
+                              <h4 className="font-semibold mb-1 transition-colors duration-[400ms]" style={{ color: darkMode ? '#f3f4f6' : '#0f172a' }}>{t.wantMoreExams}</h4>
+                              <p className="text-sm transition-colors duration-[400ms]" style={{ color: darkMode ? '#d1d5db' : '#475569' }}>{t.additionalCategories}</p>
                             </div>
                             <Button
                               onClick={() => onNavigate('/payment')}

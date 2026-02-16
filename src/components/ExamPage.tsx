@@ -669,27 +669,42 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                 transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
               }}
             >{t.reviewAnswers}</h2>
-            <Button onClick={onBackToHome} variant="outline">
+            <Button 
+              onClick={onBackToHome} 
+              variant="outline"
+              className="transition-all duration-300"
+              style={{
+                backgroundColor: darkMode ? '#334155' : '#ffffff',
+                borderColor: darkMode ? '#64748b' : '#e5e7eb',
+                color: darkMode ? '#e2e8f0' : '#1f2937'
+              }}
+            >
               <ArrowLeft className="w-4 h-4 mr-2" />
               {t.backToExams}
             </Button>
           </div>
           
           <div className="mb-6">
-            <Card className="border-2 shadow-md">
+            <Card 
+              className="border-2 shadow-md transition-all duration-300"
+              style={{
+                backgroundColor: darkMode ? '#1e293b' : '#ffffff',
+                borderColor: darkMode ? '#475569' : '#e5e7eb'
+              }}
+            >
               <CardContent className="pt-4 pb-4">
                 <div className="flex justify-around items-center">
                   <div className="text-center">
-                    <p className="text-sm text-gray-600 mb-1">{t.yourScore}</p>
-                    <p className="text-2xl font-bold text-blue-600">{Math.round((correctCount / totalQuestions) * 100)}%</p>
+                    <p className="text-sm mb-1" style={{ color: darkMode ? '#94a3b8' : '#6b7280' }}>{t.yourScore}</p>
+                    <p className="text-2xl font-bold" style={{ color: darkMode ? '#60a5fa' : '#2563eb' }}>{Math.round((correctCount / totalQuestions) * 100)}%</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-sm text-gray-600 mb-1">{t.correctAnswers}</p>
-                    <p className="text-2xl font-bold text-green-600">{correctCount}/{totalQuestions}</p>
+                    <p className="text-sm mb-1" style={{ color: darkMode ? '#94a3b8' : '#6b7280' }}>{t.correctAnswers}</p>
+                    <p className="text-2xl font-bold" style={{ color: darkMode ? '#4ade80' : '#16a34a' }}>{correctCount}/{totalQuestions}</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-sm text-gray-600 mb-1">{t.pointsLost}</p>
-                    <p className={`text-2xl font-bold ${totalPointsLost <= MAX_POINTS_LOSS ? 'text-green-600' : 'text-red-600'}`}>
+                    <p className="text-sm mb-1" style={{ color: darkMode ? '#94a3b8' : '#6b7280' }}>{t.pointsLost}</p>
+                    <p className={`text-2xl font-bold`} style={{ color: totalPointsLost <= MAX_POINTS_LOSS ? (darkMode ? '#4ade80' : '#16a34a') : (darkMode ? '#f87171' : '#dc2626') }}>
                       {totalPointsLost}/{MAX_POINTS_LOSS}
                     </p>
                   </div>
@@ -706,33 +721,78 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
               const isCorrect = answer?.isCorrect ?? false;
               
               return (
-                <Card key={index} className={`border-2 ${isCorrect ? 'border-green-200 bg-green-50/30' : 'border-red-200 bg-red-50/30'}`}>
+                <Card 
+                  key={index} 
+                  className="border-2 transition-all duration-300"
+                  style={{
+                    backgroundColor: darkMode 
+                      ? '#1e293b'
+                      : (isCorrect ? '#f0fdf4' : '#fef2f2'),
+                    borderColor: darkMode
+                      ? (isCorrect ? '#16a34a' : '#dc2626')
+                      : (isCorrect ? '#bbf7d0' : '#fecaca')
+                  }}
+                >
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
-                          <Badge variant="outline" className="text-xs">
+                          <Badge 
+                            variant="outline" 
+                            className="text-xs transition-all duration-300"
+                            style={{
+                              backgroundColor: darkMode ? '#334155' : '#ffffff',
+                              borderColor: darkMode ? '#64748b' : '#cbd5e1',
+                              color: darkMode ? '#e2e8f0' : '#1e293b'
+                            }}
+                          >
                             {t.question} {index + 1}
                           </Badge>
-                          <Badge variant="outline" className="text-xs">
+                          <Badge 
+                            variant="outline" 
+                            className="text-xs transition-all duration-300"
+                            style={{
+                              backgroundColor: darkMode ? '#334155' : '#ffffff',
+                              borderColor: darkMode ? '#64748b' : '#cbd5e1',
+                              color: darkMode ? '#e2e8f0' : '#1e293b'
+                            }}
+                          >
                             {question.points} {question.points === 1 ? t.point : t.points}
                           </Badge>
-                          <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
+                          <Badge 
+                            variant="secondary" 
+                            className="text-xs transition-all duration-300"
+                            style={{
+                              backgroundColor: darkMode ? '#1e3a8a' : '#dbeafe',
+                              color: darkMode ? '#93c5fd' : '#1e40af'
+                            }}
+                          >
                             {t.selectMultipleAnswers.replace('{count}', (question.correctAnswers?.length || 1).toString())}
                           </Badge>
                         </div>
-                        <CardTitle className="text-base">{question.question}</CardTitle>
+                        <CardTitle 
+                          className="text-base transition-colors duration-300"
+                          style={{ color: darkMode ? '#f1f5f9' : '#1e293b' }}
+                        >
+                          {question.question}
+                        </CardTitle>
                       </div>
                       {isCorrect ? (
-                        <CheckCircle className="w-6 h-6 text-green-600 flex-shrink-0" />
+                        <CheckCircle className="w-6 h-6 flex-shrink-0" style={{ color: darkMode ? '#4ade80' : '#16a34a' }} />
                       ) : (
-                        <XCircle className="w-6 h-6 text-red-600 flex-shrink-0" />
+                        <XCircle className="w-6 h-6 flex-shrink-0" style={{ color: darkMode ? '#f87171' : '#dc2626' }} />
                       )}
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-2">
                     {question.image && (
-                      <div className="rounded-lg overflow-hidden shadow-lg border-2 bg-gray-50 dark:bg-gray-900 p-4 mb-3">
+                      <div 
+                        className="rounded-lg overflow-hidden shadow-lg border-2 p-4 mb-3 transition-all duration-300"
+                        style={{
+                          borderColor: darkMode ? '#374151' : '#e2e8f0',
+                          backgroundColor: darkMode ? '#111827' : '#f8fafc'
+                        }}
+                      >
                         <ImageWithFallback
                           src={question.image}
                           alt="Question illustration"
@@ -752,30 +812,47 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                       return (
                         <div
                           key={ansIndex}
-                          className={`p-3 rounded-lg border-2 flex items-center gap-2 ${
-                            isCorrectAnswer
-                              ? 'border-green-500 bg-green-50 dark:bg-green-900/30 dark:border-green-600'
+                          className="p-3 rounded-lg border-2 flex items-center gap-2 transition-all duration-300"
+                          style={{
+                            borderColor: isCorrectAnswer
+                              ? (darkMode ? '#16a34a' : '#22c55e')
                               : isUserAnswer
-                              ? 'border-red-500 bg-red-50 dark:bg-red-900/30 dark:border-red-600'
-                              : 'border-gray-200 bg-white dark:bg-slate-700 dark:border-gray-600'
-                          }`}
+                              ? (darkMode ? '#dc2626' : '#ef4444')
+                              : (darkMode ? '#4b5563' : '#e2e8f0'),
+                            backgroundColor: isCorrectAnswer
+                              ? (darkMode ? 'rgba(22, 163, 74, 0.15)' : '#f0fdf4')
+                              : isUserAnswer
+                              ? (darkMode ? 'rgba(220, 38, 38, 0.15)' : '#fef2f2')
+                              : (darkMode ? '#334155' : '#f8fafc')
+                          }}
                         >
                           {isMultiQuestion ? (
                             <Checkbox checked={isUserAnswer || isCorrectAnswer} disabled />
                           ) : (
-                            <div className={`size-4 shrink-0 rounded-full border-2 flex items-center justify-center ${
-                              isUserAnswer || isCorrectAnswer 
-                                ? 'border-gray-900 dark:border-gray-100' 
-                                : 'border-gray-300 dark:border-gray-600'
-                            }`}>
+                            <div 
+                              className="size-4 shrink-0 rounded-full border-2 flex items-center justify-center"
+                              style={{
+                                borderColor: (isUserAnswer || isCorrectAnswer)
+                                  ? (darkMode ? '#f1f5f9' : '#1e293b')
+                                  : (darkMode ? '#4b5563' : '#cbd5e1')
+                              }}
+                            >
                               {(isUserAnswer || isCorrectAnswer) && (
-                                <div className="size-2 rounded-full bg-gray-900 dark:bg-gray-100" />
+                                <div 
+                                  className="size-2 rounded-full"
+                                  style={{ backgroundColor: darkMode ? '#f1f5f9' : '#1e293b' }}
+                                />
                               )}
                             </div>
                           )}
-                          <span className="flex-1 text-sm dark:text-gray-200">{ans}</span>
-                          {isCorrectAnswer && <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />}
-                          {isUserAnswer && !isCorrectAnswer && <XCircle className="w-4 h-4 text-red-600 dark:text-red-400" />}
+                          <span 
+                            className="flex-1 text-sm transition-colors duration-300"
+                            style={{ color: darkMode ? '#e5e7eb' : '#334155' }}
+                          >
+                            {ans}
+                          </span>
+                          {isCorrectAnswer && <CheckCircle className="w-4 h-4" style={{ color: darkMode ? '#4ade80' : '#16a34a' }} />}
+                          {isUserAnswer && !isCorrectAnswer && <XCircle className="w-4 h-4" style={{ color: darkMode ? '#f87171' : '#dc2626' }} />}
                         </div>
                       );
                     })}
@@ -810,7 +887,12 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                 localStorage.removeItem(storageKey);
               }}
               variant="outline"
-              className="flex-1 shadow-md"
+              className="flex-1 shadow-md transition-all duration-300"
+              style={{
+                backgroundColor: darkMode ? '#334155' : '#ffffff',
+                borderColor: darkMode ? '#64748b' : '#e5e7eb',
+                color: darkMode ? '#e2e8f0' : '#1f2937'
+              }}
             >
               {t.retakeExam}
             </Button>
@@ -857,33 +939,47 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
           onNavigate={handleNavigate}
           isLoggedIn={!!user}
         />
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 px-4 pt-20">
-        <Card className="max-w-lg w-full border-red-300 dark:border-red-700 dark:bg-slate-800">
+        <div 
+          className="min-h-screen flex items-center justify-center bg-gradient-to-br px-4 pt-20 transition-all duration-300"
+          style={{
+            backgroundImage: darkMode 
+              ? 'linear-gradient(to bottom right, #0f172a, #1e293b, #0f172a)'
+              : 'linear-gradient(to bottom right, #f8fafc, #dbeafe, #f8fafc)'
+          }}
+        >
+        <Card 
+          className="max-w-lg w-full transition-all duration-300"
+          style={{
+            borderColor: darkMode ? '#991b1b' : '#fca5a5',
+            backgroundColor: darkMode ? '#1e293b' : '#ffffff'
+          }}
+        >
           <CardContent className="pt-6 space-y-4">
             <div className="flex items-center justify-center">
-              <XCircle className="w-16 h-16 text-red-600 dark:text-red-400" />
+              <XCircle 
+                className="w-16 h-16 transition-colors duration-300" 
+                style={{ color: darkMode ? '#f87171' : '#dc2626' }}
+              />
             </div>
-            <h3 className="text-xl font-bold text-center text-gray-900 dark:text-white">
+            <h3 
+              className="text-xl font-bold text-center transition-colors duration-300"
+              style={{ color: darkMode ? '#f1f5f9' : '#111827' }}
+            >
               {language === 'English' ? 'Failed to Load Questions' : 'Грешка при зареждане'}
             </h3>
-            <p className="text-base font-semibold text-gray-800 dark:text-gray-100 text-center bg-gray-100 dark:bg-slate-700 p-4 rounded-lg border-2 border-gray-300 dark:border-gray-600">
-              {questionLoadError}
+            <p 
+              className="text-base font-semibold text-center p-4 rounded-lg border-2 transition-all duration-300"
+              style={{
+                color: darkMode ? '#e5e7eb' : '#1f2937',
+                backgroundColor: darkMode ? '#334155' : '#f1f5f9',
+                borderColor: darkMode ? '#4b5563' : '#cbd5e1'
+              }}
+            >
+              {language === 'English' 
+                ? `No questions found for ${examType} exam. Contact the web page administrator.`
+                : `Няма намерени въпроси за ${examType} изпит. Свържете се с администратора.`
+              }
             </p>
-            
-            {questionLoadError.includes('No questions') && (
-              <Alert className="border-2 border-blue-500 dark:border-blue-400 bg-blue-100 dark:bg-blue-950 shadow-lg">
-                <AlertCircle className="h-5 w-5 text-blue-700 dark:text-blue-300 flex-shrink-0" />
-                <AlertDescription className="text-blue-950 dark:text-blue-50">
-                  <strong className="block mb-3 text-base font-bold">💡 Need to import questions?</strong>
-                  <p className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-3">
-                    Go to the Admin Panel &gt; Diagnostics tab to check the database status and import questions.
-                  </p>
-                  <p className="text-xs font-semibold text-blue-800 dark:text-blue-200 mt-2 bg-blue-50 dark:bg-blue-900/60 p-3 rounded border border-blue-300 dark:border-blue-700">
-                    📢 Note: This platform provides training exams only - no official certification is issued.
-                  </p>
-                </AlertDescription>
-              </Alert>
-            )}
             
             <div className="flex flex-col gap-2">
               {questionLoadError.includes('subscription') && (
@@ -893,15 +989,6 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                 >
                   <AlertCircle className="w-4 h-4 mr-2" />
                   {language === 'English' ? 'Buy Access' : 'Купи достъп'}
-                </Button>
-              )}
-              {questionLoadError.includes('No questions') && (
-                <Button 
-                  onClick={() => window.location.href = '/admin'} 
-                  className="w-full bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-600 text-white font-semibold shadow-md"
-                >
-                  <AlertCircle className="w-4 h-4 mr-2" />
-                  {language === 'English' ? 'Open Admin Diagnostics' : 'Отвори диагностика'}
                 </Button>
               )}
               <Button onClick={onBackToHome} className="w-full">
@@ -968,8 +1055,8 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
           <div className="flex items-center gap-4">
             <Button 
               onClick={() => setShowExitDialog(true)} 
-              variant="ghost" 
-              className="hover:bg-red-50 dark:hover:bg-red-900/30 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors duration-200"
+              variant="outline" 
+              className="border-red-500 dark:border-red-400 text-red-600 dark:text-red-400 bg-transparent hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors duration-200"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               {t.exitExam}
@@ -1016,15 +1103,32 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
         
         {/* Exit Confirmation Dialog */}
         <AlertDialog open={showExitDialog} onOpenChange={setShowExitDialog}>
-          <AlertDialogContent>
+          <AlertDialogContent
+            className="transition-colors duration-300"
+            style={{
+              backgroundColor: darkMode ? '#1e293b' : '#ffffff',
+              borderColor: darkMode ? '#475569' : '#e5e7eb',
+              color: darkMode ? '#e2e8f0' : '#1f2937'
+            }}
+          >
             <AlertDialogHeader>
-              <AlertDialogTitle>{t.exitExamTitle}</AlertDialogTitle>
-              <AlertDialogDescription>
+              <AlertDialogTitle style={{ color: darkMode ? '#f1f5f9' : '#111827' }}>
+                {t.exitExamTitle}
+              </AlertDialogTitle>
+              <AlertDialogDescription style={{ color: darkMode ? '#cbd5e1' : '#6b7280' }}>
                 {t.exitExamMessage}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>{t.continueExam}</AlertDialogCancel>
+              <AlertDialogCancel
+                style={{
+                  backgroundColor: darkMode ? '#334155' : '#f3f4f6',
+                  color: darkMode ? '#e2e8f0' : '#374151',
+                  borderColor: darkMode ? '#475569' : '#d1d5db'
+                }}
+              >
+                {t.continueExam}
+              </AlertDialogCancel>
               <AlertDialogAction 
                 onClick={onBackToHome}
                 className="bg-red-600 hover:bg-red-700"
@@ -1037,21 +1141,42 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
 
         {/* Submit Confirmation Dialog */}
         <AlertDialog open={showSubmitDialog} onOpenChange={setShowSubmitDialog}>
-          <AlertDialogContent>
+          <AlertDialogContent
+            className="transition-colors duration-300"
+            style={{
+              backgroundColor: darkMode ? '#1e293b' : '#ffffff',
+              borderColor: darkMode ? '#475569' : '#e5e7eb',
+              color: darkMode ? '#e2e8f0' : '#1f2937'
+            }}
+          >
             <AlertDialogHeader>
-              <AlertDialogTitle>{t.submitExamTitle}</AlertDialogTitle>
-              <AlertDialogDescription>
+              <AlertDialogTitle style={{ color: darkMode ? '#f1f5f9' : '#111827' }}>
+                {t.submitExamTitle}
+              </AlertDialogTitle>
+              <AlertDialogDescription style={{ color: darkMode ? '#cbd5e1' : '#6b7280' }}>
                 {t.submitExamMessage}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>{t.cancelSubmit}</AlertDialogCancel>
+              <AlertDialogCancel
+                style={{
+                  backgroundColor: darkMode ? '#334155' : '#f3f4f6',
+                  color: darkMode ? '#e2e8f0' : '#374151',
+                  borderColor: darkMode ? '#475569' : '#d1d5db'
+                }}
+              >
+                {t.cancelSubmit}
+              </AlertDialogCancel>
               <AlertDialogAction 
                 onClick={() => {
                   setShowSubmitDialog(false);
                   setShowResults(true);
                 }}
-                className="bg-cyan-600 hover:bg-cyan-500 dark:bg-cyan-600 dark:hover:bg-cyan-500 text-white"
+                style={{
+                  backgroundColor: '#0891b2',
+                  color: '#ffffff'
+                }}
+                className="hover:opacity-90 transition-opacity"
               >
                 {t.confirmSubmit}
               </AlertDialogAction>
@@ -1061,31 +1186,46 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
 
         <div className="mb-4">
           <div className="flex justify-between items-center mb-2">
-            <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
+            <span className="text-sm font-medium transition-colors duration-[400ms]" style={{ color: darkMode ? '#cbd5e1' : '#334155' }}>
               {t.question} {currentQuestionIndex + 1} {t.of} {totalQuestions}
             </span>
-            <span className="text-sm font-medium text-gray-600 dark:text-gray-300">{Math.round(progress)}% {t.complete}</span>
+            <span className="text-sm font-medium transition-colors duration-[400ms]" style={{ color: darkMode ? '#cbd5e1' : '#334155' }}>{Math.round(progress)}% {t.complete}</span>
           </div>
           <Progress value={progress} className="h-2 shadow-sm" />
         </div>
 
-        <Card className="mb-4 border-2 shadow-xl bg-white dark:bg-slate-700 dark:border-slate-600">
-          <CardHeader className="bg-gradient-to-br from-slate-50 to-white dark:from-slate-600 dark:to-slate-700 pb-2 pt-4 px-3 md:px-6">
+        <Card 
+          className="mb-4 border-2 shadow-xl transition-all duration-[400ms]" 
+          style={{ 
+            backgroundColor: darkMode ? '#1e293b' : '#ffffff', 
+            borderColor: darkMode ? '#475569' : '#e2e8f0',
+            transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
+          }}
+        >
+          <CardHeader 
+            className="pb-2 pt-4 px-3 md:px-6 transition-all duration-[400ms]" 
+            style={{ 
+              background: darkMode 
+                ? 'linear-gradient(to bottom right, #334155, #1e293b)' 
+                : 'linear-gradient(to bottom right, #f8fafc, #ffffff)',
+              transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
+            }}
+          >
             <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 md:gap-4">
-              <CardTitle className="flex-1 text-base md:text-lg dark:text-gray-100 max-h-[120px] overflow-y-auto">{currentQuestion.question}</CardTitle>
+              <CardTitle className="flex-1 text-base md:text-lg max-h-[120px] overflow-y-auto transition-colors duration-[400ms]" style={{ color: darkMode ? '#e2e8f0' : '#1e293b' }}>{currentQuestion.question}</CardTitle>
               <div className="flex flex-row md:flex-col gap-2 md:gap-1.5 md:items-end flex-shrink-0">
-                <Badge variant="outline" className="shadow-sm text-xs dark:border-gray-500 dark:text-gray-200">
+                <Badge variant="outline" className="shadow-sm text-xs transition-all duration-[400ms]" style={{ borderColor: darkMode ? '#64748b' : '#cbd5e1', color: darkMode ? '#cbd5e1' : '#1e293b', backgroundColor: darkMode ? '#334155' : 'transparent' }}>
                   {currentQuestion.points} {currentQuestion.points === 1 ? t.point : t.points}
                 </Badge>
-                <Badge className="shadow-md text-xs bg-blue-600 text-white dark:bg-blue-500 dark:text-white whitespace-nowrap border-blue-700 dark:border-blue-400">
+                <Badge className="shadow-md text-xs whitespace-nowrap transition-all duration-[400ms]" style={{ backgroundColor: darkMode ? '#1e40af' : '#2563eb', color: '#ffffff', borderColor: darkMode ? '#1e3a8a' : '#1d4ed8' }}>
                   {t.selectMultipleAnswers.replace('{count}', (currentQuestion.correctAnswers?.length || 1).toString())}
                 </Badge>
               </div>
             </div>
           </CardHeader>
-          <CardContent className="space-y-2 pt-2 px-3 md:px-6">
+          <CardContent className="space-y-2 pt-2 px-3 md:px-6 transition-all duration-[400ms]" style={{ backgroundColor: darkMode ? '#1e293b' : '#ffffff' }}>
             {currentQuestion.image && (
-              <div className="rounded-lg overflow-hidden shadow-lg border-2 bg-gray-50 dark:bg-gray-900 p-4 mb-2">
+              <div className="rounded-lg overflow-hidden shadow-lg border-2 border-slate-200 dark:border-gray-700 bg-slate-50 dark:bg-gray-900 p-4 mb-2">
                 <ImageWithFallback
                   src={currentQuestion.image}
                   alt="Question illustration"
@@ -1105,15 +1245,23 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                   return (
                     <div
                       key={index}
-                      className={`flex items-center space-x-3 p-2 md:p-3 rounded-lg border-2 transition-all duration-200 ${
-                        showCorrect 
-                          ? 'border-green-500 bg-green-50 dark:bg-green-900/30 shadow-md' 
+                      className="flex items-center space-x-3 p-2 md:p-3 rounded-lg border-2 transition-all duration-200 cursor-pointer"
+                      style={{ 
+                        backgroundColor: showCorrect 
+                          ? (darkMode ? '#064e3b' : '#f0fdf4')
                           : showWrong 
-                          ? 'border-red-500 bg-red-50 dark:bg-red-900/30 shadow-md' 
-                          : isSelected
-                          ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 dark:border-blue-500 shadow-md'
-                          : 'border-slate-300 dark:border-gray-600 bg-white dark:bg-gray-700 hover:bg-blue-50/50 dark:hover:bg-gray-700 hover:border-blue-400 dark:hover:border-blue-500 shadow-sm'
-                      } cursor-pointer`}
+                          ? (darkMode ? '#7f1d1d' : '#fef2f2')
+                          : isSelected 
+                          ? (darkMode ? '#1e3a8a' : '#eff6ff')
+                          : (darkMode ? '#334155' : '#f8fafc'),
+                        borderColor: showCorrect 
+                          ? '#22c55e' 
+                          : showWrong 
+                          ? '#ef4444' 
+                          : isSelected 
+                          ? '#3b82f6' 
+                          : (darkMode ? '#475569' : '#cbd5e1')
+                      }}
                       onClick={() => !(mode === 'study' && showAnswerFeedback) && handleMultipleAnswerToggle(index)}
                     >
                       <Checkbox 
@@ -1122,11 +1270,11 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                         onCheckedChange={() => handleMultipleAnswerToggle(index)}
                         disabled={mode === 'study' && showAnswerFeedback}
                       />
-                      <Label htmlFor={`answer-${index}`} className="flex-1 cursor-pointer text-xs md:text-sm text-slate-700 dark:text-gray-200 max-h-[100px] overflow-y-auto font-medium">
+                      <Label htmlFor={`answer-${index}`} className="flex-1 cursor-pointer text-xs md:text-sm max-h-[100px] overflow-y-auto font-medium transition-colors duration-200" style={{ color: darkMode ? '#e2e8f0' : '#334155' }}>
                         {answer}
                       </Label>
-                      {showCorrect && <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />}
-                      {showWrong && <XCircle className="w-5 h-5 text-red-600 dark:text-red-400" />}
+                      {showCorrect && <CheckCircle className="w-5 h-5" style={{ color: '#16a34a' }} />}
+                      {showWrong && <XCircle className="w-5 h-5" style={{ color: '#dc2626' }} />}
                     </div>
                   );
                 })}
@@ -1143,21 +1291,29 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                     <div
                       key={index}
                       onClick={() => !(mode === 'study' && showAnswerFeedback) && handleAnswerSelect(index)}
-                      className={`flex items-center p-3 md:p-4 rounded-lg border-2 transition-all duration-200 ${
-                        showCorrect 
-                          ? 'border-green-500 bg-green-50 dark:bg-green-900/30 shadow-md' 
+                      className={`flex items-center p-3 md:p-4 rounded-lg border-2 transition-all duration-200 ${mode === 'study' && showAnswerFeedback ? 'cursor-default' : 'cursor-pointer'}`}
+                      style={{ 
+                        backgroundColor: showCorrect 
+                          ? (darkMode ? '#064e3b' : '#f0fdf4')
                           : showWrong 
-                          ? 'border-red-500 bg-red-50 dark:bg-red-900/30 shadow-md' 
-                          : isSelected
-                          ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/40 dark:border-blue-400 shadow-md'
-                          : 'border-slate-300 dark:border-gray-600 bg-white dark:bg-gray-700 hover:bg-blue-50/50 dark:hover:bg-gray-700 hover:border-blue-400 dark:hover:border-blue-500 shadow-sm'
-                      } ${mode === 'study' && showAnswerFeedback ? 'cursor-default' : 'cursor-pointer'}`}
+                          ? (darkMode ? '#7f1d1d' : '#fef2f2')
+                          : isSelected 
+                          ? (darkMode ? '#1e3a8a' : '#eff6ff')
+                          : (darkMode ? '#334155' : '#f8fafc'),
+                        borderColor: showCorrect 
+                          ? '#22c55e' 
+                          : showWrong 
+                          ? '#ef4444' 
+                          : isSelected 
+                          ? '#3b82f6' 
+                          : (darkMode ? '#475569' : '#cbd5e1')
+                      }}
                     >
-                      <span className="flex-1 text-xs md:text-sm text-slate-700 dark:text-gray-200 max-h-[100px] overflow-y-auto font-medium">
+                      <span className="flex-1 text-xs md:text-sm max-h-[100px] overflow-y-auto font-medium transition-colors duration-200" style={{ color: darkMode ? '#e2e8f0' : '#334155' }}>
                         {answer}
                       </span>
-                      {showCorrect && <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0 ml-3" />}
-                      {showWrong && <XCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 ml-3" />}
+                      {showCorrect && <CheckCircle className="w-5 h-5 flex-shrink-0 ml-3" style={{ color: '#16a34a' }} />}
+                      {showWrong && <XCircle className="w-5 h-5 flex-shrink-0 ml-3" style={{ color: '#dc2626' }} />}
                     </div>
                   );
                 })}
@@ -1184,7 +1340,12 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
             onClick={handlePrevious}
             disabled={currentQuestionIndex === 0}
             variant="outline"
-            className="shadow-md border-2 dark:border-gray-600 dark:text-gray-100 dark:hover:bg-slate-700 dark:hover:text-white font-semibold"
+            className="shadow-md border-2 transition-all duration-[400ms] font-semibold hover:opacity-80"
+            style={{
+              borderColor: darkMode ? '#475569' : '#cbd5e1',
+              color: darkMode ? '#cbd5e1' : '#334155',
+              backgroundColor: darkMode ? '#334155' : '#f8fafc'
+            }}
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             {t.previous}
@@ -1212,11 +1373,38 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
           </Button>
         </div>
 
-        <Card className="border-2 shadow-xl dark:bg-slate-700 dark:border-slate-600">
-          <CardHeader className="bg-gradient-to-br from-slate-50 to-white dark:from-slate-600 dark:to-slate-700 pb-2 pt-3">
-            <CardTitle className="text-center text-sm dark:text-gray-100">{t.questionNavigator}</CardTitle>
+        <Card 
+          className="border-2 shadow-xl transition-all duration-[400ms]"
+          style={{ 
+            backgroundColor: darkMode ? '#1e293b' : '#ffffff',
+            borderColor: darkMode ? '#475569' : '#e2e8f0',
+            transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
+          }}
+        >
+          <CardHeader 
+            className="pb-2 pt-3 transition-all duration-[400ms]"
+            style={{ 
+              background: darkMode 
+                ? 'linear-gradient(to bottom right, #334155, #1e293b)' 
+                : 'linear-gradient(to bottom right, #f8fafc, #ffffff)',
+              transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
+            }}
+          >
+            <CardTitle 
+              className="text-center text-sm transition-colors duration-[400ms]"
+              style={{ 
+                color: darkMode ? '#e2e8f0' : '#1e293b',
+                transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
+              }}
+            >{t.questionNavigator}</CardTitle>
           </CardHeader>
-          <CardContent className="pt-2 pb-3">
+          <CardContent 
+            className="pt-2 pb-3 transition-all duration-[400ms]"
+            style={{ 
+              backgroundColor: darkMode ? '#1e293b' : '#ffffff',
+              transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
+            }}
+          >
             <ScrollArea className="h-[190px]">
               <div className="grid grid-cols-10 gap-1 pr-2 p-1">
                 {examQuestions.map((q, index) => {
@@ -1230,15 +1418,25 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                           <div className="relative flex items-center justify-center p-1">
                             <button
                               onClick={() => jumpToQuestion(index)}
-                              className={`relative w-10 h-10 rounded-full border-2 transition-all flex items-center justify-center overflow-hidden ${
-                                isCurrentQuestion
-                                  ? 'bg-blue-500 text-white border-blue-500 shadow-md ring-2 ring-blue-300 dark:ring-blue-400'
+                              className="relative w-10 h-10 rounded-full border-2 transition-all duration-200 flex items-center justify-center overflow-hidden"
+                              style={{
+                                backgroundColor: isCurrentQuestion
+                                  ? '#3b82f6'
                                   : answer?.isCorrect
-                                  ? 'bg-green-500 border-green-600 hover:bg-green-600 text-white'
+                                  ? '#22c55e'
                                   : answer
-                                  ? 'bg-red-500 border-red-600 hover:bg-red-600 text-white'
-                                  : 'bg-white dark:bg-gray-600 border-gray-400 dark:border-gray-500 hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900 text-gray-700 dark:text-gray-200'
-                              }`}
+                                  ? '#ef4444'
+                                  : (darkMode ? '#475569' : '#ffffff'),
+                                borderColor: isCurrentQuestion
+                                  ? '#3b82f6'
+                                  : answer?.isCorrect
+                                  ? '#16a34a'
+                                  : answer
+                                  ? '#dc2626'
+                                  : (darkMode ? '#64748b' : '#9ca3af'),
+                                color: isCurrentQuestion || answer ? '#ffffff' : (darkMode ? '#e2e8f0' : '#334155'),
+                                boxShadow: isCurrentQuestion ? '0 4px 6px -1px rgba(59, 130, 246, 0.3), 0 0 0 3px rgba(59, 130, 246, 0.2)' : 'none'
+                              }}
                             >
                               {q.image && (
                                 <div className="absolute inset-0 opacity-30">
@@ -1249,7 +1447,13 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                                   />
                                 </div>
                               )}
-                              <span className={`relative z-10 text-xs font-bold ${isCurrentQuestion || answer ? 'text-white drop-shadow-md' : 'text-gray-800 dark:text-gray-100'}`}>
+                              <span 
+                                className="relative z-10 text-xs font-bold transition-colors duration-200" 
+                                style={{ 
+                                  color: isCurrentQuestion || answer ? '#ffffff' : (darkMode ? '#e2e8f0' : '#334155'),
+                                  textShadow: isCurrentQuestion || answer ? '0 1px 2px rgba(0,0,0,0.3)' : 'none'
+                                }}
+                              >
                                 {index + 1}
                               </span>
                             </button>
@@ -1282,7 +1486,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                     <span className="text-[10px] text-gray-600 dark:text-gray-300">{t.answeredIncorrectly}</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <div className="w-3.5 h-3.5 rounded-full border-2 border-gray-400 bg-white dark:bg-gray-600"></div>
+                    <div className="w-3.5 h-3.5 rounded-full border-2 border-slate-400 dark:border-gray-400 bg-slate-100 dark:bg-gray-600"></div>
                     <span className="text-[10px] text-gray-600 dark:text-gray-300">{t.unanswered}</span>
                   </div>
                   <div className="flex items-center gap-1">
@@ -1297,7 +1501,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                     <span className="text-[10px] text-gray-600 dark:text-gray-300">{t.answered}</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <div className="w-3.5 h-3.5 rounded-full border-2 border-gray-400 bg-white dark:bg-gray-600"></div>
+                    <div className="w-3.5 h-3.5 rounded-full border-2 border-slate-400 dark:border-gray-400 bg-slate-100 dark:bg-gray-600"></div>
                     <span className="text-[10px] text-gray-600 dark:text-gray-300">{t.unanswered}</span>
                   </div>
                   <div className="flex items-center gap-1">
@@ -1367,7 +1571,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
             }}
             className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800"
           >
-            {language === 'English' ? 'Submit' : 'Подай'}
+            {language === 'English' ? 'Submit' : 'П��дай'}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
