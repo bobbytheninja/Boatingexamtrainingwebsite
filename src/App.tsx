@@ -27,8 +27,18 @@ import { ImageDiagnostics } from './pages/ImageDiagnostics';
 
 // Simple loading component
 function LoadingFallback() {
+  const { darkMode } = useDarkMode();
+  
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 via-sky-50/50 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+    <div 
+      className="flex items-center justify-center min-h-screen transition-all duration-[400ms]"
+      style={{ 
+        background: darkMode 
+          ? 'linear-gradient(to bottom right, #0f172a, #1e293b, #0f172a)'
+          : 'linear-gradient(to bottom right, #ffffff, #f0f9ff, #ffffff)',
+        transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
+      }}
+    >
       <div className="text-center">
         <div className="animate-spin h-12 w-12 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
         <p className="text-slate-600 dark:text-slate-400">Loading...</p>

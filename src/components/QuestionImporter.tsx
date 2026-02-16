@@ -3,6 +3,7 @@ import { Upload, CheckCircle, AlertCircle, Loader2, Image as ImageIcon } from 'l
 import { api } from '../utils/api';
 import { projectId, publicAnonKey } from '../utils/supabase/info';
 import { createClient } from '../utils/supabase/client';
+import { useDarkMode } from '../contexts/DarkModeContext';
 import * as XLSX from 'xlsx';
 import {
   Tooltip,

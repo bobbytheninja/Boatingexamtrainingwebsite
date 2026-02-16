@@ -372,7 +372,15 @@ export function AdminPage({ onBack }: AdminPageProps) {
         onDarkModeToggle={toggleDarkMode}
       />
       
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/50 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 pt-24 pb-12 px-4">
+      <div 
+        className="min-h-screen pt-32 pb-12 px-4 transition-all duration-[400ms]"
+        style={{ 
+          background: darkMode 
+            ? 'linear-gradient(to bottom right, #0f172a, #1e293b, #0f172a)'
+            : 'linear-gradient(to bottom right, #ffffff, #f0f9ff, #ffffff)',
+          transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
+        }}
+      >
         <div className="container mx-auto max-w-6xl">
           <Button onClick={onBack} variant="ghost" className="mb-8">
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -380,11 +388,23 @@ export function AdminPage({ onBack }: AdminPageProps) {
           </Button>
 
         <div className="text-center mb-8">
-          <h1 className="text-4xl mb-4 dark:text-gray-100 flex items-center justify-center gap-2">
+          <h1 
+            className="text-4xl mb-4 flex items-center justify-center gap-2 transition-colors duration-[400ms]"
+            style={{ 
+              color: darkMode ? '#f3f4f6' : '#1e293b',
+              transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
+            }}
+          >
             <Shield className="w-8 h-8 text-purple-500" />
             Admin Panel
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 mb-3">
+          <p 
+            className="mb-3 transition-colors duration-[400ms]"
+            style={{ 
+              color: darkMode ? '#9ca3af' : '#64748b',
+              transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
+            }}
+          >
             Manage users, grant licenses, import questions, and configure your yacht exam platform
           </p>
           <div className="flex flex-wrap justify-center gap-3 text-sm">

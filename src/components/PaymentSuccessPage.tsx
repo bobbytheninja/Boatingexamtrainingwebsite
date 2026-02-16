@@ -3,6 +3,7 @@ import { CheckCircle, ArrowRight, Loader2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { useAuth } from '../contexts/AuthContext';
+import { useDarkMode } from '../contexts/DarkModeContext';
 import { api } from '../utils/api';
 import { toast } from 'sonner';
 
@@ -12,6 +13,7 @@ interface PaymentSuccessPageProps {
 
 export function PaymentSuccessPage({ onContinue }: PaymentSuccessPageProps) {
   const { accessToken, refreshSubscriptions } = useAuth();
+  const { darkMode } = useDarkMode();
   const [verifying, setVerifying] = useState(true);
   const [purchasedExams, setPurchasedExams] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -57,8 +59,23 @@ export function PaymentSuccessPage({ onContinue }: PaymentSuccessPageProps) {
 
   if (verifying) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/50 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 flex items-center justify-center px-4">
-        <Card className="max-w-md w-full">
+      <div 
+        className="min-h-screen flex items-center justify-center px-4 transition-all duration-[400ms]"
+        style={{ 
+          background: darkMode 
+            ? 'linear-gradient(to bottom right, #0f172a, #1e293b, #0f172a)'
+            : 'linear-gradient(to bottom right, #ffffff, #f0f9ff, #ffffff)',
+          transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
+        }}
+      >
+        <Card 
+          className="max-w-md w-full transition-all duration-[400ms]"
+          style={{ 
+            backgroundColor: darkMode ? '#334155' : '#ffffff',
+            borderColor: darkMode ? '#475569' : '#e2e8f0',
+            transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
+          }}
+        >
           <CardContent className="pt-6 flex flex-col items-center space-y-4">
             <Loader2 className="w-16 h-16 text-blue-500 animate-spin" />
             <h3 className="text-xl dark:text-gray-100">Verifying Payment...</h3>

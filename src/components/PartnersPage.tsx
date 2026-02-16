@@ -97,14 +97,35 @@ export function PartnersPage({ onNavigate, selectedPartnerIndex = 0, isLoggedIn 
         transparent={false}
       />
       
-      <div className="min-h-screen pt-24 pb-20 bg-gradient-to-br from-slate-50 via-blue-50/50 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+      <div 
+        className="min-h-screen pt-32 pb-20 transition-all duration-[400ms]"
+        style={{ 
+          background: darkMode 
+            ? 'linear-gradient(to bottom right, #0f172a, #1e293b, #0f172a)'
+            : 'linear-gradient(to bottom right, #ffffff, #f0f9ff, #ffffff)',
+          transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
+        }}
+      >
         <div className="container mx-auto px-4 md:px-6 lg:px-8 max-w-6xl">
           {/* Header */}
           <div className="text-center mb-12 animate-fadeIn">
-            <h2 className="gradient-ocean mb-4 tracking-tight" style={{ fontSize: 'clamp(1.5rem, 4vw, 2rem)', fontWeight: '800' }}>
+            <h2 
+              className="gradient-ocean mb-4 tracking-tight transition-colors duration-[400ms]" 
+              style={{ 
+                fontSize: 'clamp(1.5rem, 4vw, 2rem)', 
+                fontWeight: '800',
+                transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
+              }}
+            >
               {t.partnersTitle}
             </h2>
-            <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto text-sm md:text-base font-light leading-relaxed">
+            <p 
+              className="max-w-2xl mx-auto text-sm md:text-base font-light leading-relaxed transition-colors duration-[400ms]"
+              style={{ 
+                color: darkMode ? '#d1d5db' : '#475569',
+                transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+              }}
+            >
               {t.partnersSubtitle}
             </p>
           </div>
@@ -113,16 +134,24 @@ export function PartnersPage({ onNavigate, selectedPartnerIndex = 0, isLoggedIn 
           <div className="space-y-8">
             {partners.map((partner, index) => (
               <div key={index} ref={(el) => partnerRefs.current[index] = el}>
-                <Card className="border-2 border-gray-200 dark:border-gray-600 dark:bg-slate-700 shadow-lg overflow-hidden">
+                <Card 
+                  className="group border-2 shadow-lg overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all duration-[400ms]"
+                  style={{ 
+                    backgroundColor: darkMode ? '#334155' : '#ffffff',
+                    borderColor: darkMode ? '#475569' : '#e2e8f0',
+                    transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+                  }}
+                >
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* Partner Image */}
-                    <div className="relative h-64 lg:h-auto">
+                    <div className="relative h-64 lg:h-auto overflow-hidden">
                       <ImageWithFallback
                         src={partner.image}
                         alt={partner.name}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent lg:bg-gradient-to-r" />
+                      <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                       <div className="absolute bottom-4 left-4 lg:hidden">
                         <h3 className="text-white text-xl font-bold">{partner.name}</h3>
                       </div>
@@ -131,21 +160,45 @@ export function PartnersPage({ onNavigate, selectedPartnerIndex = 0, isLoggedIn 
                     {/* Partner Info */}
                     <div className="p-6 lg:py-8">
                       <CardHeader className="p-0 mb-4 hidden lg:block">
-                        <CardTitle className="text-2xl dark:text-gray-100 mb-2">{partner.name}</CardTitle>
-                        <CardDescription className="text-sm dark:text-gray-300"></CardDescription>
+                        <CardTitle 
+                          className="text-2xl mb-2 transition-colors duration-[400ms]"
+                          style={{ 
+                            color: darkMode ? '#f3f4f6' : '#1e293b',
+                            transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+                          }}
+                        >{partner.name}</CardTitle>
+                        <CardDescription 
+                          className="text-sm transition-colors duration-[400ms]"
+                          style={{ 
+                            color: darkMode ? '#d1d5db' : '#64748b',
+                            transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+                          }}
+                        ></CardDescription>
                       </CardHeader>
                       
                       <CardContent className="p-0 space-y-6">
                         {/* Description */}
                         <div>
-                          <p className="text-gray-700 dark:text-gray-200 text-sm leading-relaxed">
+                          <p 
+                            className="text-sm leading-relaxed transition-colors duration-[400ms]"
+                            style={{ 
+                              color: darkMode ? '#e5e7eb' : '#334155',
+                              transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+                            }}
+                          >
                             {partner.description}
                           </p>
                         </div>
 
                         {/* Specializations */}
                         <div>
-                          <h4 className="flex items-center gap-2 mb-3 text-cyan-700 dark:text-cyan-400">
+                          <h4 
+                            className="flex items-center gap-2 mb-3 transition-colors duration-[400ms]"
+                            style={{ 
+                              color: darkMode ? '#22d3ee' : '#0e7490',
+                              transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+                            }}
+                          >
                             <GraduationCap className="w-4 h-4" />
                             <span className="text-sm font-semibold">
                               {language === 'English' ? 'Specializations' : 'Специализации'}
@@ -153,7 +206,14 @@ export function PartnersPage({ onNavigate, selectedPartnerIndex = 0, isLoggedIn 
                           </h4>
                           <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
                             {partner.specializations.map((spec, idx) => (
-                              <li key={idx} className="flex items-center gap-2 text-gray-600 dark:text-gray-300 text-xs">
+                              <li 
+                                key={idx} 
+                                className="flex items-center gap-2 text-xs transition-colors duration-[400ms]"
+                                style={{ 
+                                  color: darkMode ? '#d1d5db' : '#475569',
+                                  transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+                                }}
+                              >
                                 <span className="w-1.5 h-1.5 rounded-full bg-cyan-500" />
                                 {spec}
                               </li>
@@ -173,7 +233,7 @@ export function PartnersPage({ onNavigate, selectedPartnerIndex = 0, isLoggedIn 
                           <Button
                             onClick={() => window.open(partner.classesLink, '_blank')}
                             variant="outline"
-                            className="flex-1 border-cyan-500 text-cyan-700 hover:bg-cyan-50 dark:border-cyan-600 dark:text-cyan-400 dark:hover:bg-cyan-900/30"
+                            className="flex-1 border-sky-400 text-sky-600 hover:bg-white hover:text-sky-700 hover:border-sky-500 hover:shadow-md dark:border-cyan-600 dark:text-cyan-400 dark:hover:bg-cyan-900/30 dark:hover:text-cyan-300 transition-all duration-200"
                           >
                             <GraduationCap className="w-4 h-4 mr-2" />
                             {t.viewClasses}
@@ -188,16 +248,37 @@ export function PartnersPage({ onNavigate, selectedPartnerIndex = 0, isLoggedIn 
           </div>
 
           {/* Call to Action */}
-          <Card className="mt-12 border-2 border-orange-200 dark:border-orange-600 bg-gradient-to-br from-orange-50 to-white dark:from-slate-700 dark:to-slate-600 shadow-md">
+          <Card 
+            className="mt-12 border-2 shadow-md transition-all duration-[400ms]"
+            style={{ 
+              background: darkMode 
+                ? 'linear-gradient(to bottom right, #334155, #1e293b)'
+                : 'linear-gradient(to bottom right, #fff7ed, #ffffff)',
+              borderColor: darkMode ? '#ea580c' : '#fed7aa',
+              transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+            }}
+          >
             <CardContent className="p-8 text-center">
               <div className="text-4xl mb-3">🤝</div>
-              <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">
+              <h3 
+                className="text-xl font-bold mb-2 transition-colors duration-[400ms]"
+                style={{ 
+                  color: darkMode ? '#f3f4f6' : '#1e293b',
+                  transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+                }}
+              >
                 {language === 'English' ? 'Interested in Partnering?' : 'Интересувате ли се от партньорство?'}
               </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 max-w-2xl mx-auto">
+              <p 
+                className="text-sm mb-4 max-w-2xl mx-auto transition-colors duration-[400ms]"
+                style={{ 
+                  color: darkMode ? '#d1d5db' : '#475569',
+                  transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+                }}
+              >
                 {language === 'English' 
                   ? 'We\'re always looking to collaborate with quality maritime training providers. Contact us to discuss partnership opportunities.'
-                  : 'Винаги търсим да сътрудничим с качествени доставчици на морско обучение. Свържете се с нас, за да обсъдим възможности за партньорство.'}
+                  : 'Винаги търсим да сътрудничим с качествени доставчици на морско оучение. Свържете се с нас, за да обсъдим възможности за партньорство.'}
               </p>
               <Button
                 onClick={() => onNavigate('/contact')}

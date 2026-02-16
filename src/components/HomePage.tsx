@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { Waves, Ship, Sailboat, Anchor as AnchorIcon, Compass } from 'lucide-react';
+import { Waves, Ship, Sailboat, Anchor as AnchorIcon, Compass, Users, BookOpen, Award } from 'lucide-react';
 import { ExamType } from '../data/examQuestions';
 import { getTranslation } from '../data/translations';
 import { Navigation } from './Navigation';
@@ -11,6 +11,7 @@ import { Footer } from './Footer';
 import { useAuth } from '../contexts/AuthContext';
 import { useDarkMode } from '../contexts/DarkModeContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import { AnimatedStatCard } from './AnimatedCounter';
 
 export function HomePage() {
   const navigate = useNavigate();
@@ -87,7 +88,14 @@ export function HomePage() {
         transparent={true}
       />
       
-      <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+      {/* Main container - Force background with inline style + Tailwind classes */}
+      <div 
+        className="min-h-screen bg-white dark:bg-slate-800 transition-all duration-[400ms]"
+        style={{ 
+          backgroundColor: darkMode ? '#1e293b' : '#ffffff',
+          transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
+        }}
+      >
         {/* Hero Image - Navigation bar overlays this */}
         <div className="relative h-[77vh] md:h-[81vh] overflow-hidden">
           <ImageWithFallback
@@ -96,19 +104,75 @@ export function HomePage() {
             className="w-full h-full object-cover"
             style={{ objectPosition: 'center 70%' }}
           />
-          <div className="absolute bottom-0 left-0 right-0 h-[20%] bg-gradient-to-b from-transparent to-gray-50 dark:to-slate-900"></div>
+          <div 
+            className="absolute bottom-0 left-0 right-0 h-[20%] duration-[400ms]"
+            style={{ 
+              background: darkMode 
+                ? 'linear-gradient(to bottom, transparent, #1e293b)' 
+                : 'linear-gradient(to bottom, transparent, #ffffff)',
+              transition: 'background 400ms cubic-bezier(0.65, 0, 0.35, 1)'
+            }}
+          ></div>
         </div>
 
         {/* Exam Types Section */}
-        <div className="relative -mt-10 pb-20 bg-gradient-to-b from-transparent via-white dark:via-slate-800 to-slate-50 dark:to-slate-900">
+        <div 
+          className="relative -mt-10 pb-20 bg-white dark:bg-slate-800 transition-all duration-[400ms]"
+          style={{ 
+            backgroundColor: darkMode ? '#1e293b' : '#ffffff',
+            transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
+          }}
+        >
           <div className="container mx-auto px-4 md:px-6 lg:px-8">
             <div className="text-center mb-12 max-w-3xl mx-auto pt-16">
-              <h2 className="text-gray-900 dark:text-gray-100 mb-2 tracking-wide" style={{ fontSize: 'clamp(1.75rem, 4vw, 2.25rem)', fontWeight: '400' }}>
+              <h2 
+                className="text-gray-900 dark:text-gray-100 mb-2 tracking-wide transition-colors duration-[400ms]" 
+                style={{ 
+                  fontSize: 'clamp(1.75rem, 4vw, 2.25rem)', 
+                  fontWeight: '400',
+                  color: darkMode ? '#f3f4f6' : '#111827',
+                  transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
+                }}
+              >
                 {t.examCategories}
               </h2>
-              <p className="text-gray-600 dark:text-gray-300 text-lg font-light leading-relaxed">
+              <p 
+                className="text-gray-600 dark:text-gray-300 text-lg font-light leading-relaxed transition-colors duration-[400ms]"
+                style={{ 
+                  color: darkMode ? '#d1d5db' : '#4b5563',
+                  transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
+                }}
+              >
                 {t.examCategoriesSubtitle}
               </p>
+            </div>
+
+            {/* Platform Stats Section */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto mb-16">
+              <AnimatedStatCard
+                value={2500}
+                label={language === 'English' ? 'Active Students' : 'Активни Студенти'}
+                icon={<Users className="w-6 h-6" />}
+                suffix="+"
+                color="blue"
+                className="animate-fadeInUp stagger-1"
+              />
+              <AnimatedStatCard
+                value={200}
+                label={language === 'English' ? 'Practice Questions' : 'Практически Въпроси'}
+                icon={<BookOpen className="w-6 h-6" />}
+                suffix="+"
+                color="cyan"
+                className="animate-fadeInUp stagger-2"
+              />
+              <AnimatedStatCard
+                value={95}
+                label={language === 'English' ? 'Success Rate' : 'Процент Успех'}
+                icon={<Award className="w-6 h-6" />}
+                suffix="%"
+                color="green"
+                className="animate-fadeInUp stagger-3"
+              />
             </div>
 
             {/* Exam Type Cards */}
@@ -118,8 +182,13 @@ export function HomePage() {
                 return (
                   <Card 
                     key={exam.type} 
-                    className="group overflow-hidden hover:shadow-2xl transition-all duration-500 border border-gray-200/50 dark:border-gray-700/50 bg-white dark:bg-slate-700 backdrop-blur-sm hover:-translate-y-2"
-                    style={{ animationDelay: `${index * 100}ms` }}
+                    className="group overflow-hidden hover:shadow-2xl border border-gray-200/50 dark:border-gray-700/50 bg-white dark:bg-slate-700 backdrop-blur-sm hover:-translate-y-2 transition-all duration-[400ms]"
+                    style={{ 
+                      animationDelay: `${index * 100}ms`,
+                      backgroundColor: darkMode ? '#334155' : '#ffffff',
+                      borderColor: darkMode ? 'rgba(55, 65, 81, 0.5)' : 'rgba(229, 231, 235, 0.5)',
+                      transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
+                    }}
                   >
                     <div className="relative h-32 md:h-40 overflow-hidden">
                       <ImageWithFallback
@@ -136,8 +205,24 @@ export function HomePage() {
                       </div>
                     </div>
                     <CardHeader className="pb-1 pt-2 px-3 md:px-6">
-                      <CardTitle className="text-base md:text-lg font-bold text-gray-900 dark:text-gray-100 group-hover:text-sky-700 dark:group-hover:text-sky-400 transition-colors">{exam.title}</CardTitle>
-                      <CardDescription className="text-xs md:text-sm text-gray-600 dark:text-gray-300 leading-relaxed">{exam.description}</CardDescription>
+                      <CardTitle 
+                        className="text-base md:text-lg font-bold text-gray-900 dark:text-gray-100 group-hover:text-sky-700 dark:group-hover:text-sky-400 transition-colors duration-[400ms]"
+                        style={{ 
+                          color: darkMode ? '#f3f4f6' : '#111827',
+                          transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
+                        }}
+                      >
+                        {exam.title}
+                      </CardTitle>
+                      <CardDescription 
+                        className="text-xs md:text-sm text-gray-600 dark:text-gray-300 leading-relaxed transition-colors duration-[400ms]"
+                        style={{ 
+                          color: darkMode ? '#d1d5db' : '#4b5563',
+                          transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
+                        }}
+                      >
+                        {exam.description}
+                      </CardDescription>
                     </CardHeader>
                     <CardContent className="pt-0 pb-3 px-3 md:px-6">
                       <Button

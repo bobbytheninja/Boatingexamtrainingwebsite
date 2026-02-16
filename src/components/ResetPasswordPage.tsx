@@ -172,11 +172,32 @@ export function ResetPasswordPage({ onNavigate }: ResetPasswordPageProps) {
   // Show loading state while verifying the recovery token
   if (isVerifying) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-sky-50/50 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 flex items-center justify-center px-4">
-        <Card className="w-full max-w-md shadow-2xl border-2">
+      <div 
+        className="min-h-screen flex items-center justify-center px-4 transition-all duration-[400ms]"
+        style={{ 
+          background: darkMode 
+            ? 'linear-gradient(to bottom right, #0f172a, #1e293b, #0f172a)'
+            : 'linear-gradient(to bottom right, #ffffff, #f0f9ff, #ffffff)',
+          transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
+        }}
+      >
+        <Card 
+          className="w-full max-w-md shadow-2xl border-2 transition-all duration-[400ms]"
+          style={{ 
+            backgroundColor: darkMode ? '#334155' : '#ffffff',
+            borderColor: darkMode ? '#475569' : '#e2e8f0',
+            transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
+          }}
+        >
           <CardContent className="pt-12 pb-12 text-center">
             <Loader2 className="w-12 h-12 animate-spin text-blue-600 dark:text-blue-400 mx-auto mb-4" />
-            <p className="text-gray-600 dark:text-gray-300">
+            <p 
+              className="transition-colors duration-[400ms]"
+              style={{ 
+                color: darkMode ? '#d1d5db' : '#475569',
+                transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
+              }}
+            >
               {language === 'English' ? 'Verifying reset link...' : 'Проверка на линка...'}
             </p>
           </CardContent>
@@ -188,8 +209,23 @@ export function ResetPasswordPage({ onNavigate }: ResetPasswordPageProps) {
   // Show error if token is invalid
   if (!hasValidSession && error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-sky-50/50 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 flex items-center justify-center px-4">
-        <Card className="w-full max-w-md shadow-2xl border-2">
+      <div 
+        className="min-h-screen flex items-center justify-center px-4 transition-all duration-[400ms]"
+        style={{ 
+          background: darkMode 
+            ? 'linear-gradient(to bottom right, #0f172a, #1e293b, #0f172a)'
+            : 'linear-gradient(to bottom right, #ffffff, #f0f9ff, #ffffff)',
+          transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
+        }}
+      >
+        <Card 
+          className="w-full max-w-md shadow-2xl border-2 transition-all duration-[400ms]"
+          style={{ 
+            backgroundColor: darkMode ? '#334155' : '#ffffff',
+            borderColor: darkMode ? '#475569' : '#e2e8f0',
+            transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
+          }}
+        >
           <CardHeader className="text-center">
             <div className="mx-auto w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mb-4">
               <AlertCircle className="w-10 h-10 text-red-600 dark:text-red-400" />

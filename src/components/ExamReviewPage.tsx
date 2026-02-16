@@ -19,6 +19,7 @@ import { ExamType, examData, Question } from '../data/examQuestions';
 import { ExamMode, ExamTier } from './ExamModeSelection';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { Language, getTranslation } from '../data/translations';
+import { useDarkMode } from '../contexts/DarkModeContext';
 
 interface AnswerData {
   answer: number | number[];
@@ -46,6 +47,7 @@ export function ExamReviewPage({
   language 
 }: ExamReviewPageProps) {
   const t = getTranslation(language);
+  const { darkMode } = useDarkMode();
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
   const currentQuestion = examQuestions[currentQuestionIndex];
@@ -75,7 +77,15 @@ export function ExamReviewPage({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 pt-28 pb-6 px-4">
+    <div 
+      className="min-h-screen pt-28 pb-6 px-4 transition-all duration-[400ms]"
+      style={{ 
+        background: darkMode 
+          ? 'linear-gradient(to bottom right, #0f172a, #1e293b, #0f172a)'
+          : 'linear-gradient(to bottom right, #ffffff, #f0f9ff, #ffffff)',
+        transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
+      }}
+    >
       <div className="container mx-auto max-w-5xl">
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -145,12 +155,12 @@ export function ExamReviewPage({
                   return (
                     <div
                       key={index}
-                      className={`flex items-center space-x-3 p-3 rounded-lg border-2 shadow-sm ${
+                      className={`flex items-center space-x-3 p-3 rounded-lg border-2 shadow-sm transition-all duration-300 ${
                         isCorrectAnswer 
-                          ? 'border-green-500 bg-green-50 dark:bg-green-900/30' 
+                          ? 'border-green-500 bg-green-50 dark:bg-green-900/30 shadow-green-200/50 dark:shadow-green-900/30' 
                           : isUserAnswer 
-                          ? 'border-red-500 bg-red-50 dark:bg-red-900/30' 
-                          : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-slate-600'
+                          ? 'border-red-500 bg-red-50 dark:bg-red-900/30 shadow-red-200/50 dark:shadow-red-900/30' 
+                          : 'border-slate-300 dark:border-gray-600 bg-white dark:bg-slate-600'
                       }`}
                     >
                       <Checkbox 
@@ -158,11 +168,11 @@ export function ExamReviewPage({
                         disabled 
                         className="pointer-events-none"
                       />
-                      <Label className="flex-1 text-sm dark:text-gray-200 max-h-[100px] overflow-y-auto">
+                      <Label className="flex-1 text-sm text-slate-700 dark:text-gray-200 max-h-[100px] overflow-y-auto font-medium">
                         {answer}
                       </Label>
-                      {isCorrectAnswer && <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />}
-                      {isUserAnswer && !isCorrectAnswer && <XCircle className="w-5 h-5 text-red-600 dark:text-red-400" />}
+                      {isCorrectAnswer && <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 animate-in fade-in zoom-in duration-300" />}
+                      {isUserAnswer && !isCorrectAnswer && <XCircle className="w-5 h-5 text-red-600 dark:text-red-400 animate-in fade-in zoom-in duration-300" />}
                     </div>
                   );
                 })}

@@ -62,9 +62,25 @@ export function ExamModeSelection() {
         transparent={false}
       />
       
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 pt-24 pb-12 px-4">
+      <div 
+        className="min-h-screen pt-32 pb-12 px-4 transition-all duration-[400ms]"
+        style={{ 
+          background: darkMode 
+            ? 'linear-gradient(to bottom right, #0f172a, #1e293b, #0f172a)'
+            : 'linear-gradient(to bottom right, #ffffff, #f0f9ff, #ffffff)',
+          transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
+        }}
+      >
         <div className="container mx-auto max-w-5xl">
-          <Button onClick={handleBack} variant="ghost" className="mb-6 hover:bg-blue-100 dark:hover:bg-slate-700 dark:text-gray-200">
+          <Button 
+            onClick={handleBack} 
+            variant="ghost" 
+            className="mb-6 transition-colors duration-[400ms]"
+            style={{ 
+              color: darkMode ? '#e5e7eb' : '#334155',
+              transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
+            }}
+          >
             <ArrowLeft className="w-4 h-4 mr-2" />
             {t.backToHome}
           </Button>
@@ -73,7 +89,13 @@ export function ExamModeSelection() {
             <h2 className="bg-gradient-to-r from-blue-900 to-blue-700 dark:from-blue-400 dark:to-blue-300 bg-clip-text text-transparent mb-2">
               {exam.title}
             </h2>
-            <p className="text-gray-600 dark:text-gray-300 text-lg">{exam.description}</p>
+            <p 
+              className="text-lg transition-colors duration-[400ms]"
+              style={{ 
+                color: darkMode ? '#d1d5db' : '#475569',
+                transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
+              }}
+            >{exam.description}</p>
             <div className="mt-6 flex gap-6 justify-center items-center">
               <Badge variant="secondary" className="px-4 py-2">40 {t.question}s</Badge>
               <Badge variant="secondary" className="px-4 py-2">60 {language === 'English' ? 'Minutes' : 'Минути'}</Badge>
@@ -84,16 +106,32 @@ export function ExamModeSelection() {
           <div className="space-y-10">
             {/* Mode Toggle Section */}
             <div>
-              <h3 className="mb-6 text-center text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">{t.selectModeTitle}</h3>
+              <h3 
+                className="mb-6 text-center text-2xl font-bold tracking-tight transition-colors duration-[400ms]"
+                style={{ 
+                  color: darkMode ? '#e5e7eb' : '#1e293b',
+                  transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
+                }}
+              >{t.selectModeTitle}</h3>
               <div className="flex justify-center mb-8">
-                <div className="inline-flex rounded-lg border-2 border-sky-300 dark:border-sky-600 bg-sky-100/50 dark:bg-slate-800 p-1 shadow-lg">
+                <div 
+                  className="inline-flex rounded-lg border-2 p-1 shadow-lg transition-all duration-[400ms]"
+                  style={{ 
+                    borderColor: darkMode ? '#0369a1' : '#7dd3fc',
+                    backgroundColor: darkMode ? '#1e293b' : '#f0f9ff',
+                    transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
+                  }}
+                >
                   <button
                     onClick={() => setSelectedMode('study')}
                     className={`flex items-center gap-2 px-6 py-3 rounded-md transition-all ${
                       selectedMode === 'study'
                         ? 'bg-gradient-to-r from-sky-500 to-cyan-600 text-white shadow-md'
-                        : 'text-gray-700 dark:text-gray-300 hover:bg-sky-200/50 dark:hover:bg-slate-700'
+                        : 'hover:bg-sky-200/50 dark:hover:bg-slate-700'
                     }`}
+                    style={{ 
+                      color: selectedMode === 'study' ? '#ffffff' : (darkMode ? '#d1d5db' : '#334155')
+                    }}
                   >
                     <BookOpen className="w-5 h-5" />
                     <span className="font-semibold">{t.studyMode}</span>
@@ -103,8 +141,11 @@ export function ExamModeSelection() {
                     className={`flex items-center gap-2 px-6 py-3 rounded-md transition-all ${
                       selectedMode === 'exam'
                         ? 'bg-gradient-to-r from-sky-500 to-cyan-600 text-white shadow-md'
-                        : 'text-gray-700 dark:text-gray-300 hover:bg-sky-200/50 dark:hover:bg-slate-700'
+                        : 'hover:bg-sky-200/50 dark:hover:bg-slate-700'
                     }`}
+                    style={{ 
+                      color: selectedMode === 'exam' ? '#ffffff' : (darkMode ? '#d1d5db' : '#334155')
+                    }}
                   >
                     <FileText className="w-5 h-5" />
                     <span className="font-semibold">{t.examMode}</span>
@@ -112,7 +153,16 @@ export function ExamModeSelection() {
                 </div>
               </div>
               <div className="max-w-2xl mx-auto">
-                <Card className="border-2 shadow-xl transition-all border-sky-400 bg-gradient-to-br from-sky-50 to-white dark:from-slate-700 dark:to-slate-600">
+                <Card 
+                  className="border-2 shadow-xl transition-all duration-[400ms]"
+                  style={{ 
+                    borderColor: darkMode ? '#0369a1' : '#7dd3fc',
+                    background: darkMode 
+                      ? 'linear-gradient(to bottom right, #334155, #475569)'
+                      : 'linear-gradient(to bottom right, #f0f9ff, #ffffff)',
+                    transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
+                  }}
+                >
                   <CardHeader className="text-center">
                     <CardTitle className="flex items-center justify-center gap-2 text-xl">
                       {selectedMode === 'study' ? (
@@ -173,11 +223,25 @@ export function ExamModeSelection() {
             </div>
 
             <div>
-              <h3 className="mb-6 text-center text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
+              <h3 
+                className="mb-6 text-center text-2xl font-bold tracking-tight transition-colors duration-[400ms]"
+                style={{ 
+                  color: darkMode ? '#e5e7eb' : '#1e293b',
+                  transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
+                }}
+              >
                 {t.selectExamType}
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <Card className="relative overflow-hidden border-2 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border-sky-300 dark:border-sky-600 bg-gradient-to-br from-sky-50 to-white dark:from-slate-700 dark:to-slate-600">
+                <Card 
+                  className="relative overflow-hidden border-2 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1"
+                  style={{ 
+                    borderColor: darkMode ? '#0369a1' : '#7dd3fc',
+                    background: darkMode 
+                      ? 'linear-gradient(to bottom right, #334155, #475569)'
+                      : 'linear-gradient(to bottom right, #f0f9ff, #ffffff)'
+                  }}
+                >
                   <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br rounded-full blur-2xl from-sky-400/20 to-transparent"></div>
                   <CardHeader>
                     <div className="flex items-center justify-between">
@@ -215,14 +279,25 @@ export function ExamModeSelection() {
                   </CardContent>
                 </Card>
 
-                <Card className="relative overflow-hidden border-2 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border-sky-300 dark:border-sky-600 bg-gradient-to-br from-sky-50 to-white dark:from-slate-700 dark:to-slate-600">
+                <Card 
+                  className="relative overflow-hidden border-2 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1"
+                  style={{ 
+                    borderColor: darkMode ? '#0369a1' : '#7dd3fc',
+                    background: darkMode 
+                      ? 'linear-gradient(to bottom right, #334155, #475569)'
+                      : 'linear-gradient(to bottom right, #f0f9ff, #ffffff)'
+                  }}
+                >
                   <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br rounded-full blur-2xl from-sky-400/20 to-transparent"></div>
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <CardTitle className="dark:text-gray-100">{t.fullAccessTitle}</CardTitle>
                       <Badge className="shadow-md bg-gradient-to-r from-amber-400 to-sky-500">€5{t.perMonth}</Badge>
                     </div>
-                    <CardDescription className="text-gray-700 dark:text-gray-300">
+                    <CardDescription 
+                      className="transition-colors duration-[400ms]"
+                      style={{ color: darkMode ? '#d1d5db' : '#334155' }}
+                    >
                       {t.fullAccessDescription}
                     </CardDescription>
                   </CardHeader>

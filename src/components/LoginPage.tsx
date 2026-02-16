@@ -134,7 +134,15 @@ export function LoginPage({ onLogin, onNavigate }: LoginPageProps) {
         transparent={false}
       />
       
-      <div className="min-h-screen pt-24 pb-20 bg-gradient-to-br from-slate-50 via-sky-50/50 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+      <div 
+        className="min-h-screen pt-32 pb-20 transition-all duration-[400ms]"
+        style={{ 
+          background: darkMode 
+            ? 'linear-gradient(to bottom right, #0f172a, #1e293b, #0f172a)'
+            : 'linear-gradient(to bottom right, #ffffff, #f0f9ff, #ffffff)',
+          transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
+        }}
+      >
         <div className="container mx-auto px-4 md:px-6 lg:px-8">
         <div className="max-w-md mx-auto">
           {/* Header */}
@@ -142,22 +150,52 @@ export function LoginPage({ onLogin, onNavigate }: LoginPageProps) {
             <h2 className="gradient-ocean mb-3 tracking-tight" style={{ fontSize: 'clamp(1.75rem, 4vw, 2.25rem)', fontWeight: '800' }}>
               {t.welcomeAboard}
             </h2>
-            <p className="text-gray-600 dark:text-gray-300 text-lg font-light leading-relaxed">
+            <p 
+              className="text-lg font-light leading-relaxed transition-colors duration-[400ms]"
+              style={{ 
+                color: darkMode ? '#d1d5db' : '#475569',
+                transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+              }}
+            >
               {t.signInToContinue}
             </p>
           </div>
 
           {/* Login/Signup Card */}
-          <Card className="border-2 border-gray-200 dark:border-slate-600 shadow-2xl bg-white/80 dark:bg-slate-700/80 backdrop-blur-xl">
+          <Card 
+            className="border-2 shadow-2xl backdrop-blur-xl transition-all duration-[400ms]"
+            style={{ 
+              backgroundColor: darkMode ? 'rgba(51, 65, 85, 0.8)' : 'rgba(255, 255, 255, 0.95)',
+              borderColor: darkMode ? '#475569' : '#e2e8f0',
+              transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+            }}
+          >
             <CardHeader className="space-y-1 pb-6">
-              <CardTitle className="text-2xl text-center dark:text-gray-100">{t.accountAccess}</CardTitle>
-              <CardDescription className="text-center dark:text-gray-300">
+              <CardTitle 
+                className="text-2xl text-center transition-colors duration-[400ms]"
+                style={{ 
+                  color: darkMode ? '#f3f4f6' : '#1e293b',
+                  transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+                }}
+              >{t.accountAccess}</CardTitle>
+              <CardDescription 
+                className="text-center transition-colors duration-[400ms]"
+                style={{ 
+                  color: darkMode ? '#d1d5db' : '#64748b',
+                  transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+                }}
+              >
                 {t.enterCredentials}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <Tabs defaultValue="signup" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 mb-6">
+                <TabsList 
+                  className="grid w-full grid-cols-2 mb-6"
+                  style={{ 
+                    backgroundColor: darkMode ? '#334155' : '#f3f4f6'
+                  }}
+                >
                   <TabsTrigger value="login">{t.signIn}</TabsTrigger>
                   <TabsTrigger value="signup" className="relative">
                     {t.signUp}
@@ -171,11 +209,30 @@ export function LoginPage({ onLogin, onNavigate }: LoginPageProps) {
                 {/* Sign In Tab */}
                 <TabsContent value="login">
                   {/* New User Notice */}
-                  <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-700 rounded-lg">
-                    <p className="text-sm text-blue-900 dark:text-blue-200 font-medium mb-2">
+                  <div 
+                    className="mb-6 p-4 border-2 rounded-lg transition-all duration-[400ms]"
+                    style={{ 
+                      backgroundColor: darkMode ? 'rgba(30, 58, 138, 0.2)' : '#eff6ff',
+                      borderColor: darkMode ? '#1e40af' : '#bfdbfe',
+                      transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+                    }}
+                  >
+                    <p 
+                      className="text-sm font-medium mb-2 transition-colors duration-[400ms]"
+                      style={{ 
+                        color: darkMode ? '#93c5fd' : '#1e3a8a',
+                        transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+                      }}
+                    >
                       👋 {language === 'English' ? 'First time here?' : 'Тук за първи път?'}
                     </p>
-                    <p className="text-xs text-blue-800 dark:text-blue-300">
+                    <p 
+                      className="text-xs transition-colors duration-[400ms]"
+                      style={{ 
+                        color: darkMode ? '#bfdbfe' : '#1e40af',
+                        transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+                      }}
+                    >
                       {language === 'English' 
                         ? 'If you don\'t have an account yet, click the "Sign Up" tab above to create one. You need to sign up before you can log in.'
                         : 'Ако все още нямате акаунт, кликнете на "Регистрация" по-горе, за да създадете акаунт. Трябва да се регистрирате, преди да можете да влезете.'}
@@ -184,7 +241,14 @@ export function LoginPage({ onLogin, onNavigate }: LoginPageProps) {
                   
                   <form onSubmit={handleLogin} className="space-y-5">
                     <div className="space-y-2">
-                      <Label htmlFor="email" className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                      <Label 
+                        htmlFor="email" 
+                        className="text-sm font-semibold transition-colors duration-[400ms]"
+                        style={{ 
+                          color: darkMode ? '#e5e7eb' : '#334155',
+                          transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+                        }}
+                      >
                         {t.email}
                       </Label>
                       <Input
@@ -194,11 +258,18 @@ export function LoginPage({ onLogin, onNavigate }: LoginPageProps) {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
-                        className="h-11 border-2 border-gray-200 dark:border-gray-600 focus:border-sky-500 dark:focus:border-sky-400 transition-colors dark:bg-slate-800 dark:text-gray-100"
+                        className="h-11 border-2 !bg-white dark:!bg-slate-700 border-gray-300 dark:border-gray-500 transition-all dark:text-gray-100"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="password" className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                      <Label 
+                        htmlFor="password" 
+                        className="text-sm font-semibold transition-colors duration-[400ms]"
+                        style={{ 
+                          color: darkMode ? '#e5e7eb' : '#334155',
+                          transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+                        }}
+                      >
                         {t.password}
                       </Label>
                       <Input
@@ -208,19 +279,19 @@ export function LoginPage({ onLogin, onNavigate }: LoginPageProps) {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
-                        className="h-11 border-2 border-gray-200 dark:border-gray-600 focus:border-sky-500 dark:focus:border-sky-400 transition-colors dark:bg-slate-800 dark:text-gray-100"
+                        className="h-11 border-2 !bg-white dark:!bg-slate-700 border-gray-300 dark:border-gray-500 transition-all dark:text-gray-100"
                       />
                     </div>
                     <Button 
                       type="submit" 
-                      className="w-full h-12 bg-gradient-to-r from-sky-500 via-sky-600 to-cyan-600 hover:from-sky-600 hover:via-sky-700 hover:to-cyan-700 shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02] font-semibold" 
+                      className="w-full h-12 bg-gradient-to-r from-sky-500 via-sky-600 to-cyan-600 hover:from-sky-600 hover:via-sky-700 hover:to-cyan-700 shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] font-semibold text-white" 
                       size="lg"
                       disabled={isLoggingIn}
                     >
                       {isLoggingIn ? (
                         <>
                           <ButtonSpinner className="mr-2" />
-                          {language === 'English' ? 'Signing in...' : 'Влизане...'}
+                          {language === 'English' ? 'Signing in...' : 'лизане...'}
                         </>
                       ) : (
                         t.signIn
@@ -240,7 +311,7 @@ export function LoginPage({ onLogin, onNavigate }: LoginPageProps) {
                           <DialogDescription>
                             {language === 'English' 
                               ? 'Enter your email address and we\'ll send you a link to reset your password.'
-                              : 'Въведете вашия имейл адрес и ще ви изпратим линк за нулиране на паролата.'}
+                              : 'Въведете вашия имейл адрес и ще ви изпратим линк за нуиране на паролата.'}
                           </DialogDescription>
                         </DialogHeader>
                         <form onSubmit={handlePasswordReset} className="space-y-4">
@@ -279,11 +350,30 @@ export function LoginPage({ onLogin, onNavigate }: LoginPageProps) {
                 {/* Sign Up Tab */}
                 <TabsContent value="signup">
                   {/* First Time User Encouragement */}
-                  <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border-2 border-green-200 dark:border-green-700 rounded-lg">
-                    <p className="text-sm text-green-900 dark:text-green-200 font-medium mb-2">
+                  <div 
+                    className="mb-6 p-4 border-2 rounded-lg transition-all duration-[400ms]"
+                    style={{ 
+                      backgroundColor: darkMode ? 'rgba(6, 78, 59, 0.2)' : '#f0fdf4',
+                      borderColor: darkMode ? '#166534' : '#bbf7d0',
+                      transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+                    }}
+                  >
+                    <p 
+                      className="text-sm font-medium mb-2 transition-colors duration-[400ms]"
+                      style={{ 
+                        color: darkMode ? '#86efac' : '#14532d',
+                        transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+                      }}
+                    >
                       ✨ {language === 'English' ? 'Create Your Account' : 'Създайте Акаунт'}
                     </p>
-                    <p className="text-xs text-green-800 dark:text-green-300">
+                    <p 
+                      className="text-xs transition-colors duration-[400ms]"
+                      style={{ 
+                        color: darkMode ? '#bbf7d0' : '#166534',
+                        transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+                      }}
+                    >
                       {language === 'English' 
                         ? 'New here? Start by creating an account. You\'ll be automatically logged in after signing up!'
                         : 'Нов тук? Започнете като създадете акаунт. Ще бъдете автоматично влезли след регистрация!'}
@@ -292,7 +382,14 @@ export function LoginPage({ onLogin, onNavigate }: LoginPageProps) {
                   
                   <form onSubmit={handleSignup} className="space-y-5">
                     <div className="space-y-2">
-                      <Label htmlFor="signup-name" className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                      <Label 
+                        htmlFor="signup-name" 
+                        className="text-sm font-semibold transition-colors duration-[400ms]"
+                        style={{ 
+                          color: darkMode ? '#e5e7eb' : '#334155',
+                          transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+                        }}
+                      >
                         {t.fullName}
                       </Label>
                       <Input
@@ -302,11 +399,18 @@ export function LoginPage({ onLogin, onNavigate }: LoginPageProps) {
                         value={signupName}
                         onChange={(e) => setSignupName(e.target.value)}
                         required
-                        className="h-11 border-2 border-gray-200 dark:border-gray-600 focus:border-sky-500 dark:focus:border-sky-400 transition-colors dark:bg-slate-800 dark:text-gray-100"
+                        className="h-11 border-2 !bg-white dark:!bg-slate-700 border-gray-300 dark:border-gray-500 transition-all dark:text-gray-100"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="signup-email" className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                      <Label 
+                        htmlFor="signup-email" 
+                        className="text-sm font-semibold transition-colors duration-[400ms]"
+                        style={{ 
+                          color: darkMode ? '#e5e7eb' : '#334155',
+                          transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+                        }}
+                      >
                         {t.email}
                       </Label>
                       <Input
@@ -316,11 +420,18 @@ export function LoginPage({ onLogin, onNavigate }: LoginPageProps) {
                         value={signupEmail}
                         onChange={(e) => setSignupEmail(e.target.value)}
                         required
-                        className="h-11 border-2 border-gray-200 dark:border-gray-600 focus:border-sky-500 dark:focus:border-sky-400 transition-colors dark:bg-slate-800 dark:text-gray-100"
+                        className="h-11 border-2 !bg-white dark:!bg-slate-700 border-gray-300 dark:border-gray-500 transition-all dark:text-gray-100"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="signup-password" className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                      <Label 
+                        htmlFor="signup-password" 
+                        className="text-sm font-semibold transition-colors duration-[400ms]"
+                        style={{ 
+                          color: darkMode ? '#e5e7eb' : '#334155',
+                          transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+                        }}
+                      >
                         {t.password}
                       </Label>
                       <Input
@@ -330,7 +441,7 @@ export function LoginPage({ onLogin, onNavigate }: LoginPageProps) {
                         value={signupPassword}
                         onChange={(e) => setSignupPassword(e.target.value)}
                         required
-                        className="h-11 border-2 border-gray-200 dark:border-gray-600 focus:border-sky-500 dark:focus:border-sky-400 transition-colors dark:bg-slate-800 dark:text-gray-100"
+                        className="h-11 border-2 !bg-white dark:!bg-slate-700 border-gray-300 dark:border-gray-500 transition-all dark:text-gray-100"
                       />
                     </div>
                     <Button 

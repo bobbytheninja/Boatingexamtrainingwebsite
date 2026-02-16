@@ -101,7 +101,15 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
         transparent={false}
       />
       
-      <div className="min-h-screen pt-24 pb-20 bg-gradient-to-br from-slate-50 via-blue-50/50 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+      <div 
+        className="min-h-screen pt-32 pb-20 transition-all duration-[400ms]"
+        style={{ 
+          background: darkMode 
+            ? 'linear-gradient(to bottom right, #0f172a, #1e293b, #0f172a)'
+            : 'linear-gradient(to bottom right, #ffffff, #f0f9ff, #ffffff)',
+          transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
+        }}
+      >
         <div className="container mx-auto px-4 md:px-6 lg:px-8 max-w-6xl">
           {/* Back Button */}
           <Button
@@ -117,15 +125,34 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
             <h2 className="gradient-ocean mb-2 tracking-tight" style={{ fontSize: 'clamp(2rem, 4vw, 2.5rem)', fontWeight: '800' }}>
               {t.myAccount}
             </h2>
-            <p className="text-gray-600 dark:text-gray-300 text-lg font-light">{t.manageAccount}</p>
+            <p 
+              className="text-lg font-light transition-colors duration-[400ms]"
+              style={{ 
+                color: darkMode ? '#d1d5db' : '#475569',
+                transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+              }}
+            >{t.manageAccount}</p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Account Information */}
             <div className="lg:col-span-1 space-y-6">
-              <Card className="border-2 border-gray-200 dark:border-slate-600 shadow-xl dark:bg-slate-700">
+              <Card 
+                className="border-2 shadow-xl transition-all duration-[400ms]"
+                style={{ 
+                  backgroundColor: darkMode ? '#334155' : '#ffffff',
+                  borderColor: darkMode ? '#475569' : '#e2e8f0',
+                  transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+                }}
+              >
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2 dark:text-gray-100">
+                  <CardTitle 
+                    className="flex items-center gap-2 transition-colors duration-[400ms]"
+                    style={{ 
+                      color: darkMode ? '#f3f4f6' : '#1e293b',
+                      transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+                    }}
+                  >
                     <User className="w-5 h-5" />
                     {t.accountDetails}
                   </CardTitle>
@@ -146,7 +173,16 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
                 </CardContent>
               </Card>
 
-              <Card className="border-2 border-blue-200 dark:border-blue-800 bg-gradient-to-br from-blue-50 to-white dark:from-blue-900/30 dark:to-slate-700 shadow-xl">
+              <Card 
+                className="border-2 shadow-xl transition-all duration-[400ms]"
+                style={{ 
+                  background: darkMode 
+                    ? 'linear-gradient(to bottom right, #1e3a5f, #334155)'
+                    : 'linear-gradient(to bottom right, #dbeafe, #ffffff)',
+                  borderColor: darkMode ? '#1e40af' : '#bfdbfe',
+                  transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+                }}
+              >
                 <CardContent className="pt-6 space-y-4">
                   <Button
                     onClick={onLogout}
@@ -159,7 +195,16 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
               </Card>
 
               {/* Danger Zone */}
-              <Card className="border-2 border-red-200 dark:border-red-800 bg-gradient-to-br from-red-50 to-white dark:from-red-900/20 dark:to-slate-700 shadow-xl">
+              <Card 
+                className="border-2 shadow-xl transition-all duration-[400ms]"
+                style={{ 
+                  background: darkMode 
+                    ? 'linear-gradient(to bottom right, rgba(127, 29, 29, 0.2), #334155)'
+                    : 'linear-gradient(to bottom right, #fee2e2, #ffffff)',
+                  borderColor: darkMode ? '#991b1b' : '#fecaca',
+                  transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+                }}
+              >
                 <CardHeader>
                   <CardTitle className="text-red-700 dark:text-red-400 flex items-center gap-2">
                     <Trash2 className="w-5 h-5" />
@@ -226,13 +271,32 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
 
             {/* Active Subscriptions */}
             <div className="lg:col-span-2">
-              <Card className="border-2 border-gray-200 dark:border-slate-600 shadow-xl dark:bg-slate-700">
+              <Card 
+                className="border-2 shadow-xl transition-all duration-[400ms]"
+                style={{ 
+                  backgroundColor: darkMode ? '#334155' : '#ffffff',
+                  borderColor: darkMode ? '#475569' : '#e2e8f0',
+                  transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+                }}
+              >
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2 dark:text-gray-100">
+                  <CardTitle 
+                    className="flex items-center gap-2 transition-colors duration-[400ms]"
+                    style={{ 
+                      color: darkMode ? '#f3f4f6' : '#1e293b',
+                      transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+                    }}
+                  >
                     <CreditCard className="w-5 h-5" />
                     {t.activeSubscriptions}
                   </CardTitle>
-                  <CardDescription className="dark:text-gray-300">{t.currentExamAccess}</CardDescription>
+                  <CardDescription 
+                    className="transition-colors duration-[400ms]"
+                    style={{ 
+                      color: darkMode ? '#d1d5db' : '#64748b',
+                      transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+                    }}
+                  >{t.currentExamAccess}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   {paidExams.length === 0 ? (
@@ -258,7 +322,15 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
                         const isExpiringSoon = daysRemaining <= 7;
 
                         return (
-                          <Card key={examType} className="border-2 border-gray-200 dark:border-slate-600 hover:border-blue-300 dark:hover:border-blue-600 transition-colors dark:bg-slate-800">
+                          <Card 
+                            key={examType} 
+                            className="border-2 hover:border-sky-300 dark:hover:border-sky-600 hover:shadow-lg transition-all duration-[400ms] group"
+                            style={{ 
+                              backgroundColor: darkMode ? '#1e293b' : '#ffffff',
+                              borderColor: darkMode ? '#475569' : '#e2e8f0',
+                              transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+                            }}
+                          >
                             <CardContent className="pt-6">
                               <div className="flex items-start justify-between gap-4">
                                 <div className="flex-1">

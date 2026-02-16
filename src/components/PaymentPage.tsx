@@ -115,31 +115,81 @@ export function PaymentPage({ userEmail, onBack, onComplete, onNavigate }: Payme
         onDarkModeToggle={toggleDarkMode}
       />
       
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/50 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 pt-24 pb-12 px-4">
+      <div 
+        className="min-h-screen pt-32 pb-12 px-4 transition-all duration-[400ms]"
+        style={{ 
+          background: darkMode 
+            ? 'linear-gradient(to bottom right, #0f172a, #1e293b, #0f172a)'
+            : 'linear-gradient(to bottom right, #ffffff, #f0f9ff, #ffffff)',
+          transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
+        }}
+      >
         <div className="container mx-auto max-w-6xl">
-          <Button onClick={onBack} variant="ghost" className="mb-8 hover:bg-blue-100 dark:hover:bg-slate-700 dark:text-gray-200 transition-colors">
+          <Button 
+            onClick={onBack} 
+            variant="ghost" 
+            className="mb-8 hover:bg-blue-100 dark:hover:bg-slate-700 dark:text-gray-200 transition-colors"
+          >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back
           </Button>
 
           <div className="text-center mb-16 animate-fadeIn">
-            <div className="inline-block mb-4 px-6 py-2 bg-blue-100 dark:bg-blue-900 rounded-full border border-blue-200 dark:border-blue-700">
-              <span className="text-blue-700 dark:text-blue-300 text-sm font-semibold tracking-wide uppercase">Unlock Full Access</span>
+            <div 
+              className="inline-block mb-4 px-6 py-2 rounded-full border transition-all duration-[400ms]"
+              style={{ 
+                backgroundColor: darkMode ? '#1e3a5f' : '#dbeafe',
+                borderColor: darkMode ? '#1e40af' : '#93c5fd',
+                transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
+              }}
+            >
+              <span 
+                className="text-sm font-semibold tracking-wide uppercase transition-colors duration-[400ms]"
+                style={{ 
+                  color: darkMode ? '#93c5fd' : '#1e40af',
+                  transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
+                }}
+              >Unlock Full Access</span>
             </div>
             <h2 className="gradient-ocean mb-6 tracking-tight" style={{ fontSize: 'clamp(2rem, 4vw, 2.5rem)', fontWeight: '800' }}>
               Premium Exam Access
             </h2>
-            <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto text-lg font-light leading-relaxed">
+            <p 
+              className="max-w-2xl mx-auto text-lg font-light leading-relaxed transition-colors duration-[400ms]"
+              style={{ 
+                color: darkMode ? '#d1d5db' : '#475569',
+                transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
+              }}
+            >
               Select the exam categories you want to unlock. Each category is €5 per month with unlimited attempts.
             </p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-6">
-              <Card className="border-2 shadow-xl dark:bg-slate-700 dark:border-slate-600">
+              <Card 
+                className="border-2 shadow-xl transition-all duration-[400ms]"
+                style={{ 
+                  backgroundColor: darkMode ? '#334155' : '#ffffff',
+                  borderColor: darkMode ? '#475569' : '#e2e8f0',
+                  transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
+                }}
+              >
                 <CardHeader>
-                  <CardTitle className="dark:text-gray-100">Select Exam Categories</CardTitle>
-                  <CardDescription className="dark:text-gray-300">Choose which exams you want full access to</CardDescription>
+                  <CardTitle 
+                    className="transition-colors duration-[400ms]"
+                    style={{ 
+                      color: darkMode ? '#f3f4f6' : '#1e293b',
+                      transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
+                    }}
+                  >Select Exam Categories</CardTitle>
+                  <CardDescription 
+                    className="transition-colors duration-[400ms]"
+                    style={{ 
+                      color: darkMode ? '#d1d5db' : '#64748b',
+                      transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
+                    }}
+                  >Choose which exams you want full access to</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {examTypes.map((exam) => {
@@ -148,12 +198,12 @@ export function PaymentPage({ userEmail, onBack, onComplete, onNavigate }: Payme
                     return (
                       <div
                         key={exam.type}
-                        className={`flex items-start space-x-3 p-4 rounded-lg border-2 transition-all ${
+                        className={`flex items-start space-x-3 p-4 rounded-lg border-2 transition-all duration-200 ${
                           isSubscribed
                             ? 'border-green-400 bg-green-50 dark:bg-green-900/20 dark:border-green-600 cursor-not-allowed opacity-75'
                             : selectedExams.includes(exam.type)
-                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 dark:border-blue-400 cursor-pointer'
-                            : 'border-gray-200 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-500 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer'
+                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 dark:border-blue-400 cursor-pointer shadow-md scale-[1.01]'
+                            : 'border-gray-200 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-500 hover:bg-gray-50 dark:hover:bg-gray-600 hover:shadow-md cursor-pointer'
                         }`}
                         onClick={() => toggleExam(exam.type)}
                       >

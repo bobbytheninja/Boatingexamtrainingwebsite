@@ -23,6 +23,7 @@ export function DarkModeProvider({ children }: { children: React.ReactNode }) {
       return false; // Default to light mode on error
     }
   });
+  const [isAnimating, setIsAnimating] = useState(false);
 
   // Apply dark mode class to document element immediately on init
   useEffect(() => {
@@ -35,9 +36,14 @@ export function DarkModeProvider({ children }: { children: React.ReactNode }) {
     if (darkMode) {
       document.documentElement.classList.add('dark');
       console.log('[DarkModeContext] ✅ ADDED "dark" class');
+      // Force style update by setting attribute as well
+      document.documentElement.setAttribute('data-theme', 'dark');
+      document.body.style.backgroundColor = '#1e293b'; // slate-800 (lighter)
     } else {
       document.documentElement.classList.remove('dark');
       console.log('[DarkModeContext] ❌ REMOVED "dark" class');
+      document.documentElement.removeAttribute('data-theme');
+      document.body.style.backgroundColor = '#ffffff'; // white
     }
     
     console.log('[DarkModeContext] Current classes AFTER:', document.documentElement.className);
@@ -57,10 +63,7 @@ export function DarkModeProvider({ children }: { children: React.ReactNode }) {
 
   const toggleDarkMode = () => {
     console.log('[DarkModeContext] 🌓 Toggle called! Current:', darkMode, '-> New:', !darkMode);
-    setDarkModeState(prev => {
-      console.log('[DarkModeContext] 🌓 Toggling from', prev, 'to', !prev);
-      return !prev;
-    });
+    setDarkModeState(prev => !prev);
   };
 
   const setDarkMode = (value: boolean) => {
