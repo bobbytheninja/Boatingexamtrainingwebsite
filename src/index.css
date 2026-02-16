@@ -4164,12 +4164,6 @@
   }
 
   @media (hover: hover) {
-    .hover\:bg-sky-50:hover {
-      background-color: var(--color-sky-50);
-    }
-  }
-
-  @media (hover: hover) {
     .hover\:bg-sky-200\/50:hover {
       background-color: color-mix(in srgb, oklch(.901 .058 230.902) 50%, transparent);
     }

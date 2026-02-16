@@ -115,7 +115,17 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
           <Button
             onClick={() => onNavigate('home')}
             variant="ghost"
-            className="mb-8 hover:bg-sky-50 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-300"
+            className="mb-8 font-medium transition-all duration-200"
+            style={{
+              color: darkMode ? '#d1d5db' : '#374151',
+              backgroundColor: 'transparent'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = darkMode ? '#334155' : '#f0f9ff';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+            }}
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             {t.backToHome}
@@ -128,7 +138,7 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
             <p 
               className="text-lg font-light transition-colors duration-[400ms]"
               style={{ 
-                color: darkMode ? '#d1d5db' : '#475569',
+                color: darkMode ? '#d1d5db' : '#334155',
                 transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
               }}
             >{t.manageAccount}</p>
@@ -159,15 +169,15 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">{t.email}</p>
-                    <p className="font-medium text-gray-900 dark:text-gray-100">{userEmail}</p>
+                    <p className="text-sm mb-1 transition-colors duration-[400ms]" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>{t.email}</p>
+                    <p className="font-medium transition-colors duration-[400ms]" style={{ color: darkMode ? '#f3f4f6' : '#0f172a' }}>{userEmail}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">{t.memberSince}</p>
-                    <p className="font-medium text-gray-900 dark:text-gray-100">{language === 'English' ? 'November 2024' : 'Ноември 2024'}</p>
+                    <p className="text-sm mb-1 transition-colors duration-[400ms]" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>{t.memberSince}</p>
+                    <p className="font-medium transition-colors duration-[400ms]" style={{ color: darkMode ? '#f3f4f6' : '#0f172a' }}>{language === 'English' ? 'November 2024' : 'Ноември 2024'}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">{t.accountStatus}</p>
+                    <p className="text-sm mb-1 transition-colors duration-[400ms]" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>{t.accountStatus}</p>
                     <Badge className="bg-green-100 text-green-700 hover:bg-green-100 dark:bg-green-900/50 dark:text-green-300">{t.active}</Badge>
                   </div>
                 </CardContent>
@@ -187,7 +197,18 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
                   <Button
                     onClick={onLogout}
                     variant="outline"
-                    className="w-full border-2 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-slate-600 dark:text-gray-200 font-semibold"
+                    className="w-full border-2 font-semibold transition-all duration-200"
+                    style={{
+                      borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                      backgroundColor: darkMode ? 'transparent' : '#f9fafb',
+                      color: darkMode ? '#e5e7eb' : '#1f2937'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = darkMode ? '#475569' : '#e5e7eb';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = darkMode ? 'transparent' : '#f9fafb';
+                    }}
                   >
                     {t.logout}
                   </Button>
@@ -212,7 +233,7 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <p className="text-sm text-gray-700 dark:text-gray-300">
+                  <p className="text-sm transition-colors duration-[400ms]" style={{ color: darkMode ? '#d1d5db' : '#374151' }}>
                     {language === 'English' 
                       ? 'Once you delete your account, there is no going back. All your data including subscriptions, exam results, and progress will be permanently deleted.' 
                       : 'След като изтриете акаунта си, няма връщане назад. Всички ваши данни включително абонаменти, резултати от изпити и прогрес е бъдат перманентно изтрити.'}
@@ -335,7 +356,7 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
                               <div className="flex items-start justify-between gap-4">
                                 <div className="flex-1">
                                   <div className="flex items-center gap-3 mb-3">
-                                    <h4 className="font-semibold text-gray-900 dark:text-gray-100">{exam.title}</h4>
+                                    <h4 className="font-bold text-lg transition-colors duration-[400ms]" style={{ color: darkMode ? '#f3f4f6' : '#0f172a' }}>{exam.title}</h4>
                                     <Badge 
                                       className={`${
                                         isExpiringSoon 
@@ -347,18 +368,18 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
                                     </Badge>
                                   </div>
                                   <div className="space-y-2 text-sm">
-                                    <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+                                    <div className="flex items-center gap-2 transition-colors duration-[400ms]" style={{ color: darkMode ? '#d1d5db' : '#475569' }}>
                                       <Calendar className="w-4 h-4" />
-                                      <span>{t.validUntil}: <strong className="text-gray-900 dark:text-gray-100">{expiryDate}</strong></span>
+                                      <span>{t.validUntil}: <strong style={{ color: darkMode ? '#f3f4f6' : '#1e293b' }}>{expiryDate}</strong></span>
                                     </div>
-                                    <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+                                    <div className="flex items-center gap-2 transition-colors duration-[400ms]" style={{ color: darkMode ? '#d1d5db' : '#475569' }}>
                                       <span>{daysRemaining} {t.daysRemaining}</span>
                                     </div>
                                   </div>
                                   <div className="mt-4 pt-4 border-t border-gray-200 dark:border-slate-600">
                                     <div className="flex items-center justify-between text-sm">
-                                      <span className="text-gray-600 dark:text-gray-300">{t.monthlySubscription}</span>
-                                      <span className="font-semibold text-gray-900 dark:text-gray-100">€5.00{t.perMonth}</span>
+                                      <span style={{ color: darkMode ? '#d1d5db' : '#475569' }}>{t.monthlySubscription}</span>
+                                      <span className="font-semibold" style={{ color: darkMode ? '#f3f4f6' : '#1e293b' }}>€5.00{t.perMonth}</span>
                                     </div>
                                   </div>
                                 </div>

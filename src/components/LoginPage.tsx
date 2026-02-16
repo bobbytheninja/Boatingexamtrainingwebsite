@@ -153,7 +153,7 @@ export function LoginPage({ onLogin, onNavigate }: LoginPageProps) {
             <p 
               className="text-lg font-light leading-relaxed transition-colors duration-[400ms]"
               style={{ 
-                color: darkMode ? '#d1d5db' : '#475569',
+                color: darkMode ? '#d1d5db' : '#334155',
                 transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
               }}
             >

@@ -57,6 +57,32 @@ export function Navigation({
         .dark .nav-dropdown-btn:hover {
           background-color: rgb(51, 65, 85) !important;
         }
+        
+        /* Fix selected dropdown items - target exact classes */
+        [data-slot="dropdown-menu-item"].bg-sky-50 {
+          background-color: rgb(240, 249, 255) !important;
+          color: rgb(3, 105, 161) !important;
+        }
+        
+        [data-slot="dropdown-menu-item"].bg-sky-50:hover,
+        [data-slot="dropdown-menu-item"].bg-sky-50:focus,
+        [data-slot="dropdown-menu-item"].bg-sky-50[data-highlighted] {
+          background-color: rgb(224, 242, 254) !important;
+          color: rgb(3, 105, 161) !important;
+        }
+        
+        /* Dark mode versions */
+        .dark [data-slot="dropdown-menu-item"].bg-sky-50 {
+          background-color: rgb(12, 74, 110) !important;
+          color: rgb(125, 211, 252) !important;
+        }
+        
+        .dark [data-slot="dropdown-menu-item"].bg-sky-50:hover,
+        .dark [data-slot="dropdown-menu-item"].bg-sky-50:focus,
+        .dark [data-slot="dropdown-menu-item"].bg-sky-50[data-highlighted] {
+          background-color: rgb(7, 89, 133) !important;
+          color: rgb(125, 211, 252) !important;
+        }
       `}} />
       <nav 
         className={`fixed top-0 left-0 right-0 z-50 border-b-2 transition-all duration-[400ms] ${
@@ -190,9 +216,12 @@ export function Navigation({
                       className={`hidden sm:flex nav-dropdown-btn ${
                         transparent
                           ? 'text-white hover:bg-white/10 backdrop-blur-sm'
-                          : 'text-gray-700 dark:text-gray-200 hover:bg-slate-100 dark:hover:bg-gray-700'
+                          : 'hover:bg-slate-100 dark:hover:bg-gray-700'
                       } gap-1 px-2 md:px-3 min-w-[100px] sm:min-w-[130px] flex-shrink-0`}
-                      style={{ willChange: 'auto' }}
+                      style={{ 
+                        willChange: 'auto',
+                        color: transparent ? undefined : (darkMode ? '#e5e7eb' : '#1f2937')
+                      }}
                     >
                       <Globe className="w-4 h-4 flex-shrink-0" />
                       <span className="hidden sm:inline truncate flex-1 text-left">{language}</span>
@@ -205,7 +234,12 @@ export function Navigation({
                     <DropdownMenuItem
                       key={lang}
                       onClick={() => setLanguage(lang)}
+                      data-selected={language === lang ? 'true' : undefined}
                       className={`cursor-pointer ${language === lang ? 'bg-sky-50 dark:bg-sky-900 text-sky-700 dark:text-sky-300 font-semibold' : 'dark:text-gray-200'}`}
+                      style={language === lang ? {
+                        backgroundColor: darkMode ? 'rgb(12, 74, 110)' : 'rgb(240, 249, 255)',
+                        color: darkMode ? 'rgb(125, 211, 252)' : 'rgb(3, 105, 161)'
+                      } : undefined}
                     >
                       {lang}
                     </DropdownMenuItem>
@@ -222,9 +256,12 @@ export function Navigation({
                     className={`hidden sm:flex nav-dropdown-btn ${
                       transparent
                         ? 'text-white hover:bg-white/10 backdrop-blur-sm'
-                        : 'text-gray-700 dark:text-gray-200 hover:bg-slate-100 dark:hover:bg-gray-700'
+                        : 'hover:bg-slate-100 dark:hover:bg-gray-700'
                     } gap-1 px-2 md:px-3 min-w-[100px] sm:min-w-[130px] flex-shrink-0`}
-                    style={{ willChange: 'auto' }}
+                    style={{ 
+                      willChange: 'auto',
+                      color: transparent ? undefined : (darkMode ? '#e5e7eb' : '#1f2937')
+                    }}
                   >
                     <MapPin className="w-4 h-4 flex-shrink-0" />
                     <span className="hidden sm:inline truncate flex-1 text-left">{region}</span>
@@ -236,7 +273,12 @@ export function Navigation({
                     <DropdownMenuItem
                       key={reg}
                       onClick={() => setRegion(reg)}
+                      data-selected={region === reg ? 'true' : undefined}
                       className={`cursor-pointer ${region === reg ? 'bg-sky-50 dark:bg-sky-900 text-sky-700 dark:text-sky-300 font-semibold' : 'dark:text-gray-200'}`}
+                      style={region === reg ? {
+                        backgroundColor: darkMode ? 'rgb(12, 74, 110)' : 'rgb(240, 249, 255)',
+                        color: darkMode ? 'rgb(125, 211, 252)' : 'rgb(3, 105, 161)'
+                      } : undefined}
                     >
                       {reg}
                     </DropdownMenuItem>
