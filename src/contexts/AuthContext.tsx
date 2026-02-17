@@ -219,6 +219,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (data.session?.user) {
         const token = data.session.access_token;
         
+        // Immediately log out all other sessions (prevents account sharing)
+        try {
+          console.log('🔒 Logging out all other sessions for this user...');
+          const { error: logoutError } = await supabase.auth.signOut({ scope: 'others' });
+          
+          if (logoutError) {
+            console.error('⚠️ Failed to log out other sessions:', logoutError);
+          } else {
+            console.log('✅ All other sessions logged out successfully - only this device is active');
+          }
+        } catch (sessionError) {
+          console.warn('Could not invalidate other sessions:', sessionError);
+          // Continue with login even if this fails
+        }
+        
         // Try to fetch subscriptions, but don't fail login if backend is down
         let subscriptions: ExamType[] = [];
         let expiresAt: number | null = null;

@@ -11,6 +11,7 @@ import { Navigation } from './Navigation';
 import { Footer } from './Footer';
 import { useDarkMode } from '../contexts/DarkModeContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import { projectId, publicAnonKey } from '../utils/supabase/info';
 
 interface ContactPageProps {
   onNavigate: (page: string) => void;
@@ -23,14 +24,43 @@ export function ContactPage({ onNavigate, isLoggedIn = false }: ContactPageProps
   const { darkMode } = useDarkMode();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [message, setMessage] = useState('');
+  const [isSending, setIsSending] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success('Message sent! We\'ll get back to you soon.');
-    setName('');
-    setEmail('');
-    setMessage('');
+    setIsSending(true);
+
+    try {
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/contact`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${publicAnonKey}`,
+          },
+          body: JSON.stringify({ name, email, phone, message }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Failed to send message' }));
+        throw new Error(errorData.message || 'Failed to send message');
+      }
+
+      toast.success('Message sent! We\'ll get back to you soon.');
+      setName('');
+      setEmail('');
+      setPhone('');
+      setMessage('');
+    } catch (error: any) {
+      console.error('Contact form error:', error);
+      toast.error(error.message || 'Failed to send message. Please try again.');
+    } finally {
+      setIsSending(false);
+    }
   };
 
   const handleNavigate = (page: string) => {
@@ -166,6 +196,27 @@ export function ContactPage({ onNavigate, isLoggedIn = false }: ContactPageProps
                     </div>
                     <div className="space-y-1.5">
                       <Label 
+                        htmlFor="phone" 
+                        className="text-sm font-semibold transition-colors duration-[400ms]"
+                        style={{ 
+                          color: darkMode ? '#e5e7eb' : '#334155',
+                          transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+                        }}
+                      >
+                        {t.phone}
+                      </Label>
+                      <Input
+                        id="phone"
+                        type="tel"
+                        placeholder="+359 88 9660467"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        required
+                        className="h-10 text-sm border-2 border-gray-200 dark:border-gray-600 focus:border-sky-500 dark:focus:border-sky-400 transition-all duration-200"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label 
                         htmlFor="message" 
                         className="text-sm font-semibold transition-colors duration-[400ms]"
                         style={{ 
@@ -187,8 +238,9 @@ export function ContactPage({ onNavigate, isLoggedIn = false }: ContactPageProps
                     <Button 
                       type="submit" 
                       className="w-full h-10 bg-gradient-to-r from-sky-500 to-cyan-600 hover:from-sky-600 hover:to-cyan-700 shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] font-semibold text-sm"
+                      disabled={isSending}
                     >
-                      {t.sendMessage}
+                      {isSending ? 'Sending...' : t.sendMessage}
                     </Button>
                   </form>
                 </CardContent>

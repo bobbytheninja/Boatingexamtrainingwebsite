@@ -44,8 +44,8 @@ export function PartnersPage({ onNavigate, selectedPartnerIndex = 0, isLoggedIn 
       specializations: language === 'English'
         ? ['RYA Certified Courses', 'Yacht Charter Qualifications', 'Advanced Navigation', 'Safety at Sea Training', 'VHF Radio Operator License']
         : ['RYA Сертифицирани Курсове', 'Квалификации за Чартър на Яхти', 'Напреднала Навигация', 'Обучение за Безопасност на Море', 'Лиценз за VHF Радио Оператор'],
-      website: 'https://maritime-academy-bg.com',
-      classesLink: 'https://maritime-academy-bg.com/classes',
+      website: 'https://www.naval-acad.bg/en',
+      classesLink: 'https://www.naval-acad.bg/en',
       image: 'https://images.unsplash.com/photo-1599444941426-db010d9b5ef7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzYWlsaW5nJTIwc2Nob29sJTIwdHJhaW5pbmclMjBpbnN0cnVjdG9yfGVufDF8fHx8MTc2MjQzNzU1NHww&ixlib=rb-4.1.0&q=80&w=1080',
     },
     {
@@ -56,8 +56,8 @@ export function PartnersPage({ onNavigate, selectedPartnerIndex = 0, isLoggedIn 
       specializations: language === 'English'
         ? ['Bareboat Charter', 'Skippered Charter', 'Sailing Holidays', 'Team Building Events', 'Corporate Charters']
         : ['Чартър без Екипаж', 'Чартър със Скипер', 'Ветроходни Ваканции', 'Тийм Билдинг Събития', 'Корпоративни Чартъри'],
-      website: 'https://blacksea-yachts.com',
-      classesLink: 'https://blacksea-yachts.com/charter',
+      website: 'https://bmtc.bg/en/index.html',
+      classesLink: 'https://bmtc.bg/en/STCW-courses/c2.html',
       image: 'https://images.unsplash.com/photo-1630840754024-8e3817c5e623?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx5YWNodCUyMGNoYXJ0ZXIlMjBib2F0JTIwcmVudGFsfGVufDF8fHx8MTc2MjQzODE3MXww&ixlib=rb-4.1.0&q=80&w=1080',
     },
     {

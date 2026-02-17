@@ -176,6 +176,167 @@ app.post("/make-server-d36f8f91/signup", async (c) => {
   }
 });
 
+// Invalidate all other sessions for a user (for concurrent session limiting)
+app.post("/make-server-d36f8f91/invalidate-sessions", async (c) => {
+  try {
+    if (!supabase) {
+      return c.json({ message: 'Service unavailable - Authentication system not initialized' }, 503);
+    }
+
+    const { error, user } = await verifyUser(c.req.header('Authorization'));
+    
+    if (error || !user) {
+      return c.json({ message: 'Unauthorized' }, 401);
+    }
+
+    console.log(`[Session Invalidation] Invalidating all sessions for user ${user.id} (${user.email})`);
+
+    // Use admin API to sign out the user globally (from all sessions)
+    const { error: signOutError } = await supabase.auth.admin.signOut(user.id);
+    
+    if (signOutError) {
+      console.error('[Session Invalidation] ❌ Error invalidating sessions:', signOutError);
+      return c.json({ message: 'Failed to invalidate sessions', error: signOutError.message }, 500);
+    }
+
+    console.log(`[Session Invalidation] ✅ Successfully signed out user ${user.id} from ALL devices`);
+    console.log(`[Session Invalidation] ℹ️ User will remain signed in on current device (frontend will refresh token)`);
+    
+    return c.json({ 
+      message: 'All other sessions invalidated successfully',
+      note: 'User has been logged out from all other devices'
+    });
+  } catch (error: any) {
+    console.error('[Session Invalidation] ❌ Unexpected error:', error);
+    return c.json({ message: 'Internal server error during session invalidation' }, 500);
+  }
+});
+
+// Contact form submission - send email
+app.post("/make-server-d36f8f91/contact", async (c) => {
+  console.log('[Contact] ===== NEW CONTACT FORM SUBMISSION =====');
+  
+  try {
+    const resendApiKey = getEnv('RESEND_API_KEY');
+    
+    console.log('[Contact] Checking RESEND_API_KEY...', resendApiKey ? '✅ Present' : '❌ Missing');
+    
+    if (!resendApiKey) {
+      console.error('[Contact] ❌ RESEND_API_KEY environment variable is not set!');
+      return c.json({ message: 'Email service not configured' }, 503);
+    }
+
+    const body = await c.req.json();
+    const { name, email, phone, message } = body;
+
+    console.log('[Contact] Form data received:', { 
+      name, 
+      email,
+      phone,
+      messageLength: message?.length || 0 
+    });
+
+    if (!name || !email || !phone || !message) {
+      console.error('[Contact] ❌ Missing required fields:', { 
+        name: !!name, 
+        email: !!email, 
+        phone: !!phone,
+        message: !!message 
+      });
+      return c.json({ message: 'Name, email, phone, and message are required' }, 400);
+    }
+
+    console.log('[Contact] Preparing email to send via Resend API...');
+
+    // Send email using Resend API
+    const emailPayload = {
+      from: 'Yacht Exam Training <onboarding@resend.dev>',
+      to: ['88xgdgbckn@privaterelay.appleid.com'], // Your Resend account email (forwards to bobby_rocks@me.com)
+      subject: `New Contact Enquiry from ${name}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #0369a1; border-bottom: 3px solid #0ea5e9; padding-bottom: 10px;">
+            📧 New Contact Form Submission
+          </h2>
+          
+          <div style="background-color: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="margin-top: 0; color: #0c4a6e;">Visitor Contact Details:</h3>
+            
+            <p style="margin: 10px 0;">
+              <strong style="color: #0369a1;">Name:</strong><br/>
+              ${name}
+            </p>
+            
+            <p style="margin: 10px 0;">
+              <strong style="color: #0369a1;">Email:</strong><br/>
+              <a href="mailto:${email}" style="color: #0ea5e9;">${email}</a>
+            </p>
+            
+            <p style="margin: 10px 0;">
+              <strong style="color: #0369a1;">Phone:</strong><br/>
+              <a href="tel:${phone}" style="color: #0ea5e9;">${phone}</a>
+            </p>
+          </div>
+          
+          <div style="background-color: #ffffff; padding: 20px; border-left: 4px solid #0ea5e9; margin: 20px 0;">
+            <h3 style="margin-top: 0; color: #0c4a6e;">Message:</h3>
+            <p style="line-height: 1.6; color: #334155;">${message.replace(/\n/g, '<br>')}</p>
+          </div>
+          
+          <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;">
+          
+          <p style="color: #64748b; font-size: 12px; text-align: center;">
+            Sent from Yacht Exam Training Website Contact Form<br/>
+            <a href="https://boatingexamtrainingwebsite.vercel.app" style="color: #0ea5e9;">boatingexamtrainingwebsite.vercel.app</a>
+          </p>
+        </div>
+      `,
+    };
+
+    console.log('[Contact] Email payload:', {
+      from: emailPayload.from,
+      to: emailPayload.to,
+      subject: emailPayload.subject,
+    });
+
+    const emailResponse = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${resendApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(emailPayload),
+    });
+
+    console.log('[Contact] Resend API response status:', emailResponse.status, emailResponse.statusText);
+
+    if (!emailResponse.ok) {
+      const errorData = await emailResponse.json().catch(() => ({}));
+      console.error('[Contact] ❌ Resend API error response:', JSON.stringify(errorData, null, 2));
+      return c.json({ 
+        message: 'Failed to send email', 
+        error: errorData,
+        status: emailResponse.status 
+      }, 500);
+    }
+
+    const result = await emailResponse.json();
+    console.log('[Contact] ✅ Email sent successfully! Resend response:', JSON.stringify(result, null, 2));
+
+    return c.json({ 
+      message: 'Email sent successfully',
+      emailId: result.id 
+    });
+  } catch (error: any) {
+    console.error('[Contact] ❌ Unexpected error while sending email:', error);
+    console.error('[Contact] Error stack:', error.stack);
+    return c.json({ 
+      message: 'Internal server error while sending email',
+      error: error.message 
+    }, 500);
+  }
+});
+
 // Get user subscriptions
 app.get("/make-server-d36f8f91/subscriptions", async (c) => {
   const { error, user } = await verifyUser(c.req.header('Authorization'));
