@@ -219,19 +219,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (data.session?.user) {
         const token = data.session.access_token;
         
-        // Immediately log out all other sessions (prevents account sharing)
+        // Immediately invalidate all other sessions (prevents account sharing)
+        console.log('🔒 [Login] Calling backend to invalidate all other sessions...');
+        
         try {
-          console.log('🔒 Logging out all other sessions for this user...');
-          const { error: logoutError } = await supabase.auth.signOut({ scope: 'others' });
+          const invalidateResponse = await fetch(
+            `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/invalidate-sessions`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
           
-          if (logoutError) {
-            console.error('⚠️ Failed to log out other sessions:', logoutError);
+          if (invalidateResponse.ok) {
+            const result = await invalidateResponse.json();
+            console.log('✅ [Login] All other sessions logged out successfully!', result);
+            console.log('ℹ️ [Login] This is now the ONLY active device for this account');
           } else {
-            console.log('✅ All other sessions logged out successfully - only this device is active');
+            const errorText = await invalidateResponse.text();
+            console.warn('⚠️ [Login] Failed to invalidate other sessions:', errorText);
           }
         } catch (sessionError) {
-          console.warn('Could not invalidate other sessions:', sessionError);
-          // Continue with login even if this fails
+          console.warn('⚠️ [Login] Could not invalidate other sessions:', sessionError);
+          // Continue with login even if session invalidation fails
         }
         
         // Try to fetch subscriptions, but don't fail login if backend is down

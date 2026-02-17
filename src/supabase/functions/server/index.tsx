@@ -189,18 +189,18 @@ app.post("/make-server-d36f8f91/invalidate-sessions", async (c) => {
       return c.json({ message: 'Unauthorized' }, 401);
     }
 
-    console.log(`[Session Invalidation] Invalidating all sessions for user ${user.id} (${user.email})`);
+    console.log(`[Session Invalidation] 🔒 Invalidating OTHER sessions for user ${user.id} (${user.email})`);
 
-    // Use admin API to sign out the user globally (from all sessions)
-    const { error: signOutError } = await supabase.auth.admin.signOut(user.id);
+    // Use admin API to sign out the user from all OTHER sessions (keeping current one active)
+    const { error: signOutError } = await supabase.auth.admin.signOut(user.id, 'others');
     
     if (signOutError) {
-      console.error('[Session Invalidation] ❌ Error invalidating sessions:', signOutError);
+      console.error('[Session Invalidation] ❌ Error invalidating other sessions:', signOutError);
       return c.json({ message: 'Failed to invalidate sessions', error: signOutError.message }, 500);
     }
 
-    console.log(`[Session Invalidation] ✅ Successfully signed out user ${user.id} from ALL devices`);
-    console.log(`[Session Invalidation] ℹ️ User will remain signed in on current device (frontend will refresh token)`);
+    console.log(`[Session Invalidation] ✅ Successfully logged out user ${user.id} from ALL OTHER devices`);
+    console.log(`[Session Invalidation] ℹ️ Current session remains active`);
     
     return c.json({ 
       message: 'All other sessions invalidated successfully',
@@ -208,7 +208,7 @@ app.post("/make-server-d36f8f91/invalidate-sessions", async (c) => {
     });
   } catch (error: any) {
     console.error('[Session Invalidation] ❌ Unexpected error:', error);
-    return c.json({ message: 'Internal server error during session invalidation' }, 500);
+    return c.json({ message: 'Internal server error during session invalidation', error: error.message }, 500);
   }
 });
 
