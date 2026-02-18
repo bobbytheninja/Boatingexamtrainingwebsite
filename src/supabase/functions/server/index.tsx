@@ -83,7 +83,7 @@ async function verifyUser(authHeader: string | null) {
 
   const parts = authHeader.split(' ');
   if (parts.length !== 2 || parts[0] !== 'Bearer') {
-    console.error('[VerifyUser] ❌ Invalid authorization header format:', authHeader.substring(0, 20));
+    console.error('[VerifyUser] ❌ Invalid authorization header format. Parts:', parts.length, 'First part:', parts[0]);
     return { error: 'Invalid authorization header format', user: null };
   }
 
@@ -94,18 +94,15 @@ async function verifyUser(authHeader: string | null) {
   }
 
   const tokenSegments = token.split('.').length;
-  console.log('[VerifyUser] Token info - Segments:', tokenSegments, 'Length:', token.length);
+  console.log('[VerifyUser] Token verification attempt - Segments:', tokenSegments, 'Length:', token.length, 'First 30 chars:', token.substring(0, 30) + '...');
 
   try {
-    // Use the service role client to get user from JWT
-    // Create a temporary client with the user's token to verify it
-    const supabaseUrl = getEnv('SUPABASE_URL');
-    const userClient = createClient(supabaseUrl, token);
-    
-    const { data: { user }, error } = await userClient.auth.getUser();
+    // Use service role client to verify the user's JWT token
+    const { data: { user }, error } = await supabase.auth.getUser(token);
     
     if (error) {
-      console.error('[VerifyUser] ❌ Error from getUser():', error.message);
+      console.error('[VerifyUser] ❌ Supabase auth.getUser error:', error.message);
+      console.error('[VerifyUser] ❌ Error details:', JSON.stringify(error, null, 2));
       return { error: error.message || 'Invalid token or user not found', user: null };
     }
     
