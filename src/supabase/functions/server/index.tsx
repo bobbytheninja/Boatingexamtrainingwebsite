@@ -77,22 +77,35 @@ async function verifyUser(authHeader: string | null) {
   }
 
   if (!authHeader) {
+    console.error('[VerifyUser] ❌ No authorization header provided');
     return { error: 'No authorization header', user: null };
   }
 
-  const token = authHeader.split(' ')[1];
+  const parts = authHeader.split(' ');
+  if (parts.length !== 2 || parts[0] !== 'Bearer') {
+    console.error('[VerifyUser] ❌ Invalid authorization header format:', authHeader.substring(0, 20));
+    return { error: 'Invalid authorization header format', user: null };
+  }
+
+  const token = parts[1];
   if (!token) {
+    console.error('[VerifyUser] ❌ No token provided after Bearer');
     return { error: 'No token provided', user: null };
   }
 
-  console.log('[VerifyUser] Attempting to verify token (first 20 chars):', token.substring(0, 20) + '...');
-  console.log('[VerifyUser] Token segments:', token.split('.').length);
+  const tokenSegments = token.split('.').length;
+  console.log('[VerifyUser] Token info - Segments:', tokenSegments, 'Length:', token.length);
 
   try {
-    const { data: { user }, error } = await supabase.auth.getUser(token);
+    // Use the service role client to get user from JWT
+    // Create a temporary client with the user's token to verify it
+    const supabaseUrl = getEnv('SUPABASE_URL');
+    const userClient = createClient(supabaseUrl, token);
+    
+    const { data: { user }, error } = await userClient.auth.getUser();
     
     if (error) {
-      console.error('[VerifyUser] ❌ Error from supabase.auth.getUser:', error.message);
+      console.error('[VerifyUser] ❌ Error from getUser():', error.message);
       return { error: error.message || 'Invalid token or user not found', user: null };
     }
     
@@ -105,6 +118,7 @@ async function verifyUser(authHeader: string | null) {
     return { error: null, user };
   } catch (err: any) {
     console.error('[VerifyUser] ❌ Exception during token verification:', err.message);
+    console.error('[VerifyUser] ❌ Stack:', err.stack);
     return { error: 'Error verifying authentication', user: null };
   }
 }
