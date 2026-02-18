@@ -140,6 +140,9 @@ async function verifyUser(authHeader: string | null) {
       }
       
       console.log('[VerifyUser] ✅ Token matches active session - access granted');
+    } else {
+      // No active session stored yet - this is fine (first login or session not set yet)
+      console.log('[VerifyUser] ℹ️ No active session stored - allowing request (first login or setting session)');
     }
     
     return { error: null, user };
