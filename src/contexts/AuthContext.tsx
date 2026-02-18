@@ -256,9 +256,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.log('✅ [Login] All other sessions logged out successfully!', result);
           console.log('ℹ️ [Login] This is now the ONLY active device for this account');
         } else {
-          const errorText = await invalidateResponse.text();
+          const errorData = await invalidateResponse.json().catch(async () => ({ message: await invalidateResponse.text() }));
           console.error('❌ [Login] Failed to invalidate other sessions. Status:', invalidateResponse.status);
-          console.error('❌ [Login] Error response:', errorText);
+          console.error('❌ [Login] Error response:', errorData);
+          if (errorData.debug) {
+            console.error('🐛 [Login] Debug info from backend:', errorData.debug);
+          }
         }
       } catch (sessionError) {
         console.error('❌ [Login] Exception while invalidating other sessions:', sessionError);

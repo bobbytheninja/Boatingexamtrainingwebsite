@@ -97,12 +97,19 @@ async function verifyUser(authHeader: string | null) {
   console.log('[VerifyUser] Token verification attempt - Segments:', tokenSegments, 'Length:', token.length, 'First 30 chars:', token.substring(0, 30) + '...');
 
   try {
+    console.log('[VerifyUser] 🔍 About to call supabase.auth.getUser() with token...');
+    console.log('[VerifyUser] 🔍 Token type:', typeof token);
+    console.log('[VerifyUser] 🔍 Token is string?', typeof token === 'string');
+    console.log('[VerifyUser] 🔍 Token trimmed length:', token.trim().length);
+    
     // Use service role client to verify the user's JWT token
     const { data: { user }, error } = await supabase.auth.getUser(token);
     
     if (error) {
       console.error('[VerifyUser] ❌ Supabase auth.getUser error:', error.message);
-      console.error('[VerifyUser] ❌ Error details:', JSON.stringify(error, null, 2));
+      console.error('[VerifyUser] ❌ Error name:', error.name);
+      console.error('[VerifyUser] ❌ Error status:', error.status);
+      console.error('[VerifyUser] ❌ Full error object:', JSON.stringify(error, null, 2));
       return { error: error.message || 'Invalid token or user not found', user: null };
     }
     
@@ -115,6 +122,7 @@ async function verifyUser(authHeader: string | null) {
     return { error: null, user };
   } catch (err: any) {
     console.error('[VerifyUser] ❌ Exception during token verification:', err.message);
+    console.error('[VerifyUser] ❌ Exception name:', err.name);
     console.error('[VerifyUser] ❌ Stack:', err.stack);
     return { error: 'Error verifying authentication', user: null };
   }
@@ -204,10 +212,21 @@ app.post("/make-server-d36f8f91/invalidate-sessions", async (c) => {
       return c.json({ message: 'Service unavailable - Authentication system not initialized' }, 503);
     }
 
-    const { error, user } = await verifyUser(c.req.header('Authorization'));
+    const authHeader = c.req.header('Authorization');
+    console.log('[Session Invalidation] 📨 Received authorization header:', authHeader ? (authHeader.substring(0, 20) + '...') : 'NONE');
+    
+    const { error, user } = await verifyUser(authHeader);
     
     if (error || !user) {
-      return c.json({ message: 'Unauthorized' }, 401);
+      console.error('[Session Invalidation] ❌ User verification failed:', error);
+      return c.json({ 
+        message: 'Unauthorized',
+        debug: {
+          error: error,
+          hasAuthHeader: !!authHeader,
+          authHeaderPreview: authHeader ? authHeader.substring(0, 30) : 'missing'
+        }
+      }, 401);
     }
 
     console.log(`[Session Invalidation] 🔒 Invalidating OTHER sessions for user ${user.id} (${user.email})`);
