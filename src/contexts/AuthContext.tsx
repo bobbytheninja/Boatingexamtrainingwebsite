@@ -219,6 +219,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (data.session?.user) {
         const token = data.session.access_token;
         
+        console.log('🔐 [Login] User signed in successfully');
+        console.log('🔐 [Login] Token (first 30 chars):', token.substring(0, 30) + '...');
+        console.log('🔐 [Login] Token segments:', token.split('.').length, '(should be 3 for valid JWT)');
+        
         // Immediately invalidate all other sessions (prevents account sharing)
         console.log('🔒 [Login] Calling backend to invalidate all other sessions...');
         
@@ -234,16 +238,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
           );
           
+          console.log('🔒 [Login] Backend response status:', invalidateResponse.status, invalidateResponse.statusText);
+          
           if (invalidateResponse.ok) {
             const result = await invalidateResponse.json();
             console.log('✅ [Login] All other sessions logged out successfully!', result);
             console.log('ℹ️ [Login] This is now the ONLY active device for this account');
           } else {
             const errorText = await invalidateResponse.text();
-            console.warn('⚠️ [Login] Failed to invalidate other sessions:', errorText);
+            console.error('❌ [Login] Failed to invalidate other sessions. Status:', invalidateResponse.status);
+            console.error('❌ [Login] Error response:', errorText);
           }
         } catch (sessionError) {
-          console.warn('⚠️ [Login] Could not invalidate other sessions:', sessionError);
+          console.error('❌ [Login] Exception while invalidating other sessions:', sessionError);
           // Continue with login even if session invalidation fails
         }
         

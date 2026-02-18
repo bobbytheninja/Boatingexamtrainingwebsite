@@ -85,16 +85,26 @@ async function verifyUser(authHeader: string | null) {
     return { error: 'No token provided', user: null };
   }
 
+  console.log('[VerifyUser] Attempting to verify token (first 20 chars):', token.substring(0, 20) + '...');
+  console.log('[VerifyUser] Token segments:', token.split('.').length);
+
   try {
     const { data: { user }, error } = await supabase.auth.getUser(token);
     
-    if (error || !user) {
+    if (error) {
+      console.error('[VerifyUser] ❌ Error from supabase.auth.getUser:', error.message);
+      return { error: error.message || 'Invalid token or user not found', user: null };
+    }
+    
+    if (!user) {
+      console.error('[VerifyUser] ❌ No user returned from token verification');
       return { error: 'Invalid token or user not found', user: null };
     }
 
+    console.log('[VerifyUser] ✅ User verified successfully:', user.id, user.email);
     return { error: null, user };
-  } catch (err) {
-    console.error('Error verifying user:', err);
+  } catch (err: any) {
+    console.error('[VerifyUser] ❌ Exception during token verification:', err.message);
     return { error: 'Error verifying authentication', user: null };
   }
 }
