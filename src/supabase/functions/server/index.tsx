@@ -229,18 +229,21 @@ app.post("/make-server-d36f8f91/invalidate-sessions", async (c) => {
       }, 401);
     }
 
-    console.log(`[Session Invalidation] 🔒 Invalidating OTHER sessions for user ${user.id} (${user.email})`);
+    console.log(`[Session Invalidation] 🔒 Invalidating ALL sessions for user ${user.id} (${user.email})`);
 
-    // Use admin API to sign out the user from all OTHER sessions (keeping current one active)
-    const { error: signOutError } = await supabase.auth.admin.signOut(user.id, 'others');
+    // Use admin API to sign out the user from ALL sessions
+    // Note: The admin signOut() only accepts userId - no scope parameter
+    // This will invalidate all sessions, and the user's browser will still have the token
+    // until they refresh or the token expires
+    const { error: signOutError } = await supabase.auth.admin.signOut(user.id);
     
     if (signOutError) {
-      console.error('[Session Invalidation] ❌ Error invalidating other sessions:', signOutError);
+      console.error('[Session Invalidation] ❌ Error invalidating sessions:', signOutError);
       return c.json({ message: 'Failed to invalidate sessions', error: signOutError.message }, 500);
     }
 
-    console.log(`[Session Invalidation] ✅ Successfully logged out user ${user.id} from ALL OTHER devices`);
-    console.log(`[Session Invalidation] ℹ️ Current session remains active`);
+    console.log(`[Session Invalidation] ✅ Successfully invalidated all sessions for user ${user.id}`);
+    console.log(`[Session Invalidation] ℹ️ All other devices will be logged out. Current browser session will remain until refresh.`);
     
     return c.json({ 
       message: 'All other sessions invalidated successfully',
