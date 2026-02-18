@@ -119,6 +119,29 @@ async function verifyUser(authHeader: string | null) {
     }
 
     console.log('[VerifyUser] ✅ User verified successfully:', user.id, user.email);
+    
+    // ✅ NEW: Check if this token matches the stored active session
+    const sessionKey = `active_session:${user.id}`;
+    const activeSession = await kv.get(sessionKey);
+    
+    if (activeSession) {
+      // If there's an active session stored, verify this token matches
+      if (activeSession.token !== token) {
+        console.log('[VerifyUser] ❌ Token mismatch - user logged in on another device');
+        console.log('[VerifyUser] ℹ️ This session has been invalidated');
+        return { error: 'Session invalidated - logged in on another device', user: null };
+      }
+      
+      // Check if session is expired
+      if (activeSession.expiresAt && activeSession.expiresAt < Date.now()) {
+        console.log('[VerifyUser] ❌ Active session expired');
+        await kv.del(sessionKey); // Clean up expired session
+        return { error: 'Session expired', user: null };
+      }
+      
+      console.log('[VerifyUser] ✅ Token matches active session - access granted');
+    }
+    
     return { error: null, user };
   } catch (err: any) {
     console.error('[VerifyUser] ❌ Exception during token verification:', err.message);
@@ -229,25 +252,29 @@ app.post("/make-server-d36f8f91/invalidate-sessions", async (c) => {
       }, 401);
     }
 
-    console.log(`[Session Invalidation] 🔒 Invalidating ALL sessions for user ${user.id} (${user.email})`);
+    console.log(`[Session Invalidation] 🔒 Invalidating ALL OTHER sessions for user ${user.id} (${user.email})`);
 
-    // Use admin API to sign out the user from ALL sessions
-    // Note: The admin signOut() only accepts userId - no scope parameter
-    // This will invalidate all sessions, and the user's browser will still have the token
-    // until they refresh or the token expires
-    const { error: signOutError } = await supabase.auth.admin.signOut(user.id);
+    // Extract the current token from the auth header
+    const currentToken = authHeader?.split(' ')[1];
     
-    if (signOutError) {
-      console.error('[Session Invalidation] ❌ Error invalidating sessions:', signOutError);
-      return c.json({ message: 'Failed to invalidate sessions', error: signOutError.message }, 500);
-    }
+    // Store current session token in KV (this becomes the ONLY valid session)
+    // All other sessions will be invalidated because they won't match this token
+    const sessionKey = `active_session:${user.id}`;
+    
+    await kv.set(sessionKey, {
+      token: currentToken,
+      userId: user.id,
+      email: user.email,
+      createdAt: Date.now(),
+      expiresAt: Date.now() + (7 * 24 * 60 * 60 * 1000), // 7 days
+    });
 
-    console.log(`[Session Invalidation] ✅ Successfully invalidated all sessions for user ${user.id}`);
-    console.log(`[Session Invalidation] ℹ️ All other devices will be logged out. Current browser session will remain until refresh.`);
+    console.log(`[Session Invalidation] ✅ Set active session for user ${user.id}`);
+    console.log(`[Session Invalidation] ℹ️ All other devices will be logged out when they try to access protected routes`);
     
     return c.json({ 
       message: 'All other sessions invalidated successfully',
-      note: 'User has been logged out from all other devices'
+      note: 'User has been logged out from all other devices. They will be prompted to log in again on those devices.'
     });
   } catch (error: any) {
     console.error('[Session Invalidation] ❌ Unexpected error:', error);
