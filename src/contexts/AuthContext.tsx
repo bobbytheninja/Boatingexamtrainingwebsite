@@ -209,6 +209,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     try {
+      // ✅ Step 1: Sign in the user
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -216,70 +217,79 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) throw error;
 
-      if (data.session?.user) {
-        const token = data.session.access_token;
-        
-        console.log('🔐 [Login] User signed in successfully');
-        console.log('🔐 [Login] Token (first 30 chars):', token.substring(0, 30) + '...');
-        console.log('🔐 [Login] Token segments:', token.split('.').length, '(should be 3 for valid JWT)');
-        
-        // Immediately invalidate all other sessions (prevents account sharing)
-        console.log('🔒 [Login] Calling backend to invalidate all other sessions...');
-        
-        try {
-          const invalidateResponse = await fetch(
-            `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/invalidate-sessions`,
-            {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          );
-          
-          console.log('🔒 [Login] Backend response status:', invalidateResponse.status, invalidateResponse.statusText);
-          
-          if (invalidateResponse.ok) {
-            const result = await invalidateResponse.json();
-            console.log('✅ [Login] All other sessions logged out successfully!', result);
-            console.log('ℹ️ [Login] This is now the ONLY active device for this account');
-          } else {
-            const errorText = await invalidateResponse.text();
-            console.error('❌ [Login] Failed to invalidate other sessions. Status:', invalidateResponse.status);
-            console.error('❌ [Login] Error response:', errorText);
-          }
-        } catch (sessionError) {
-          console.error('❌ [Login] Exception while invalidating other sessions:', sessionError);
-          // Continue with login even if session invalidation fails
-        }
-        
-        // Try to fetch subscriptions, but don't fail login if backend is down
-        let subscriptions: ExamType[] = [];
-        let expiresAt: number | null = null;
-        
-        try {
-          const result = await fetchSubscriptions(data.session.user.id, token);
-          subscriptions = result.subscriptions;
-          expiresAt = result.expiresAt;
-        } catch (subError) {
-          console.warn('Could not fetch subscriptions, continuing with empty subscriptions:', subError);
-          // Login still succeeds even if subscription fetch fails
-        }
-        
-        // Check admin status
-        const isAdmin = data.session.user.user_metadata?.role === 'admin' || false;
-        
-        setUser({
-          id: data.session.user.id,
-          email: data.session.user.email!,
-          name: data.session.user.user_metadata?.name,
-          subscriptions,
-          subscriptionExpiresAt: expiresAt,
-          isAdmin,
-        });
-        setAccessToken(token);
+      console.log('🔐 [Login] Sign-in request successful, waiting for session...');
+
+      // ✅ Step 2: Wait until session is fully established
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session?.access_token) {
+        throw new Error('No active session - token not ready yet');
       }
+
+      const token = session.access_token;
+      
+      console.log('🔐 [Login] ✅ Session established successfully');
+      console.log('🔐 [Login] Token (first 30 chars):', token.substring(0, 30) + '...');
+      console.log('🔐 [Login] Token segments:', token.split('.').length, '(should be 3 for valid JWT)');
+      
+      // ✅ Step 3: NOW invalidate all other sessions (prevents account sharing)
+      console.log('🔒 [Login] Calling backend to invalidate all other sessions...');
+      
+      try {
+        const invalidateResponse = await fetch(
+          `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/invalidate-sessions`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        
+        console.log('🔒 [Login] Backend response status:', invalidateResponse.status, invalidateResponse.statusText);
+        
+        if (invalidateResponse.ok) {
+          const result = await invalidateResponse.json();
+          console.log('✅ [Login] All other sessions logged out successfully!', result);
+          console.log('ℹ️ [Login] This is now the ONLY active device for this account');
+        } else {
+          const errorText = await invalidateResponse.text();
+          console.error('❌ [Login] Failed to invalidate other sessions. Status:', invalidateResponse.status);
+          console.error('❌ [Login] Error response:', errorText);
+        }
+      } catch (sessionError) {
+        console.error('❌ [Login] Exception while invalidating other sessions:', sessionError);
+        // Continue with login even if session invalidation fails
+      }
+      
+      // Try to fetch subscriptions, but don't fail login if backend is down
+      let subscriptions: ExamType[] = [];
+      let expiresAt: number | null = null;
+      
+      try {
+        const result = await fetchSubscriptions(session.user.id, token);
+        subscriptions = result.subscriptions;
+        expiresAt = result.expiresAt;
+      } catch (subError) {
+        console.warn('Could not fetch subscriptions, continuing with empty subscriptions:', subError);
+        // Login still succeeds even if subscription fetch fails
+      }
+      
+      // Check admin status
+      const isAdmin = session.user.user_metadata?.role === 'admin' || false;
+      
+      setUser({
+        id: session.user.id,
+        email: session.user.email!,
+        name: session.user.user_metadata?.name,
+        subscriptions,
+        subscriptionExpiresAt: expiresAt,
+        isAdmin,
+      });
+      setAccessToken(token);
     } catch (error: any) {
       console.error('Sign in error:', error);
       throw error;
