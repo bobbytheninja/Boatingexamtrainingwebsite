@@ -332,6 +332,43 @@ app.post("/make-server-d36f8f91/invalidate-sessions", async (c) => {
   }
 });
 
+// Logout endpoint - clears the user's active session from KV store
+app.post("/make-server-d36f8f91/logout", async (c) => {
+  try {
+    if (!supabase) {
+      return c.json({ message: 'Service unavailable - Authentication system not initialized' }, 503);
+    }
+
+    const authHeader = c.req.header('Authorization');
+    console.log('[Logout] 📨 Logout request received');
+    
+    // Use verifyUserBasic to avoid session checking (user is logging out, so session might be expired)
+    const { error, user } = await verifyUserBasic(authHeader);
+    
+    if (error || !user) {
+      console.error('[Logout] ❌ User verification failed:', error);
+      // Even if verification fails, we should still try to clear local state
+      return c.json({ message: 'Logged out (no active session to clear)' }, 200);
+    }
+
+    console.log(`[Logout] 🚪 Logging out user ${user.id} (${user.email})`);
+
+    // Delete the active session from KV store
+    const sessionKey = `active_session:${user.id}`;
+    await kv.del(sessionKey);
+
+    console.log(`[Logout] ✅ Cleared active session for user ${user.id}`);
+    
+    return c.json({ 
+      message: 'Logged out successfully',
+      note: 'Session cleared from server'
+    });
+  } catch (error: any) {
+    console.error('[Logout] ❌ Unexpected error:', error);
+    return c.json({ message: 'Internal server error during logout', error: error.message }, 500);
+  }
+});
+
 // Contact form submission - send email
 app.post("/make-server-d36f8f91/contact", async (c) => {
   console.log('[Contact] ===== NEW CONTACT FORM SUBMISSION =====');

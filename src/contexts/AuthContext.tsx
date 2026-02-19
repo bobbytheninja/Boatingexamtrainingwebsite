@@ -27,11 +27,12 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const supabaseClient = createClient();
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const [accessToken, setAccessToken] = useState<string | null>(null);
-  const supabase = createClient();
 
   // Fetch user subscriptions from backend
   const fetchSubscriptions = async (userId: string, token: string): Promise<{ subscriptions: ExamType[], expiresAt: number | null }> => {
@@ -65,7 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const loadSession = async () => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession();
+        const { data: { session }, error } = await supabaseClient.auth.getSession();
         
         if (error) {
           console.error('[YachtExam App] Error loading session:', error);
@@ -103,7 +104,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabaseClient.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
         const token = session.access_token;
         
@@ -165,7 +166,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       // Now sign in the user
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabaseClient.auth.signInWithPassword({
         email,
         password,
       });
@@ -210,7 +211,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signIn = async (email: string, password: string) => {
     try {
       // ✅ Step 1: Sign in the user
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabaseClient.auth.signInWithPassword({
         email,
         password,
       });
@@ -222,7 +223,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // ✅ Step 2: Wait until session is fully established
       const {
         data: { session },
-      } = await supabase.auth.getSession();
+      } = await supabaseClient.auth.getSession();
 
       if (!session?.access_token) {
         throw new Error('No active session - token not ready yet');
@@ -301,7 +302,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
+      // Clear the active session from the backend FIRST (before Supabase signOut)
+      if (user && accessToken) {
+        try {
+          await fetch(
+            `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/logout`,
+            {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${accessToken}`,
+              },
+            }
+          );
+          console.log('✅ Session cleared from backend');
+        } catch (logoutError) {
+          console.error('Failed to clear session from backend:', logoutError);
+          // Continue with local logout even if backend fails
+        }
+      }
+      
+      // Sign out locally (only this device, not globally)
+      const { error } = await supabaseClient.auth.signOut({ scope: 'local' });
       if (error) throw error;
       
       setUser(null);
@@ -314,7 +335,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const resetPassword = async (email: string) => {
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
         redirectTo: window.location.origin + '/reset-password',
       });
       
