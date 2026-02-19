@@ -154,6 +154,51 @@ async function verifyUser(authHeader: string | null) {
   }
 }
 
+// Helper function to verify user token WITHOUT session checking (for setting new sessions)
+async function verifyUserBasic(authHeader: string | null) {
+  if (!supabase) {
+    return { error: 'Service unavailable - Supabase not initialized', user: null };
+  }
+
+  if (!authHeader) {
+    console.error('[VerifyUserBasic] ❌ No authorization header provided');
+    return { error: 'No authorization header', user: null };
+  }
+
+  const parts = authHeader.split(' ');
+  if (parts.length !== 2 || parts[0] !== 'Bearer') {
+    console.error('[VerifyUserBasic] ❌ Invalid authorization header format');
+    return { error: 'Invalid authorization header format', user: null };
+  }
+
+  const token = parts[1];
+  if (!token) {
+    console.error('[VerifyUserBasic] ❌ No token provided after Bearer');
+    return { error: 'No token provided', user: null };
+  }
+
+  try {
+    // Use service role client to verify the user's JWT token
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    
+    if (error) {
+      console.error('[VerifyUserBasic] ❌ Supabase auth.getUser error:', error.message);
+      return { error: error.message || 'Invalid token or user not found', user: null };
+    }
+    
+    if (!user) {
+      console.error('[VerifyUserBasic] ❌ No user returned from token verification');
+      return { error: 'Invalid token or user not found', user: null };
+    }
+
+    console.log('[VerifyUserBasic] ✅ User verified successfully:', user.id, user.email);
+    return { error: null, user };
+  } catch (err: any) {
+    console.error('[VerifyUserBasic] ❌ Exception during token verification:', err.message);
+    return { error: 'Error verifying authentication', user: null };
+  }
+}
+
 // Helper function to check if user is admin
 async function isAdmin(user: any): Promise<boolean> {
   // Check if user has admin role in metadata
@@ -241,7 +286,9 @@ app.post("/make-server-d36f8f91/invalidate-sessions", async (c) => {
     const authHeader = c.req.header('Authorization');
     console.log('[Session Invalidation] 📨 Received authorization header:', authHeader ? (authHeader.substring(0, 20) + '...') : 'NONE');
     
-    const { error, user } = await verifyUser(authHeader);
+    // Use verifyUserBasic instead of verifyUser to avoid session checking
+    // (we're SETTING the session here, so we can't check if it matches yet!)
+    const { error, user } = await verifyUserBasic(authHeader);
     
     if (error || !user) {
       console.error('[Session Invalidation] ❌ User verification failed:', error);
