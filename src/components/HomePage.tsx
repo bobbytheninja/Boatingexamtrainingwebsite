@@ -147,34 +147,6 @@ export function HomePage() {
               </p>
             </div>
 
-            {/* Platform Stats Section */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto mb-16">
-              <AnimatedStatCard
-                value={2500}
-                label={language === 'English' ? 'Active Students' : 'Активни Студенти'}
-                icon={<Users className="w-6 h-6" />}
-                suffix="+"
-                color="blue"
-                className="animate-fadeInUp stagger-1"
-              />
-              <AnimatedStatCard
-                value={200}
-                label={language === 'English' ? 'Practice Questions' : 'Практически Въпроси'}
-                icon={<BookOpen className="w-6 h-6" />}
-                suffix="+"
-                color="cyan"
-                className="animate-fadeInUp stagger-2"
-              />
-              <AnimatedStatCard
-                value={95}
-                label={language === 'English' ? 'Success Rate' : 'Процент Успех'}
-                icon={<Award className="w-6 h-6" />}
-                suffix="%"
-                color="green"
-                className="animate-fadeInUp stagger-3"
-              />
-            </div>
-
             {/* Exam Type Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 max-w-7xl mx-auto">
               {examTypes.map((exam, index) => {

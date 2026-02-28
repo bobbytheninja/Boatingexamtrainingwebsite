@@ -40,7 +40,7 @@ export function Navigation({
     { id: 'partners', label: t.partners },
   ];
 
-  const languages: Language[] = ['English', 'Bulgarian', 'Spanish', 'Greek'];
+  const languages: Language[] = ['English', 'Bulgarian', 'Spanish', 'Greek', 'Italian'];
   const regions = ['Bulgaria'];
   
   const handleNavigate = (page: string) => {

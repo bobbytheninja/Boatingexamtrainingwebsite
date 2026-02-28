@@ -122,7 +122,14 @@ export function ContactPage({ onNavigate, isLoggedIn = false }: ContactPageProps
                   </div>
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">{t.phone}</p>
-                    <a href="tel:+359889660467" className="text-base font-medium text-gray-700 dark:text-gray-200 hover:text-sky-600 dark:hover:text-sky-400">
+                    <a 
+                      href="tel:+359889660467" 
+                      className="text-base font-medium hover:text-sky-600 dark:hover:text-sky-400 transition-colors duration-[400ms]"
+                      style={{ 
+                        color: darkMode ? '#e5e7eb' : '#1f2937',
+                        transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+                      }}
+                    >
                       +359 88 9660467
                     </a>
                   </div>
@@ -134,20 +141,50 @@ export function ContactPage({ onNavigate, isLoggedIn = false }: ContactPageProps
                   </div>
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">{t.location}</p>
-                    <p className="text-base font-medium text-gray-700 dark:text-gray-200">Sofia, Bulgaria</p>
+                    <p 
+                      className="text-base font-medium transition-colors duration-[400ms]"
+                      style={{ 
+                        color: darkMode ? '#e5e7eb' : '#1f2937',
+                        transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+                      }}
+                    >
+                      Sofia, Bulgaria
+                    </p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-2 border-sky-200 dark:border-sky-600 bg-gradient-to-br from-sky-50 to-white dark:from-slate-700 dark:to-slate-600 shadow-md">
+            <Card 
+              className="border-2 shadow-md transition-all duration-[400ms]"
+              style={{ 
+                backgroundColor: darkMode ? '#334155' : '#f0f9ff',
+                borderColor: darkMode ? '#0c4a6e' : '#bae6fd',
+                background: darkMode 
+                  ? 'linear-gradient(to bottom right, #475569, #334155)'
+                  : 'linear-gradient(to bottom right, #f0f9ff, #ffffff)',
+                transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+              }}
+            >
               <CardContent className="pt-6">
                 <div className="text-center space-y-3">
                   <div className="text-3xl">⚓</div>
-                  <p className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                  <p 
+                    className="text-sm font-medium transition-colors duration-[400ms]"
+                    style={{ 
+                      color: darkMode ? '#f3f4f6' : '#374151',
+                      transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+                    }}
+                  >
                     Business inquiries welcome!
                   </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p 
+                    className="text-sm transition-colors duration-[400ms]"
+                    style={{ 
+                      color: darkMode ? '#d1d5db' : '#6b7280',
+                      transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+                    }}
+                  >
                     <strong>Class teaching</strong> & <strong>advertising</strong> <strong>opportunities</strong>
                   </p>
                 </div>
