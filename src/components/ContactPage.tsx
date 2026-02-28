@@ -22,46 +22,6 @@ export function ContactPage({ onNavigate, isLoggedIn = false }: ContactPageProps
   const { language } = useLanguage();
   const t = getTranslation(language);
   const { darkMode } = useDarkMode();
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [message, setMessage] = useState('');
-  const [isSending, setIsSending] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSending(true);
-
-    try {
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/contact`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${publicAnonKey}`,
-          },
-          body: JSON.stringify({ name, email, phone, message }),
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Failed to send message' }));
-        throw new Error(errorData.message || 'Failed to send message');
-      }
-
-      toast.success('Message sent! We\'ll get back to you soon.');
-      setName('');
-      setEmail('');
-      setPhone('');
-      setMessage('');
-    } catch (error: any) {
-      console.error('Contact form error:', error);
-      toast.error(error.message || 'Failed to send message. Please try again.');
-    } finally {
-      setIsSending(false);
-    }
-  };
 
   const handleNavigate = (page: string) => {
     if (page === 'contact') return;
@@ -124,199 +84,75 @@ export function ContactPage({ onNavigate, isLoggedIn = false }: ContactPageProps
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
-            {/* Contact Form */}
-            <div className="lg:col-span-2">
-              <Card 
-                className="border-2 shadow-lg transition-all duration-[400ms]"
-                style={{ 
-                  backgroundColor: darkMode ? '#334155' : '#ffffff',
-                  borderColor: darkMode ? '#475569' : '#e2e8f0',
-                  transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
-                }}
-              >
-                <CardHeader className="pb-4">
-                  <CardTitle 
-                    className="text-lg transition-colors duration-[400ms]"
-                    style={{ 
-                      color: darkMode ? '#f3f4f6' : '#1e293b',
-                      transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
-                    }}
-                  >{t.sendMessage}</CardTitle>
-                  <CardDescription 
-                    className="text-xs transition-colors duration-[400ms]"
-                    style={{ 
-                      color: darkMode ? '#d1d5db' : '#64748b',
-                      transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
-                    }}
-                  >Fill out the form below and we'll get back to you</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="space-y-1.5">
-                      <Label 
-                        htmlFor="name" 
-                        className="text-sm font-semibold transition-colors duration-[400ms]"
-                        style={{ 
-                          color: darkMode ? '#e5e7eb' : '#334155',
-                          transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
-                        }}
-                      >
-                        {t.fullName}
-                      </Label>
-                      <Input
-                        id="name"
-                        placeholder="John Smith"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        required
-                        className="h-10 text-sm border-2 border-gray-200 dark:border-gray-600 focus:border-sky-500 dark:focus:border-sky-400 transition-all duration-200"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label 
-                        htmlFor="email" 
-                        className="text-sm font-semibold transition-colors duration-[400ms]"
-                        style={{ 
-                          color: darkMode ? '#e5e7eb' : '#334155',
-                          transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
-                        }}
-                      >
-                        {t.email}
-                      </Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="john@example.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                        className="h-10 text-sm border-2 border-gray-200 dark:border-gray-600 focus:border-sky-500 dark:focus:border-sky-400 transition-all duration-200"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label 
-                        htmlFor="phone" 
-                        className="text-sm font-semibold transition-colors duration-[400ms]"
-                        style={{ 
-                          color: darkMode ? '#e5e7eb' : '#334155',
-                          transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
-                        }}
-                      >
-                        {t.phone}
-                      </Label>
-                      <Input
-                        id="phone"
-                        type="tel"
-                        placeholder="+359 88 9660467"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        required
-                        className="h-10 text-sm border-2 border-gray-200 dark:border-gray-600 focus:border-sky-500 dark:focus:border-sky-400 transition-all duration-200"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label 
-                        htmlFor="message" 
-                        className="text-sm font-semibold transition-colors duration-[400ms]"
-                        style={{ 
-                          color: darkMode ? '#e5e7eb' : '#334155',
-                          transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
-                        }}
-                      >
-                        {t.message}
-                      </Label>
-                      <Textarea
-                        id="message"
-                        placeholder="Your message here..."
-                        value={message}
-                        onChange={(e) => setMessage(e.target.value)}
-                        required
-                        className="min-h-[120px] resize-none text-sm border-2 border-gray-200 dark:border-gray-600 focus:border-sky-500 dark:focus:border-sky-400 transition-all duration-200"
-                      />
-                    </div>
-                    <Button 
-                      type="submit" 
-                      className="w-full h-10 bg-gradient-to-r from-sky-500 to-cyan-600 hover:from-sky-600 hover:to-cyan-700 shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] font-semibold text-sm"
-                      disabled={isSending}
-                    >
-                      {isSending ? 'Sending...' : t.sendMessage}
-                    </Button>
-                  </form>
-                </CardContent>
-              </Card>
-            </div>
-
+          <div className="max-w-2xl mx-auto space-y-6">
             {/* Contact Information */}
-            <div className="space-y-4">
-              <Card 
-                className="border-2 shadow-lg transition-all duration-[400ms]"
-                style={{ 
-                  backgroundColor: darkMode ? '#334155' : '#ffffff',
-                  borderColor: darkMode ? '#475569' : '#e2e8f0',
-                  transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
-                }}
-              >
-                <CardHeader className="pb-3">
-                  <CardTitle 
-                    className="text-base transition-colors duration-[400ms]"
-                    style={{ 
-                      color: darkMode ? '#f3f4f6' : '#1e293b',
-                      transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
-                    }}
-                  >{t.contactInfo}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex items-start gap-3">
-                    <div className="mt-0.5 p-2 bg-sky-100 dark:bg-sky-900 rounded-lg">
-                      <Mail className="w-4 h-4 text-sky-600 dark:text-sky-400" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">{t.emailUs}</p>
-                      <a href="mailto:info@yachtexam.com" className="text-sm font-medium text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300">
-                        info@yachtexam.com
-                      </a>
-                    </div>
+            <Card 
+              className="border-2 shadow-lg transition-all duration-[400ms]"
+              style={{ 
+                backgroundColor: darkMode ? '#334155' : '#ffffff',
+                borderColor: darkMode ? '#475569' : '#e2e8f0',
+                transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+              }}
+            >
+              <CardHeader className="pb-4">
+                <CardTitle 
+                  className="text-xl transition-colors duration-[400ms]"
+                  style={{ 
+                    color: darkMode ? '#f3f4f6' : '#1e293b',
+                    transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+                  }}
+                >{t.contactInfo}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-start gap-4">
+                  <div className="mt-0.5 p-3 bg-sky-100 dark:bg-sky-900 rounded-lg">
+                    <Mail className="w-5 h-5 text-sky-600 dark:text-sky-400" />
                   </div>
+                  <div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">{t.emailUs}</p>
+                    <a href="mailto:info@yachtexam.com" className="text-base font-medium text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300">
+                      info@yachtexam.com
+                    </a>
+                  </div>
+                </div>
 
-                  <div className="flex items-start gap-3">
-                    <div className="mt-0.5 p-2 bg-green-100 dark:bg-green-900 rounded-lg">
-                      <Phone className="w-4 h-4 text-green-600 dark:text-green-400" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">{t.phone}</p>
-                      <a href="tel:+359889660467" className="text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-sky-600 dark:hover:text-sky-400">
-                        +359 88 9660467
-                      </a>
-                    </div>
+                <div className="flex items-start gap-4">
+                  <div className="mt-0.5 p-3 bg-green-100 dark:bg-green-900 rounded-lg">
+                    <Phone className="w-5 h-5 text-green-600 dark:text-green-400" />
                   </div>
+                  <div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">{t.phone}</p>
+                    <a href="tel:+359889660467" className="text-base font-medium text-gray-700 dark:text-gray-200 hover:text-sky-600 dark:hover:text-sky-400">
+                      +359 88 9660467
+                    </a>
+                  </div>
+                </div>
 
-                  <div className="flex items-start gap-3">
-                    <div className="mt-0.5 p-2 bg-purple-100 dark:bg-purple-900 rounded-lg">
-                      <MapPin className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">{t.location}</p>
-                      <p className="text-sm font-medium text-gray-700 dark:text-gray-200">Sofia, Bulgaria</p>
-                    </div>
+                <div className="flex items-start gap-4">
+                  <div className="mt-0.5 p-3 bg-purple-100 dark:bg-purple-900 rounded-lg">
+                    <MapPin className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                   </div>
-                </CardContent>
-              </Card>
+                  <div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">{t.location}</p>
+                    <p className="text-base font-medium text-gray-700 dark:text-gray-200">Sofia, Bulgaria</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-              <Card className="border-2 border-sky-200 dark:border-sky-600 bg-gradient-to-br from-sky-50 to-white dark:from-slate-700 dark:to-slate-600 shadow-md">
-                <CardContent className="pt-4">
-                  <div className="text-center space-y-2">
-                    <div className="text-2xl">⚓</div>
-                    <p className="text-xs font-medium text-gray-700 dark:text-gray-200">
-                      Business inquiries welcome!
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      <strong>Class teaching</strong> & <strong>advertising</strong> <strong>opportunities</strong>
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            <Card className="border-2 border-sky-200 dark:border-sky-600 bg-gradient-to-br from-sky-50 to-white dark:from-slate-700 dark:to-slate-600 shadow-md">
+              <CardContent className="pt-6">
+                <div className="text-center space-y-3">
+                  <div className="text-3xl">⚓</div>
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                    Business inquiries welcome!
+                  </p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    <strong>Class teaching</strong> & <strong>advertising</strong> <strong>opportunities</strong>
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
