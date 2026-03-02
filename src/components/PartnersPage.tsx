@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { ExternalLink, GraduationCap } from 'lucide-react';
@@ -8,6 +8,8 @@ import { Navigation } from './Navigation';
 import { Footer } from './Footer';
 import { useDarkMode } from '../contexts/DarkModeContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import { projectId, publicAnonKey } from '../utils/supabase/info';
+import { LoadingSpinner } from './LoadingSpinner';
 
 interface PartnersPageProps {
   onNavigate: (page: string) => void;
@@ -15,11 +17,26 @@ interface PartnersPageProps {
   isLoggedIn?: boolean;
 }
 
+interface Partner {
+  id: string;
+  name: string;
+  description: string;
+  specializations: string[];
+  website: string;
+  classesLink: string;
+  image: string;
+  order: number;
+  createdAt: number;
+  updatedAt: number;
+}
+
 export function PartnersPage({ onNavigate, selectedPartnerIndex = 0, isLoggedIn = false }: PartnersPageProps) {
   const { language } = useLanguage();
   const t = getTranslation(language);
   const { darkMode } = useDarkMode();
   const partnerRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [partners, setPartners] = useState<Partner[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const handleNavigate = (page: string) => {
     if (page === 'partners') return;
@@ -34,49 +51,85 @@ export function PartnersPage({ onNavigate, selectedPartnerIndex = 0, isLoggedIn 
     }
   };
 
-  // Partner data - can be expanded to multiple partners
-  const partners = [
-    {
-      name: 'Maritime Academy Bulgaria',
-      description: language === 'English' 
-        ? 'Leading maritime training institution offering comprehensive sailing courses, yacht certifications, and professional skipper training. With over 15 years of experience and certified instructors, we provide hands-on training in modern vessels and state-of-the-art facilities.'
-        : 'Водеща институция за морско обучение, предлагаща цялостни курсове по ветроходство, сертификати за яхти и професионално обучение за капитани. С над 15 години опит и сертифицирани инструктори, ние предоставяме практическо обучение в модерни плавателни съдове и най-съвременни съоръжения.',
-      specializations: language === 'English'
-        ? ['RYA Certified Courses', 'Yacht Charter Qualifications', 'Advanced Navigation', 'Safety at Sea Training', 'VHF Radio Operator License']
-        : ['RYA Сертифицирани Курсове', 'Квалификации за Чартър на Яхти', 'Напреднала Навигация', 'Обучение за Безопасност на Море', 'Лиценз за VHF Радио Оператор'],
-      website: 'https://www.naval-acad.bg/en',
-      classesLink: 'https://www.naval-acad.bg/en',
-      image: 'https://images.unsplash.com/photo-1599444941426-db010d9b5ef7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzYWlsaW5nJTIwc2Nob29sJTIwdHJhaW5pbmclMjBpbnN0cnVjdG9yfGVufDF8fHx8MTc2MjQzNzU1NHww&ixlib=rb-4.1.0&q=80&w=1080',
-    },
-    {
-      name: 'Black Sea Yacht Charters',
-      description: language === 'English' 
-        ? 'Premium yacht charter service with a fleet of modern sailing and motor yachts. We offer bareboat and skippered charters along the Bulgarian and Greek coastlines. Perfect for practicing your newly acquired skills in real-world conditions.'
-        : 'Премиум услуга за чартър на яхти с флот от модерни ветроходни и моторни яхти. Предлагаме чартър без екипаж и със скипер по българското и гръцкото крайбрежие. Перфектно за практикуване на новопридобитите ви умения в реални условия.',
-      specializations: language === 'English'
-        ? ['Bareboat Charter', 'Skippered Charter', 'Sailing Holidays', 'Team Building Events', 'Corporate Charters']
-        : ['Чартър без Екипаж', 'Чартър със Скипер', 'Ветроходни Ваканции', 'Тийм Билдинг Събития', 'Корпоративни Чартъри'],
-      website: 'https://bmtc.bg/en/index.html',
-      classesLink: 'https://bmtc.bg/en/STCW-courses/c2.html',
-      image: 'https://images.unsplash.com/photo-1630840754024-8e3817c5e623?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx5YWNodCUyMGNoYXJ0ZXIlMjBib2F0JTIwcmVudGFsfGVufDF8fHx8MTc2MjQzODE3MXww&ixlib=rb-4.1.0&q=80&w=1080',
-    },
-    {
-      name: 'Neptune Marine Equipment',
-      description: language === 'English' 
-        ? 'Your one-stop shop for all maritime safety and navigation equipment. We supply professional-grade gear for exam preparation including safety equipment, navigation tools, and communication devices. Special discounts for our partner exam students.'
-        : 'Вашият магазин на едно място за всички морски безопасност и навигационно оборудване. Предлагаме професионално оборудване за подготовка за изпити, включително оборудване за безопасност, навигационни инструменти и комуникационни устройства. Специални отстъпки за студенти от партньорски изпити.',
-      specializations: language === 'English'
-        ? ['Safety Equipment', 'Navigation Instruments', 'VHF Radios', 'Life Jackets & Safety Gear', 'Electronic Charts']
-        : ['Оборудване за Безопасност', 'Навигационни Инструменти', 'VHF Радиостанции', 'Спасителни Жилетки', 'Електронни Карти'],
-      website: 'https://neptune-marine.bg',
-      classesLink: 'https://neptune-marine.bg/shop',
-      image: 'https://images.unsplash.com/photo-1601534961131-1526b4741505?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtYXJpbmUlMjBlcXVpcG1lbnQlMjBzaG9wfGVufDF8fHx8MTc2MjQzODE3NXww&ixlib=rb-4.1.0&q=80&w=1080',
-    },
-  ];
+  // Fetch partners from backend
+  useEffect(() => {
+    const fetchPartners = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch(
+          `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/partners`,
+          {
+            headers: {
+              'Authorization': `Bearer ${publicAnonKey}`,
+            },
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          setPartners(data.partners || []);
+        } else {
+          console.error('Failed to fetch partners:', response.status);
+          // Fall back to default partners if fetch fails
+          setPartners(getDefaultPartners());
+        }
+      } catch (error) {
+        console.error('Error fetching partners:', error);
+        // Fall back to default partners if fetch fails
+        setPartners(getDefaultPartners());
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPartners();
+  }, []);
+
+  // Default fallback partners
+  const getDefaultPartners = (): Partner[] => {
+    return [
+      {
+        id: 'default_1',
+        name: 'Maritime Academy Bulgaria',
+        description: 'Leading maritime training institution offering comprehensive sailing courses, yacht certifications, and professional skipper training. With over 15 years of experience and certified instructors, we provide hands-on training in modern vessels and state-of-the-art facilities.',
+        specializations: ['RYA Certified Courses', 'Yacht Charter Qualifications', 'Advanced Navigation', 'Safety at Sea Training', 'VHF Radio Operator License'],
+        website: 'https://www.naval-acad.bg/en',
+        classesLink: 'https://www.naval-acad.bg/en',
+        image: 'https://images.unsplash.com/photo-1599444941426-db010d9b5ef7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzYWlsaW5nJTIwc2Nob29sJTIwdHJhaW5pbmclMjBpbnN0cnVjdG9yfGVufDF8fHx8MTc2MjQzNzU1NHww&ixlib=rb-4.1.0&q=80&w=1080',
+        order: 0,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      },
+      {
+        id: 'default_2',
+        name: 'Black Sea Yacht Charters',
+        description: 'Premium yacht charter service with a fleet of modern sailing and motor yachts. We offer bareboat and skippered charters along the Bulgarian and Greek coastlines. Perfect for practicing your newly acquired skills in real-world conditions.',
+        specializations: ['Bareboat Charter', 'Skippered Charter', 'Sailing Holidays', 'Team Building Events', 'Corporate Charters'],
+        website: 'https://bmtc.bg/en/index.html',
+        classesLink: 'https://bmtc.bg/en/STCW-courses/c2.html',
+        image: 'https://images.unsplash.com/photo-1630840754024-8e3817c5e623?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx5YWNodCUyMGNoYXJ0ZXIlMjBib2F0JTIwcmVudGFsfGVufDF8fHx8MTc2MjQzODE3MXww&ixlib=rb-4.1.0&q=80&w=1080',
+        order: 1,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      },
+      {
+        id: 'default_3',
+        name: 'Neptune Marine Equipment',
+        description: 'Your one-stop shop for all maritime safety and navigation equipment. We supply professional-grade gear for exam preparation including safety equipment, navigation tools, and communication devices. Special discounts for our partner exam students.',
+        specializations: ['Safety Equipment', 'Navigation Instruments', 'VHF Radios', 'Life Jackets & Safety Gear', 'Electronic Charts'],
+        website: 'https://neptune-marine.bg',
+        classesLink: 'https://neptune-marine.bg/shop',
+        image: 'https://images.unsplash.com/photo-1601534961131-1526b4741505?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtYXJpbmUlMjBlcXVpcG1lbnQlMjBzaG9wfGVufDF8fHx8MTc2MjQzODE3NXww&ixlib=rb-4.1.0&q=80&w=1080',
+        order: 2,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      },
+    ];
+  };
 
   // Scroll to selected partner on mount
   useEffect(() => {
-    if (partnerRefs.current[selectedPartnerIndex]) {
+    if (partnerRefs.current[selectedPartnerIndex] && !loading) {
       setTimeout(() => {
         const element = partnerRefs.current[selectedPartnerIndex];
         if (element) {
@@ -86,7 +139,7 @@ export function PartnersPage({ onNavigate, selectedPartnerIndex = 0, isLoggedIn 
         }
       }, 100);
     }
-  }, [selectedPartnerIndex]);
+  }, [selectedPartnerIndex, loading]);
 
   return (
     <div className={darkMode ? 'dark' : ''}>
@@ -132,119 +185,125 @@ export function PartnersPage({ onNavigate, selectedPartnerIndex = 0, isLoggedIn 
 
           {/* Partners List */}
           <div className="space-y-8">
-            {partners.map((partner, index) => (
-              <div key={index} ref={(el) => partnerRefs.current[index] = el}>
-                <Card 
-                  className="group border-2 shadow-lg overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all duration-[400ms]"
-                  style={{ 
-                    backgroundColor: darkMode ? '#334155' : '#ffffff',
-                    borderColor: darkMode ? '#475569' : '#e2e8f0',
-                    transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
-                  }}
-                >
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* Partner Image */}
-                    <div className="relative h-64 lg:h-auto overflow-hidden">
-                      <ImageWithFallback
-                        src={partner.image}
-                        alt={partner.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent lg:bg-gradient-to-r" />
-                      <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                      <div className="absolute bottom-4 left-4 lg:hidden">
-                        <h3 className="text-white text-xl font-bold">{partner.name}</h3>
+            {loading ? (
+              <div className="flex justify-center">
+                <LoadingSpinner />
+              </div>
+            ) : (
+              partners.map((partner, index) => (
+                <div key={index} ref={(el) => partnerRefs.current[index] = el}>
+                  <Card 
+                    className="group border-2 shadow-lg overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all duration-[400ms]"
+                    style={{ 
+                      backgroundColor: darkMode ? '#334155' : '#ffffff',
+                      borderColor: darkMode ? '#475569' : '#e2e8f0',
+                      transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+                    }}
+                  >
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {/* Partner Image */}
+                      <div className="relative h-64 lg:h-auto overflow-hidden">
+                        <ImageWithFallback
+                          src={partner.image}
+                          alt={partner.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent lg:bg-gradient-to-r" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                        <div className="absolute bottom-4 left-4 lg:hidden">
+                          <h3 className="text-white text-xl font-bold">{partner.name}</h3>
+                        </div>
+                      </div>
+
+                      {/* Partner Info */}
+                      <div className="p-6 lg:py-8">
+                        <CardHeader className="p-0 mb-4 hidden lg:block">
+                          <CardTitle 
+                            className="text-2xl mb-2 transition-colors duration-[400ms]"
+                            style={{ 
+                              color: darkMode ? '#f3f4f6' : '#1e293b',
+                              transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+                            }}
+                          >{partner.name}</CardTitle>
+                          <CardDescription 
+                            className="text-sm transition-colors duration-[400ms]"
+                            style={{ 
+                              color: darkMode ? '#d1d5db' : '#64748b',
+                              transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+                            }}
+                          ></CardDescription>
+                        </CardHeader>
+                        
+                        <CardContent className="p-0 space-y-6">
+                          {/* Description */}
+                          <div>
+                            <p 
+                              className="text-sm leading-relaxed transition-colors duration-[400ms]"
+                              style={{ 
+                                color: darkMode ? '#e5e7eb' : '#334155',
+                                transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+                              }}
+                            >
+                              {partner.description}
+                            </p>
+                          </div>
+
+                          {/* Specializations */}
+                          <div>
+                            <h4 
+                              className="flex items-center gap-2 mb-3 transition-colors duration-[400ms]"
+                              style={{ 
+                                color: darkMode ? '#22d3ee' : '#0e7490',
+                                transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+                              }}
+                            >
+                              <GraduationCap className="w-4 h-4" />
+                              <span className="text-sm font-semibold">
+                                {language === 'English' ? 'Specializations' : 'Специализации'}
+                              </span>
+                            </h4>
+                            <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                              {partner.specializations.map((spec, idx) => (
+                                <li 
+                                  key={idx} 
+                                  className="flex items-center gap-2 text-xs transition-colors duration-[400ms]"
+                                  style={{ 
+                                    color: darkMode ? '#d1d5db' : '#475569',
+                                    transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+                                  }}
+                                >
+                                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-500" />
+                                  {spec}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+
+                          {/* Action Buttons */}
+                          <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                            <Button
+                              onClick={() => window.open(partner.website, '_blank')}
+                              className="flex-1 bg-gradient-to-r from-sky-500 to-cyan-600 hover:from-sky-600 hover:to-cyan-700 text-white shadow-md"
+                            >
+                              <ExternalLink className="w-4 h-4 mr-2" />
+                              {t.visitWebsite}
+                            </Button>
+                            <Button
+                              onClick={() => window.open(partner.classesLink, '_blank')}
+                              variant="outline"
+                              className="flex-1 border-sky-400 text-sky-600 hover:bg-white hover:text-sky-700 hover:border-sky-500 hover:shadow-md dark:border-cyan-600 dark:text-cyan-400 dark:hover:bg-cyan-900/30 dark:hover:text-cyan-300 transition-all duration-200"
+                            >
+                              <GraduationCap className="w-4 h-4 mr-2" />
+                              {t.viewClasses}
+                            </Button>
+                          </div>
+                        </CardContent>
                       </div>
                     </div>
-
-                    {/* Partner Info */}
-                    <div className="p-6 lg:py-8">
-                      <CardHeader className="p-0 mb-4 hidden lg:block">
-                        <CardTitle 
-                          className="text-2xl mb-2 transition-colors duration-[400ms]"
-                          style={{ 
-                            color: darkMode ? '#f3f4f6' : '#1e293b',
-                            transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
-                          }}
-                        >{partner.name}</CardTitle>
-                        <CardDescription 
-                          className="text-sm transition-colors duration-[400ms]"
-                          style={{ 
-                            color: darkMode ? '#d1d5db' : '#64748b',
-                            transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
-                          }}
-                        ></CardDescription>
-                      </CardHeader>
-                      
-                      <CardContent className="p-0 space-y-6">
-                        {/* Description */}
-                        <div>
-                          <p 
-                            className="text-sm leading-relaxed transition-colors duration-[400ms]"
-                            style={{ 
-                              color: darkMode ? '#e5e7eb' : '#334155',
-                              transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
-                            }}
-                          >
-                            {partner.description}
-                          </p>
-                        </div>
-
-                        {/* Specializations */}
-                        <div>
-                          <h4 
-                            className="flex items-center gap-2 mb-3 transition-colors duration-[400ms]"
-                            style={{ 
-                              color: darkMode ? '#22d3ee' : '#0e7490',
-                              transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
-                            }}
-                          >
-                            <GraduationCap className="w-4 h-4" />
-                            <span className="text-sm font-semibold">
-                              {language === 'English' ? 'Specializations' : 'Специализации'}
-                            </span>
-                          </h4>
-                          <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                            {partner.specializations.map((spec, idx) => (
-                              <li 
-                                key={idx} 
-                                className="flex items-center gap-2 text-xs transition-colors duration-[400ms]"
-                                style={{ 
-                                  color: darkMode ? '#d1d5db' : '#475569',
-                                  transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
-                                }}
-                              >
-                                <span className="w-1.5 h-1.5 rounded-full bg-cyan-500" />
-                                {spec}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-
-                        {/* Action Buttons */}
-                        <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                          <Button
-                            onClick={() => window.open(partner.website, '_blank')}
-                            className="flex-1 bg-gradient-to-r from-sky-500 to-cyan-600 hover:from-sky-600 hover:to-cyan-700 text-white shadow-md"
-                          >
-                            <ExternalLink className="w-4 h-4 mr-2" />
-                            {t.visitWebsite}
-                          </Button>
-                          <Button
-                            onClick={() => window.open(partner.classesLink, '_blank')}
-                            variant="outline"
-                            className="flex-1 border-sky-400 text-sky-600 hover:bg-white hover:text-sky-700 hover:border-sky-500 hover:shadow-md dark:border-cyan-600 dark:text-cyan-400 dark:hover:bg-cyan-900/30 dark:hover:text-cyan-300 transition-all duration-200"
-                          >
-                            <GraduationCap className="w-4 h-4 mr-2" />
-                            {t.viewClasses}
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </div>
-                  </div>
-                </Card>
-              </div>
-            ))}
+                  </Card>
+                </div>
+              ))
+            )}
           </div>
 
           {/* Call to Action */}

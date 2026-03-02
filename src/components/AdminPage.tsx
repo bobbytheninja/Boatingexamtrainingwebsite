@@ -11,6 +11,7 @@ import { ImageUploader } from './ImageUploader';
 import { ImageDiagnostics } from './ImageDiagnostics';
 import { UserManagement } from './UserManagement';
 import { DatabaseDiagnostics } from './DatabaseDiagnostics';
+import { PartnerManagement } from './PartnerManagement';
 import { ArrowLeft, Database, Users, Key, UserPlus, AlertCircle, CheckCircle, Shield, Image as ImageIcon } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useDarkMode } from '../contexts/DarkModeContext';
@@ -502,7 +503,7 @@ export function AdminPage({ onBack }: AdminPageProps) {
         {/* Show admin panel to all logged-in users, but limit features based on admin status */}
         {user && (
         <Tabs defaultValue={userIsAdmin ? "diagnostics" : "keys"} className="space-y-6">
-          <TabsList className={`grid w-full max-w-4xl mx-auto gap-2 ${userIsAdmin ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-5' : 'grid-cols-1 sm:grid-cols-2'} h-auto`}>
+          <TabsList className={`grid w-full max-w-4xl mx-auto gap-2 ${userIsAdmin ? 'grid-cols-2 sm:grid-cols-4 lg:grid-cols-6' : 'grid-cols-1 sm:grid-cols-2'} h-auto`}>
             {userIsAdmin && (
               <>
                 <TabsTrigger value="diagnostics" className="flex items-center justify-center gap-2">
@@ -519,6 +520,11 @@ export function AdminPage({ onBack }: AdminPageProps) {
                   <Users className="w-4 h-4" />
                   <span className="hidden sm:inline">Manage Users</span>
                   <span className="sm:hidden">Users</span>
+                </TabsTrigger>
+                <TabsTrigger value="partners" className="flex items-center justify-center gap-2">
+                  <Users className="w-4 h-4" />
+                  <span className="hidden sm:inline">Partners</span>
+                  <span className="sm:hidden">Partners</span>
                 </TabsTrigger>
               </>
             )}
@@ -617,6 +623,26 @@ export function AdminPage({ onBack }: AdminPageProps) {
 
               <TabsContent value="users">
                 <UserManagement />
+              </TabsContent>
+
+              <TabsContent value="partners">
+                {accessToken ? (
+                  <PartnerManagement accessToken={accessToken} />
+                ) : (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Partner Management</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Alert>
+                        <AlertCircle className="w-4 h-4" />
+                        <AlertDescription>
+                          Please log in to manage partners.
+                        </AlertDescription>
+                      </Alert>
+                    </CardContent>
+                  </Card>
+                )}
               </TabsContent>
             </>
           )}

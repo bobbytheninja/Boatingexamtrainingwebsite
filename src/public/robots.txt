@@ -11,8 +11,8 @@ Disallow: /account
 Disallow: /payment
 Disallow: /payment-success
 
-# Sitemap location
-Sitemap: https://blackseabulgaria.com/sitemap.xml
+# Sitemap location (served from backend to avoid SPA routing conflicts)
+Sitemap: https://blackseabulgaria.com/make-server-d36f8f91/sitemap.xml
 
 # Crawl delay (be nice to the server)
 Crawl-delay: 1

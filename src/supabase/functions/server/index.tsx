@@ -231,6 +231,118 @@ app.get("/make-server-d36f8f91/health", (c) => {
   });
 });
 
+// Sitemap XML endpoint (no auth required) - for SEO
+app.get("/make-server-d36f8f91/sitemap.xml", (c) => {
+  const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Homepage -->
+  <url>
+    <loc>https://blackseabulgaria.com/</loc>
+    <lastmod>2026-03-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  
+  <!-- Main Pages -->
+  <url>
+    <loc>https://blackseabulgaria.com/login</loc>
+    <lastmod>2026-03-02</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <url>
+    <loc>https://blackseabulgaria.com/pricing</loc>
+    <lastmod>2026-03-02</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  
+  <url>
+    <loc>https://blackseabulgaria.com/partners</loc>
+    <lastmod>2026-03-02</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  
+  <url>
+    <loc>https://blackseabulgaria.com/contact</loc>
+    <lastmod>2026-03-02</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <!-- Exam Categories -->
+  <url>
+    <loc>https://blackseabulgaria.com/exam-mode/jetSki</loc>
+    <lastmod>2026-03-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <url>
+    <loc>https://blackseabulgaria.com/exam-mode/smallBoat</loc>
+    <lastmod>2026-03-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <url>
+    <loc>https://blackseabulgaria.com/exam-mode/bigBoat</loc>
+    <lastmod>2026-03-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <url>
+    <loc>https://blackseabulgaria.com/exam-mode/yacht</loc>
+    <lastmod>2026-03-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <url>
+    <loc>https://blackseabulgaria.com/exam-mode/navigation</loc>
+    <lastmod>2026-03-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+</urlset>`;
+
+  // Return XML with proper content type
+  return c.body(sitemap, 200, {
+    'Content-Type': 'application/xml; charset=utf-8',
+  });
+});
+
+// Robots.txt endpoint (no auth required) - for SEO
+app.get("/make-server-d36f8f91/robots.txt", (c) => {
+  const robots = `# Black Sea Bulgaria - Yacht Exam Training
+# https://blackseabulgaria.com
+
+# Allow all search engines
+User-agent: *
+Allow: /
+
+# Disallow admin and private areas
+Disallow: /admin
+Disallow: /account
+Disallow: /payment
+Disallow: /payment-success
+
+# Sitemap location
+Sitemap: https://blackseabulgaria.com/make-server-d36f8f91/sitemap.xml
+
+# Crawl delay (be nice to the server)
+Crawl-delay: 1
+`;
+
+  // Return plain text with proper content type
+  return c.body(robots, 200, {
+    'Content-Type': 'text/plain; charset=utf-8',
+  });
+});
+
 // Sign up endpoint
 app.post("/make-server-d36f8f91/signup", async (c) => {
   try {
@@ -1666,6 +1778,222 @@ app.post("/make-server-d36f8f91/admin/delete-all-questions", async (c) => {
   } catch (error: any) {
     console.error('Error deleting questions:', error);
     return c.json({ message: 'Error deleting questions', error: error.message }, 500);
+  }
+});
+
+// ============== PARTNER MANAGEMENT ENDPOINTS ==============
+
+// Get all partners (public endpoint - no auth required)
+app.get("/make-server-d36f8f91/partners", async (c) => {
+  try {
+    const partners = await kv.getByPrefix('partner:');
+    
+    // Return all language fields - frontend will pick the right one
+    // Sort by order field (if exists) or by creation date
+    const sortedPartners = partners.sort((a, b) => {
+      if (a.order !== undefined && b.order !== undefined) {
+        return a.order - b.order;
+      }
+      return (a.createdAt || 0) - (b.createdAt || 0);
+    });
+    
+    return c.json({ partners: sortedPartners });
+  } catch (error: any) {
+    console.error('Error fetching partners:', error);
+    return c.json({ message: 'Error fetching partners' }, 500);
+  }
+});
+
+// Get single partner (public endpoint)
+app.get("/make-server-d36f8f91/partners/:id", async (c) => {
+  try {
+    const id = c.req.param('id');
+    const partner = await kv.get(`partner:${id}`);
+    
+    if (!partner) {
+      return c.json({ message: 'Partner not found' }, 404);
+    }
+    
+    return c.json({ partner });
+  } catch (error: any) {
+    console.error('Error fetching partner:', error);
+    return c.json({ message: 'Error fetching partner' }, 500);
+  }
+});
+
+// Create partner (admin only)
+app.post("/make-server-d36f8f91/partners", async (c) => {
+  const { error, user, isAdmin: adminStatus } = await verifyAdmin(c.req.header('Authorization'));
+  
+  if (error || !user || !adminStatus) {
+    return c.json({ message: error || 'Admin access required' }, error === 'Unauthorized' ? 401 : 403);
+  }
+
+  try {
+    const body = await c.req.json();
+    const { 
+      name, 
+      description, 
+      specializations,
+      website, 
+      classesLink, 
+      image,
+      order 
+    } = body;
+
+    if (!name || !description || !website) {
+      return c.json({ message: 'Missing required fields: name, description, website' }, 400);
+    }
+
+    // Generate unique ID
+    const id = `${Date.now()}_${Math.random().toString(36).substring(7)}`;
+    
+    const partner = {
+      id,
+      name,
+      description,
+      specializations: specializations || [],
+      website,
+      classesLink: classesLink || website,
+      image: image || '',
+      order: order !== undefined ? order : Date.now(),
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+
+    await kv.set(`partner:${id}`, partner);
+
+    return c.json({ 
+      message: 'Partner created successfully',
+      partner,
+    });
+  } catch (error: any) {
+    console.error('Error creating partner:', error);
+    return c.json({ message: 'Error creating partner' }, 500);
+  }
+});
+
+// Update partner (admin only)
+app.put("/make-server-d36f8f91/partners/:id", async (c) => {
+  const { error, user, isAdmin: adminStatus } = await verifyAdmin(c.req.header('Authorization'));
+  
+  if (error || !user || !adminStatus) {
+    return c.json({ message: error || 'Admin access required' }, error === 'Unauthorized' ? 401 : 403);
+  }
+
+  try {
+    const id = c.req.param('id');
+    const existingPartner = await kv.get(`partner:${id}`);
+    
+    if (!existingPartner) {
+      return c.json({ message: 'Partner not found' }, 404);
+    }
+
+    const body = await c.req.json();
+    const { 
+      name, 
+      description, 
+      specializations,
+      website, 
+      classesLink, 
+      image,
+      order 
+    } = body;
+
+    if (!name || !description || !website) {
+      return c.json({ message: 'Missing required fields: name, description, website' }, 400);
+    }
+    
+    const updatedPartner = {
+      id,
+      name,
+      description,
+      specializations: specializations || [],
+      website,
+      classesLink: classesLink || website,
+      image: image || '',
+      order: order !== undefined ? order : existingPartner.order,
+      createdAt: existingPartner.createdAt,
+      updatedAt: Date.now(),
+    };
+
+    await kv.set(`partner:${id}`, updatedPartner);
+
+    return c.json({ 
+      message: 'Partner updated successfully',
+      partner: updatedPartner,
+    });
+  } catch (error: any) {
+    console.error('Error updating partner:', error);
+    return c.json({ message: 'Error updating partner' }, 500);
+  }
+});
+
+// Delete partner (admin only)
+app.delete("/make-server-d36f8f91/partners/:id", async (c) => {
+  const { error, user, isAdmin: adminStatus } = await verifyAdmin(c.req.header('Authorization'));
+  
+  if (error || !user || !adminStatus) {
+    return c.json({ message: error || 'Admin access required' }, error === 'Unauthorized' ? 401 : 403);
+  }
+
+  try {
+    const id = c.req.param('id');
+    const existingPartner = await kv.get(`partner:${id}`);
+    
+    if (!existingPartner) {
+      return c.json({ message: 'Partner not found' }, 404);
+    }
+
+    await kv.del(`partner:${id}`);
+
+    return c.json({ 
+      message: 'Partner deleted successfully',
+    });
+  } catch (error: any) {
+    console.error('Error deleting partner:', error);
+    return c.json({ message: 'Error deleting partner' }, 500);
+  }
+});
+
+// Cleanup endpoint - removes old multilingual fields from all partners
+app.post("/make-server-d36f8f91/partners/cleanup", async (c) => {
+  const { error, user, isAdmin: adminStatus } = await verifyAdmin(c.req.header('Authorization'));
+  
+  if (error || !user || !adminStatus) {
+    return c.json({ message: error || 'Admin access required' }, error === 'Unauthorized' ? 401 : 403);
+  }
+
+  try {
+    const partners = await kv.getByPrefix('partner:');
+    let cleanedCount = 0;
+
+    for (const partner of partners) {
+      // Keep only the core fields, remove all language-specific fields
+      const cleanedPartner = {
+        id: partner.id,
+        name: partner.name,
+        description: partner.description,
+        specializations: partner.specializations || [],
+        website: partner.website,
+        classesLink: partner.classesLink,
+        image: partner.image,
+        order: partner.order,
+        createdAt: partner.createdAt,
+        updatedAt: partner.updatedAt,
+      };
+
+      await kv.set(`partner:${partner.id}`, cleanedPartner);
+      cleanedCount++;
+    }
+
+    return c.json({ 
+      message: `Successfully cleaned ${cleanedCount} partners`,
+      count: cleanedCount
+    });
+  } catch (error: any) {
+    console.error('Error cleaning up partners:', error);
+    return c.json({ message: 'Error cleaning up partners' }, 500);
   }
 });
 
