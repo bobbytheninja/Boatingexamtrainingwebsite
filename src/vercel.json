@@ -5,14 +5,6 @@
   "installCommand": "npm install --legacy-peer-deps",
   "rewrites": [
     {
-      "source": "/sitemap.xml",
-      "destination": "https://abtrsjhvjfgcxxpkszwi.supabase.co/functions/v1/make-server-d36f8f91/sitemap.xml"
-    },
-    {
-      "source": "/robots.txt",
-      "destination": "https://abtrsjhvjfgcxxpkszwi.supabase.co/functions/v1/make-server-d36f8f91/robots.txt"
-    },
-    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

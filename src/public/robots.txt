@@ -11,9 +11,8 @@ Disallow: /account
 Disallow: /payment
 Disallow: /payment-success
 
-# Sitemap locations (using direct Supabase URL to avoid SPA routing conflicts)
-Sitemap: https://abtrsjhvjfgcxxpkszwi.supabase.co/functions/v1/make-server-d36f8f91/sitemap.xml
-Sitemap: https://blackseabulgaria.com/sitemap_index.xml
+# Sitemap location
+Sitemap: https://blackseabulgaria.com/sitemap.xml
 
 # Crawl delay (be nice to the server)
 Crawl-delay: 1
