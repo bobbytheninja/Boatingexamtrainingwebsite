@@ -331,7 +331,7 @@ Disallow: /payment
 Disallow: /payment-success
 
 # Sitemap location
-Sitemap: https://blackseabulgaria.com/make-server-d36f8f91/sitemap.xml
+Sitemap: https://blackseabulgaria.com/sitemap.xml
 
 # Crawl delay (be nice to the server)
 Crawl-delay: 1
