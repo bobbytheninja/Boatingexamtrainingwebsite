@@ -110,8 +110,8 @@ export function ContactPage({ onNavigate, isLoggedIn = false }: ContactPageProps
                   </div>
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">{t.emailUs}</p>
-                    <a href="mailto:info@yachtexam.com" className="text-base font-medium text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300">
-                      info@yachtexam.com
+                    <a href="mailto:bobby_rocks@me.com" className="text-base font-medium text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300">
+                      bobby_rocks@me.com
                     </a>
                   </div>
                 </div>
@@ -123,14 +123,14 @@ export function ContactPage({ onNavigate, isLoggedIn = false }: ContactPageProps
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">{t.phone}</p>
                     <a 
-                      href="tel:+359889660467" 
+                      href="tel:+35087661018" 
                       className="text-base font-medium hover:text-sky-600 dark:hover:text-sky-400 transition-colors duration-[400ms]"
                       style={{ 
-                        color: darkMode ? '#e5e7eb' : '#1f2937',
-                        transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+                        color: darkMode ? '#e0f2fe' : '#0c4a6e',
+                        transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
                       }}
                     >
-                      +359 88 9660467
+                      +350 87 66 101 85
                     </a>
                   </div>
                 </div>

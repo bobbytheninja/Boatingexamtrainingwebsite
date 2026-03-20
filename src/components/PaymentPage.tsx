@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Checkbox } from './ui/checkbox';
 import { ArrowLeft, Check, CreditCard } from 'lucide-react';
 import { ExamType, examData } from '../data/examQuestions';
-import { toast } from 'sonner';
+import { toast } from 'sonner@2.0.3';
 import { ButtonSpinner } from './LoadingSpinner';
 import { useAuth } from '../contexts/AuthContext';
 import { useDarkMode } from '../contexts/DarkModeContext';
@@ -13,6 +13,19 @@ import { api } from '../utils/api';
 import { Navigation } from './Navigation';
 import { Footer } from './Footer';
 import { Language } from '../data/translations';
+import { projectId, publicAnonKey } from '../utils/supabase/info';
+
+interface ExamCategory {
+  type: string;
+  title: string;
+  titleBg: string;
+  description: string;
+  descriptionBg: string;
+  icon: string;
+  color: string;
+  image: string;
+  price?: number;
+}
 
 interface PaymentPageProps {
   userEmail: string;
@@ -28,10 +41,89 @@ export function PaymentPage({ userEmail, onBack, onComplete, onNavigate }: Payme
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentLanguage, setCurrentLanguage] = useState<Language>('English');
   const [region, setRegion] = useState('Bulgaria');
+  const [categories, setCategories] = useState<ExamCategory[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
 
   // Get the user's current subscriptions and expiration date
   const currentSubscriptions = user?.subscriptions || [];
   const subscriptionExpiresAt = user?.subscriptionExpiresAt || null;
+
+  // Load categories from server
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        console.log('');
+        console.log('💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳');
+        console.log('[PaymentPage] LOADING CATEGORIES');
+        console.log('💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳');
+        
+        const url = `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/categories`;
+        console.log('[PaymentPage] Request URL:', url);
+        console.log('[PaymentPage] Request Method: GET');
+        
+        const response = await fetch(url, {
+          headers: {
+            'Authorization': `Bearer ${publicAnonKey}`
+          }
+        });
+        
+        console.log('[PaymentPage] Response Status:', response.status, response.statusText);
+        console.log('[PaymentPage] Response OK:', response.ok);
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log('[PaymentPage] Response Data:', data);
+          console.log('[PaymentPage] Categories Count:', data.categories?.length);
+          console.log('[PaymentPage] Categories:', JSON.stringify(data.categories, null, 2));
+          
+          // If no categories found, force-initialize them
+          if (!data.categories || data.categories.length === 0) {
+            console.log('[PaymentPage] ⚠️ No categories found, triggering force-init...');
+            
+            const initUrl = `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/categories/force-init`;
+            console.log('[PaymentPage] Force-init URL:', initUrl);
+            console.log('[PaymentPage] Force-init Method: POST');
+            
+            const initResponse = await fetch(initUrl, { method: 'POST' });
+            
+            console.log('[PaymentPage] Force-init Response Status:', initResponse.status, initResponse.statusText);
+            console.log('[PaymentPage] Force-init Response OK:', initResponse.ok);
+            
+            if (initResponse.ok) {
+              const initData = await initResponse.json();
+              console.log('[PaymentPage] Force-init Response Data:', initData);
+              console.log('[PaymentPage] ✅ Categories initialized:', initData.categories?.length);
+              setCategories(initData.categories || []);
+            } else {
+              const errorText = await initResponse.text();
+              console.error('[PaymentPage] ❌ Force-init failed:', errorText);
+            }
+          } else {
+            console.log('[PaymentPage] ✅ Setting categories:', data.categories.length);
+            setCategories(data.categories || []);
+          }
+        } else {
+          const errorText = await response.text();
+          console.error('[PaymentPage] ❌ Failed to load categories:', errorText);
+        }
+        
+        console.log('💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳');
+        console.log('[PaymentPage] LOAD COMPLETE');
+        console.log('💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳');
+        console.log('');
+      } catch (error: any) {
+        console.error('[PaymentPage] ❌ ERROR:', error);
+        console.error('[PaymentPage] Error details:', {
+          message: error.message,
+          stack: error.stack,
+        });
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+
+    loadCategories();
+  }, []);
 
   // Calculate expiry date for display
   const getExpiryDateString = () => {
@@ -44,13 +136,12 @@ export function PaymentPage({ userEmail, onBack, onComplete, onNavigate }: Payme
     });
   };
 
-  const examTypes: { type: ExamType; title: string; description: string }[] = [
-    { type: 'jet', title: examData.jet.title, description: examData.jet.description },
-    { type: 'small', title: examData.small.title, description: examData.small.description },
-    { type: 'big', title: examData.big.title, description: examData.big.description },
-    { type: 'yacht', title: examData.yacht.title, description: examData.yacht.description },
-    { type: 'navigation', title: examData.navigation.title, description: examData.navigation.description },
-  ];
+  // Transform server categories into display format
+  const examTypes: { type: ExamType; title: string; description: string }[] = categories.map(cat => ({
+    type: cat.type as ExamType,
+    title: currentLanguage === 'Bulgarian' && cat.titleBg ? cat.titleBg : cat.title,
+    description: currentLanguage === 'Bulgarian' && cat.descriptionBg ? cat.descriptionBg : cat.description,
+  }));
 
   const toggleExam = (examType: ExamType) => {
     // Don't allow toggling already subscribed exams
@@ -65,7 +156,11 @@ export function PaymentPage({ userEmail, onBack, onComplete, onNavigate }: Payme
     }
   };
 
-  const totalPrice = selectedExams.length * 5;
+  // Calculate total price dynamically from category prices
+  const totalPrice = selectedExams.reduce((sum, examType) => {
+    const category = categories.find(c => c.type === examType);
+    return sum + (category?.price || 5); // Default to 5 if price not set
+  }, 0);
 
   const handlePayment = async () => {
     if (selectedExams.length === 0) {
@@ -81,13 +176,26 @@ export function PaymentPage({ userEmail, onBack, onComplete, onNavigate }: Payme
     setIsProcessing(true);
     
     try {
+      console.log('💳 [PaymentPage] Starting checkout...');
+      console.log('💳 [PaymentPage] Selected exams:', selectedExams);
+      console.log('💳 [PaymentPage] Access token:', accessToken ? 'Present' : 'Missing');
+      
       // Create Stripe Checkout Session
+      console.log('💳 [PaymentPage] Calling createCheckoutSession API...');
       const { url } = await api.createCheckoutSession(selectedExams, accessToken);
+      
+      console.log('💳 [PaymentPage] Checkout URL received:', url);
+      console.log('💳 [PaymentPage] Redirecting to Stripe...');
       
       // Redirect to Stripe Checkout
       window.location.href = url;
     } catch (error: any) {
-      console.error('Payment error:', error);
+      console.error('💳 [PaymentPage] ❌ Payment error:', error);
+      console.error('💳 [PaymentPage] Error details:', {
+        message: error.message,
+        stack: error.stack,
+        fullError: error,
+      });
       toast.error(`Failed to start checkout: ${error.message || 'Please try again'}`);
       setIsProcessing(false);
     }
@@ -199,85 +307,102 @@ export function PaymentPage({ userEmail, onBack, onComplete, onNavigate }: Payme
                   >Choose which exams you want full access to</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {examTypes.map((exam) => {
-                    const isSubscribed = currentSubscriptions.includes(exam.type);
-                    
-                    return (
-                      <div
-                        key={exam.type}
-                        className={`flex items-start space-x-3 p-4 rounded-lg border-2 transition-all duration-200 cursor-pointer ${ 
-                          isSubscribed
-                            ? 'cursor-not-allowed opacity-75'
-                            : selectedExams.includes(exam.type)
-                            ? 'shadow-md scale-[1.01]'
-                            : 'hover:shadow-md'
-                        }`}
-                        style={{
-                          backgroundColor: isSubscribed
-                            ? (darkMode ? 'rgba(20, 83, 45, 0.2)' : '#f0fdf4')
-                            : selectedExams.includes(exam.type)
-                            ? (darkMode ? 'rgba(30, 58, 138, 0.3)' : '#eff6ff')
-                            : (darkMode ? '#334155' : '#ffffff'),
-                          borderColor: isSubscribed
-                            ? (darkMode ? '#16a34a' : '#4ade80')
-                            : selectedExams.includes(exam.type)
-                            ? (darkMode ? '#60a5fa' : '#3b82f6')
-                            : (darkMode ? '#475569' : '#e5e7eb'),
-                          ...(darkMode && !isSubscribed && !selectedExams.includes(exam.type) && {
-                            ':hover': {
-                              backgroundColor: '#475569'
-                            }
-                          })
-                        }}
-                        onClick={() => toggleExam(exam.type)}
-                      >
-                        <Checkbox
-                          checked={isSubscribed || selectedExams.includes(exam.type)}
-                          disabled={isSubscribed}
-                          onCheckedChange={() => toggleExam(exam.type)}
-                          className="mt-1"
-                        />
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between gap-2 flex-wrap">
-                            <h4 className="font-semibold transition-colors duration-[400ms]" style={{ color: darkMode ? '#f3f4f6' : '#0f172a' }}>{exam.title}</h4>
-                            <div className="flex items-center gap-2">
-                              {isSubscribed ? (
-                                <Badge 
-                                  className="transition-colors duration-[400ms]"
-                                  style={{
-                                    backgroundColor: darkMode ? 'rgba(34, 197, 94, 0.2)' : '#dcfce7',
-                                    color: darkMode ? '#86efac' : '#166534',
-                                    border: darkMode ? '1px solid #16a34a' : '1px solid #86efac'
-                                  }}
-                                >
-                                  ✓ Active until {getExpiryDateString()}
-                                </Badge>
-                              ) : (
-                                <Badge 
-                                  variant="secondary" 
-                                  style={{
-                                    backgroundColor: darkMode ? '#475569' : '#f1f5f9',
-                                    color: darkMode ? '#e5e7eb' : '#475569',
-                                    border: darkMode ? 'none' : '1px solid #e2e8f0'
-                                  }}
-                                >
-                                  €5/month
-                                </Badge>
-                              )}
-                            </div>
-                          </div>
-                          <p className="text-sm mt-1 transition-colors duration-[400ms]" style={{ color: darkMode ? '#d1d5db' : '#475569' }}>{exam.description}</p>
-                          {!isSubscribed && (
-                            <div className="flex gap-2 mt-2 text-xs transition-colors duration-[400ms]" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
-                              <span>• 40 Questions</span>
-                              <span>• Unlimited Attempts</span>
-                              <span>• Study & Exam Modes</span>
-                            </div>
-                          )}
-                        </div>
+                  {loadingCategories ? (
+                    <div className="flex justify-center items-center py-12">
+                      <div className="text-center space-y-3">
+                        <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                        <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#64748b' }}>
+                          Loading exam categories...
+                        </p>
                       </div>
-                    );
-                  })}
+                    </div>
+                  ) : examTypes.length === 0 ? (
+                    <div className="text-center py-12">
+                      <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#64748b' }}>
+                        No exam categories available. Please contact support.
+                      </p>
+                    </div>
+                  ) : (
+                    examTypes.map((exam) => {
+                      const isSubscribed = currentSubscriptions.includes(exam.type);
+                      
+                      return (
+                        <div
+                          key={exam.type}
+                          className={`flex items-start space-x-3 p-4 rounded-lg border-2 transition-all duration-200 cursor-pointer ${ 
+                            isSubscribed
+                              ? 'cursor-not-allowed opacity-75'
+                              : selectedExams.includes(exam.type)
+                              ? 'shadow-md scale-[1.01]'
+                              : 'hover:shadow-md'
+                          }`}
+                          style={{
+                            backgroundColor: isSubscribed
+                              ? (darkMode ? 'rgba(20, 83, 45, 0.2)' : '#f0fdf4')
+                              : selectedExams.includes(exam.type)
+                              ? (darkMode ? 'rgba(30, 58, 138, 0.3)' : '#eff6ff')
+                              : (darkMode ? '#334155' : '#ffffff'),
+                            borderColor: isSubscribed
+                              ? (darkMode ? '#16a34a' : '#4ade80')
+                              : selectedExams.includes(exam.type)
+                              ? (darkMode ? '#60a5fa' : '#3b82f6')
+                              : (darkMode ? '#475569' : '#e5e7eb'),
+                            ...(darkMode && !isSubscribed && !selectedExams.includes(exam.type) && {
+                              ':hover': {
+                                backgroundColor: '#475569'
+                              }
+                            })
+                          }}
+                          onClick={() => toggleExam(exam.type)}
+                        >
+                          <Checkbox
+                            checked={isSubscribed || selectedExams.includes(exam.type)}
+                            disabled={isSubscribed}
+                            onCheckedChange={() => toggleExam(exam.type)}
+                            className="mt-1"
+                          />
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between gap-2 flex-wrap">
+                              <h4 className="font-semibold transition-colors duration-[400ms]" style={{ color: darkMode ? '#f3f4f6' : '#0f172a' }}>{exam.title}</h4>
+                              <div className="flex items-center gap-2">
+                                {isSubscribed ? (
+                                  <Badge 
+                                    className="transition-colors duration-[400ms]"
+                                    style={{
+                                      backgroundColor: darkMode ? 'rgba(34, 197, 94, 0.2)' : '#dcfce7',
+                                      color: darkMode ? '#86efac' : '#166534',
+                                      border: darkMode ? '1px solid #16a34a' : '1px solid #86efac'
+                                    }}
+                                  >
+                                    ✓ Active until {getExpiryDateString()}
+                                  </Badge>
+                                ) : (
+                                  <Badge 
+                                    variant="secondary" 
+                                    style={{
+                                      backgroundColor: darkMode ? '#475569' : '#f1f5f9',
+                                      color: darkMode ? '#e5e7eb' : '#475569',
+                                      border: darkMode ? 'none' : '1px solid #e2e8f0'
+                                    }}
+                                  >
+                                    €{categories.find(c => c.type === exam.type)?.price || 5}/month
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                            <p className="text-sm mt-1 transition-colors duration-[400ms]" style={{ color: darkMode ? '#d1d5db' : '#475569' }}>{exam.description}</p>
+                            {!isSubscribed && (
+                              <div className="flex gap-2 mt-2 text-xs transition-colors duration-[400ms]" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
+                                <span>• 40 Questions</span>
+                                <span>• Unlimited Attempts</span>
+                                <span>• Study & Exam Modes</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
                 </CardContent>
               </Card>
 
@@ -372,10 +497,12 @@ export function PaymentPage({ userEmail, onBack, onComplete, onNavigate }: Payme
                       <div className="space-y-3">
                         {selectedExams.map((examType) => {
                           const exam = examTypes.find(e => e.type === examType);
+                          const category = categories.find(c => c.type === examType);
+                          const price = category?.price || 5;
                           return (
                             <div key={examType} className="flex items-center justify-between text-sm" style={{ color: darkMode ? '#e5e7eb' : '#1e293b' }}>
                               <span>{exam?.title}</span>
-                              <span className="font-medium">€5/mo</span>
+                              <span className="font-medium">€{price}/mo</span>
                             </div>
                           );
                         })}

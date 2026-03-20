@@ -1,0 +1,31 @@
+[Warning] ArrayBuffer is deprecated in XMLHttpRequest.send(). Use ArrayBufferView instead. (vendor-dbdbf1041f2f9da9.min.js.br, line 3, x4)
+[Log] [CategoryManagement] Saving category: – {type: "jjjj", title: "kkkk", titleBg: "", …} (code_components_preview_iframe-a2dfb1811c456f43.min.js.br, line 28)
+{type: "jjjj", title: "kkkk", titleBg: "", description: "llll", descriptionBg: "", …}Object
+[Log] [CategoryManagement] isUpdate: – false (code_components_preview_iframe-a2dfb1811c456f43.min.js.br, line 28)
+[Log] [CategoryManagement] Request URL: – "https://abtrsjhvjfgcxxpkszwi.supabase.co/functions/v1/make-server-d36f8f91/categories" (code_components_preview_iframe-a2dfb1811c456f43.min.js.br, line 28)
+[Log] [CategoryManagement] Response status: – 200 (code_components_preview_iframe-a2dfb1811c456f43.min.js.br, line 28)
+[Log] [CategoryManagement] Response headers: – {content-type: "application/json"} (code_components_preview_iframe-a2dfb1811c456f43.min.js.br, line 28)
+[Log] [CategoryManagement] Response text: – "{\"message\":\"Category added successfully\",\"category\":{\"type\":\"jjjj\",\"title\":\"kkkk\",\"titleBg\":\"\",\"description\":\"llll\",\"descriptionBg\":\"\",\"icon…" (code_components_preview_iframe-a2dfb1811c456f43.min.js.br, line 28)
+"{\"message\":\"Category added successfully\",\"category\":{\"type\":\"jjjj\",\"title\":\"kkkk\",\"titleBg\":\"\",\"description\":\"llll\",\"descriptionBg\":\"\",\"icon\":\"Waves\",\"color\":\"bg-gradient-to-br from-cyan-500 to-sky-600\",\"image\":\"\"}}"
+[Log] [CategoryManagement] Save successful: – {message: "Category added successfully", category: Object} (code_components_preview_iframe-a2dfb1811c456f43.min.js.br, line 28)
+{message: "Category added successfully", category: Object}Object
+[Log] [CategoryManagement] Loading categories... (code_components_preview_iframe-a2dfb1811c456f43.min.js.br, line 28)
+[Log] [CategoryManagement] Request URL: – "https://abtrsjhvjfgcxxpkszwi.supabase.co/functions/v1/make-server-d36f8f91/categories" (code_components_preview_iframe-a2dfb1811c456f43.min.js.br, line 28)
+[Log] [CategoryManagement] Load response status: – 200 (code_components_preview_iframe-a2dfb1811c456f43.min.js.br, line 28)
+[Log] [CategoryManagement] Categories loaded: – {categories: Array} (code_components_preview_iframe-a2dfb1811c456f43.min.js.br, line 28)
+{categories: Array}Object
+[Warning] ArrayBuffer is deprecated in XMLHttpRequest.send(). Use ArrayBufferView instead. (vendor-dbdbf1041f2f9da9.min.js.br, line 3, x6)
+[Log] [HomePage] Navigation requested: – "account" (code_components_preview_iframe-a2dfb1811c456f43.min.js.br, line 28)
+[Log] [AccountPageWrapper] Rendering with user: – "bobby_rocks@me.com" – "Subscriptions:" – ["jet", "small", "big", …] (5) (code_components_preview_iframe-a2dfb1811c456f43.min.js.br, line 28)
+["jet", "small", "big", "yacht", "navigation"]Array (5)
+[Log] [AccountPage] Mounted with props: – {userEmail: "bobby_rocks@me.com", paidExams: ["jet", "small", "big", …], subscriptionExpiresAt: 1773440453576, …} (code_components_preview_iframe-a2dfb1811c456f43.min.js.br, line 28)
+{userEmail: "bobby_rocks@me.com", paidExams: ["jet", "small", "big", "yacht", "navigation"], subscriptionExpiresAt: 1773440453576, language: "English", darkMode: false}Object
+[Log] [AccountPageWrapper] Rendering with user: – "bobby_rocks@me.com" – "Subscriptions:" – ["jet", "small", "big", …] (5) (code_components_preview_iframe-a2dfb1811c456f43.min.js.br, line 28)
+["jet", "small", "big", "yacht", "navigation"]Array (5)
+[Warning] ArrayBuffer is deprecated in XMLHttpRequest.send(). Use ArrayBufferView instead. (vendor-dbdbf1041f2f9da9.min.js.br, line 3, x4)
+[Log] [CategoryManagement] Loading categories... (code_components_preview_iframe-a2dfb1811c456f43.min.js.br, line 28)
+[Log] [CategoryManagement] Request URL: – "https://abtrsjhvjfgcxxpkszwi.supabase.co/functions/v1/make-server-d36f8f91/categories" (code_components_preview_iframe-a2dfb1811c456f43.min.js.br, line 28)
+[Log] [CategoryManagement] Load response status: – 200 (code_components_preview_iframe-a2dfb1811c456f43.min.js.br, line 28)
+[Log] [CategoryManagement] Categories loaded: – {categories: Array} (code_components_preview_iframe-a2dfb1811c456f43.min.js.br, line 28)
+{categories: Array}Object
+[Warning] ArrayBuffer is deprecated in XMLHttpRequest.send(). Use ArrayBufferView instead. (vendor-dbdbf1041f2f9da9.min.js.br, line 3, x8)

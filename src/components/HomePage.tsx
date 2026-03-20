@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { Waves, Ship, Sailboat, Anchor as AnchorIcon, Compass, Users, BookOpen, Award } from 'lucide-react';
+import { Waves, Ship, Sailboat, Anchor as AnchorIcon, Compass, Users, BookOpen, Award, LucideIcon } from 'lucide-react';
 import { ExamType } from '../data/examQuestions';
 import { getTranslation } from '../data/translations';
 import { Navigation } from './Navigation';
@@ -12,6 +12,27 @@ import { useAuth } from '../contexts/AuthContext';
 import { useDarkMode } from '../contexts/DarkModeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { AnimatedStatCard } from './AnimatedCounter';
+import { projectId, publicAnonKey } from '../utils/supabase/info';
+
+// Icon mapping - maps icon names from database to actual icon components
+const ICON_MAP: Record<string, LucideIcon> = {
+  'Waves': Waves,
+  'Ship': Ship,
+  'Anchor': AnchorIcon,
+  'Sailboat': Sailboat,
+  'Compass': Compass,
+};
+
+interface ExamCategory {
+  type: string;
+  title: string;
+  titleBg: string;
+  description: string;
+  descriptionBg: string;
+  icon: string;
+  color: string;
+  image: string;
+}
 
 export function HomePage() {
   const navigate = useNavigate();
@@ -20,49 +41,56 @@ export function HomePage() {
   const { language } = useLanguage();
   const t = getTranslation(language);
   const isLoggedIn = !!user;
-  
-  const examTypes = [
-    {
-      type: 'jet' as ExamType,
-      title: t.jetSki,
-      description: t.jetSkiDesc,
-      icon: Waves,
-      color: 'bg-gradient-to-br from-cyan-500 to-sky-600',
-      image: 'https://images.unsplash.com/photo-1721798974342-7b2b859493a0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxqZXQlMjBza2klMjBvY2VhbnxlbnwxfHx8fDE3NjIzMjEyOTB8MA&ixlib=rb-4.1.0&q=80&w=1080',
-    },
-    {
-      type: 'small' as ExamType,
-      title: t.smallBoat,
-      description: t.smallBoatDesc,
-      icon: Ship,
-      color: 'bg-gradient-to-br from-sky-500 to-blue-600',
-      image: 'https://images.unsplash.com/photo-1759809278956-70c6a72eecdd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzbWFsbCUyMGJvYXQlMjBzYWlsaW5nfGVufDF8fHx8MTc2MjM1NDIzMnww&ixlib=rb-4.1.0&q=80&w=1080',
-    },
-    {
-      type: 'big' as ExamType,
-      title: t.bigBoat,
-      description: t.bigBoatDesc,
-      icon: AnchorIcon,
-      color: 'bg-gradient-to-br from-blue-600 to-indigo-700',
-      image: 'https://images.unsplash.com/photo-1604930270269-67876a4cbe4a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsYXJnZSUyMHNoaXAlMjBkZWNrfGVufDF8fHx8MTc2MjM1NDIzNHww&ixlib=rb-4.1.0&q=80&w=1080',
-    },
-    {
-      type: 'yacht' as ExamType,
-      title: t.yacht,
-      description: t.yachtDesc,
-      icon: Sailboat,
-      color: 'bg-gradient-to-br from-indigo-600 to-purple-700',
-      image: 'https://images.unsplash.com/photo-1598737285721-29346a5c9278?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjB5YWNodCUyMG9jZWFufGVufDF8fHx8MTc2MjMwMjQ5N3ww&ixlib=rb-4.1.0&q=80&w=1080',
-    },
-    {
-      type: 'navigation' as ExamType,
-      title: t.navigationDevice,
-      description: t.navigationDeviceDesc,
-      icon: Compass,
-      color: 'bg-gradient-to-br from-teal-500 to-cyan-600',
-      image: 'https://images.unsplash.com/photo-1723988433925-035f8625b5c0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxuYXZpZ2F0aW9uJTIwY29tcGFzcyUyMG1hcmluZXxlbnwxfHx8fDE3NjIzNTQyMzl8MA&ixlib=rb-4.1.0&q=80&w=1080',
-    },
-  ];
+  const [categories, setCategories] = useState<ExamCategory[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
+
+  // Load categories from server
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const url = `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/categories`;
+        console.log('[HomePage] Loading categories from server...');
+        console.log('[HomePage] Fetch URL:', url);
+        
+        const response = await fetch(url, {
+          headers: {
+            'Authorization': `Bearer ${publicAnonKey}`,
+          },
+        });
+        
+        console.log('[HomePage] Response status:', response.status);
+        console.log('[HomePage] Response ok:', response.ok);
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log('[HomePage] Raw response data:', data);
+          console.log('[HomePage] Categories array:', data.categories);
+          console.log('[HomePage] Categories length:', data.categories?.length);
+          setCategories(data.categories || []);
+        } else {
+          const errorText = await response.text();
+          console.error('[HomePage] Failed to load categories. Status:', response.status, 'Error:', errorText);
+        }
+      } catch (error) {
+        console.error('[HomePage] Error loading categories:', error);
+      } finally {
+        setLoadingCategories(false);
+        console.log('[HomePage] Loading complete');
+      }
+    };
+
+    loadCategories();
+  }, []);
+
+  // Transform server categories into display format
+  const examTypes = categories.map(cat => ({
+    type: cat.type as ExamType,
+    title: language === 'Bulgarian' && cat.titleBg ? cat.titleBg : cat.title,
+    description: language === 'Bulgarian' && cat.descriptionBg ? cat.descriptionBg : cat.description,
+    icon: ICON_MAP[cat.icon] || Waves,
+    color: cat.color,
+    image: cat.image,
+  }));
 
   const handleNavigate = (page: string) => {
     try {
@@ -149,7 +177,18 @@ export function HomePage() {
 
             {/* Exam Type Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 max-w-7xl mx-auto">
-              {examTypes.map((exam, index) => {
+              {loadingCategories ? (
+                <div className="col-span-full flex justify-center items-center py-20">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-600 mx-auto mb-4"></div>
+                    <p className="text-gray-600 dark:text-gray-400">Loading exam categories...</p>
+                  </div>
+                </div>
+              ) : examTypes.length === 0 ? (
+                <div className="col-span-full text-center py-20">
+                  <p className="text-gray-600 dark:text-gray-400">No exam categories available.</p>
+                </div>
+              ) : examTypes.map((exam, index) => {
                 const Icon = exam.icon;
                 return (
                   <Card 

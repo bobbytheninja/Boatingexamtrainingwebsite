@@ -882,9 +882,27 @@ app.post("/make-server-d36f8f91/create-checkout-session", async (c) => {
       return c.json({ message: 'Invalid exam types - must be a non-empty array' }, 400);
     }
 
-    // Price per exam type: €5 per month
-    const pricePerExam = 500; // in cents
-    const totalAmount = examTypes.length * pricePerExam;
+    // Fetch categories to get dynamic pricing
+    console.log('[Checkout] Fetching categories from KV store...');
+    const categories = await kv.get('exam_categories') || [];
+    console.log('[Checkout] Categories loaded:', categories);
+    
+    // Calculate total and prepare pricing info
+    let totalAmount = 0;
+    const pricingInfo: { [key: string]: number } = {};
+    
+    for (const examType of examTypes) {
+      const category = Array.isArray(categories) 
+        ? categories.find((cat: any) => cat.type === examType)
+        : null;
+      
+      const pricePerExam = category?.price || 5; // Default to €5 if not found
+      const priceInCents = pricePerExam * 100;
+      totalAmount += priceInCents;
+      pricingInfo[examType] = priceInCents;
+      
+      console.log(`[Checkout] ${examType}: €${pricePerExam} (${priceInCents} cents)`);
+    }
 
     console.log('[Checkout] Total amount:', totalAmount, 'cents (€' + (totalAmount / 100) + ')');
 
@@ -919,7 +937,7 @@ app.post("/make-server-d36f8f91/create-checkout-session", async (c) => {
             name: `Yacht Exam Training - ${examType}`,
             description: `30-day access to ${examType} exam questions (for training purposes only)`,
           },
-          unit_amount: pricePerExam,
+          unit_amount: pricingInfo[examType], // Use dynamic pricing per exam type
         },
         quantity: 1,
       })),
@@ -1994,6 +2012,506 @@ app.post("/make-server-d36f8f91/partners/cleanup", async (c) => {
   } catch (error: any) {
     console.error('Error cleaning up partners:', error);
     return c.json({ message: 'Error cleaning up partners' }, 500);
+  }
+});
+
+// ============== CATEGORY MANAGEMENT ==============
+
+// Initialize default categories if they don't exist
+async function initializeDefaultCategories() {
+  console.log('[Server] Checking for existing categories...');
+  const existingCategories = await kv.get('exam_categories');
+  console.log('[Server] Existing categories:', existingCategories);
+  console.log('[Server] Exists?', !!existingCategories);
+  console.log('[Server] Is array?', Array.isArray(existingCategories));
+  console.log('[Server] Array length:', Array.isArray(existingCategories) ? existingCategories.length : 'N/A');
+  
+  // Initialize if categories don't exist OR if the array is empty
+  if (!existingCategories || (Array.isArray(existingCategories) && existingCategories.length === 0)) {
+    console.log('[Server] Initializing default exam categories...');
+    
+    const defaultCategories = [
+      {
+        type: 'jet',
+        title: 'Jet Ski License',
+        titleBg: 'Лиценз за джет',
+        description: 'Master jet ski operation and safety procedures',
+        descriptionBg: 'Овладейте управлението на джет и процедурите за безопасност',
+        icon: 'Waves',
+        color: 'bg-gradient-to-br from-cyan-500 to-sky-600',
+        image: 'https://images.unsplash.com/photo-1721798974342-7b2b859493a0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxqZXQlMjBza2klMjBvY2VhbnxlbnwxfHx8fDE3NjIzMjEyOTB8MA&ixlib=rb-4.1.0&q=80&w=1080',
+        price: 5,
+      },
+      {
+        type: 'small',
+        title: 'Small Boat License',
+        titleBg: 'Лиценз за малка лодка',
+        description: 'Learn fundamentals of small boat navigation and handling',
+        descriptionBg: 'Научете основите на навигацията и управлението на малки лодки',
+        icon: 'Ship',
+        color: 'bg-gradient-to-br from-sky-500 to-blue-600',
+        image: 'https://images.unsplash.com/photo-1759809278956-70c6a72eecdd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzbWFsbCUyMGJvYXQlMjBzYWlsaW5nfGVufDF8fHx8MTc2MjM1NDIzMnww&ixlib=rb-4.1.0&q=80&w=1080',
+        price: 5,
+      },
+      {
+        type: 'big',
+        title: 'Big Boat License',
+        titleBg: 'Лиценз за голяма лодка',
+        description: 'Advanced training for operating larger vessels',
+        descriptionBg: 'Разширено обучение за управление на по-големи съдове',
+        icon: 'Anchor',
+        color: 'bg-gradient-to-br from-blue-600 to-indigo-700',
+        image: 'https://images.unsplash.com/photo-1604930270269-67876a4cbe4a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsYXJnZSUyMHNoaXAlMjBkZWNrfGVufDF8fHx8MTc2MjM1NDIzNHww&ixlib=rb-4.1.0&q=80&w=1080',
+        price: 5,
+      },
+      {
+        type: 'yacht',
+        title: 'Yacht License (Up to 50 Tons)',
+        titleBg: 'Лиценз за яхта (до 50 тона)',
+        description: 'Professional certification for yacht operation and management',
+        descriptionBg: 'Професионална сертификация за управление на яхти',
+        icon: 'Sailboat',
+        color: 'bg-gradient-to-br from-indigo-600 to-purple-700',
+        image: 'https://images.unsplash.com/photo-1598737285721-29346a5c9278?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjB5YWNodCUyMG9jZWFufGVufDF8fHx8MTc2MjMwMjQ5N3ww&ixlib=rb-4.1.0&q=80&w=1080',
+        price: 5,
+      },
+      {
+        type: 'navigation',
+        title: 'Navigation Device License',
+        titleBg: 'Лиценз за навигационно устройство',
+        description: 'Expert knowledge of marine navigation equipment and systems',
+        descriptionBg: 'Експертни познания за морско навигационно оборудване',
+        icon: 'Compass',
+        color: 'bg-gradient-to-br from-teal-500 to-cyan-600',
+        image: 'https://images.unsplash.com/photo-1723988433925-035f8625b5c0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxuYXZpZ2F0aW9uJTIwY29tcGFzcyUyMG1hcmluZXxlbnwxfHx8fDE3NjIzNTQyMzl8MA&ixlib=rb-4.1.0&q=80&w=1080',
+        price: 5,
+      },
+    ];
+    
+    await kv.set('exam_categories', defaultCategories);
+    console.log('[Server] ✅ Default categories initialized');
+    console.log('[Server] Stored categories:', defaultCategories);
+  } else {
+    console.log('[Server] Categories already exist, skipping initialization');
+  }
+}
+
+// Debug endpoint to manually initialize categories (admin only)
+app.post("/make-server-d36f8f91/debug/init-categories", async (c) => {
+  console.log('');
+  console.log('███████████████████████████████████████████████████');
+  console.log('[POST /debug/init-categories] REQUEST RECEIVED');
+  console.log('███████████████████████████████████████████████████');
+  
+  const authHeader = c.req.header('Authorization');
+  console.log('[POST /debug/init-categories] Auth header present:', !!authHeader);
+  
+  const { error, user, isAdmin: adminStatus } = await verifyAdmin(authHeader);
+  
+  console.log('[POST /debug/init-categories] Admin verification:');
+  console.log('[POST /debug/init-categories]   - Error:', error);
+  console.log('[POST /debug/init-categories]   - User:', user?.email);
+  console.log('[POST /debug/init-categories]   - Is Admin:', adminStatus);
+  
+  if (error || !user || !adminStatus) {
+    console.log('[POST /debug/init-categories] ❌ UNAUTHORIZED - Admin access required');
+    return c.json({ message: error || 'Admin access required' }, error ? 401 : 403);
+  }
+
+  try {
+    console.log('[POST /debug/init-categories] ✅ Admin verified, initializing categories...');
+    
+    const defaultCategories = [
+      {
+        type: 'jet',
+        title: 'Jet Ski License',
+        titleBg: 'Лиценз за джет',
+        description: 'Master jet ski operation and safety procedures',
+        descriptionBg: 'Овладейте управлението на джет и процедурите за безопасност',
+        icon: 'Waves',
+        color: 'bg-gradient-to-br from-cyan-500 to-sky-600',
+        image: 'https://images.unsplash.com/photo-1721798974342-7b2b859493a0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxqZXQlMjBza2klMjBvY2VhbnxlbnwxfHx8fDE3NjIzMjEyOTB8MA&ixlib=rb-4.1.0&q=80&w=1080',
+        price: 5,
+      },
+      {
+        type: 'small',
+        title: 'Small Boat License',
+        titleBg: 'Лиценз за малка лодка',
+        description: 'Learn fundamentals of small boat navigation and handling',
+        descriptionBg: 'Научете основите на навигацията и управлението на малки лодки',
+        icon: 'Ship',
+        color: 'bg-gradient-to-br from-sky-500 to-blue-600',
+        image: 'https://images.unsplash.com/photo-1759809278956-70c6a72eecdd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzbWFsbCUyMGJvYXQlMjBzYWlsaW5nfGVufDF8fHx8MTc2MjM1NDIzMnww&ixlib=rb-4.1.0&q=80&w=1080',
+        price: 5,
+      },
+      {
+        type: 'big',
+        title: 'Big Boat License',
+        titleBg: 'Лиценз за голяма лодка',
+        description: 'Advanced training for operating larger vessels',
+        descriptionBg: 'Разширено обучение за управление на по-големи съдове',
+        icon: 'Anchor',
+        color: 'bg-gradient-to-br from-blue-600 to-indigo-700',
+        image: 'https://images.unsplash.com/photo-1604930270269-67876a4cbe4a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsYXJnZSUyMHNoaXAlMjBkZWNrfGVufDF8fHx8MTc2MjM1NDIzNHww&ixlib=rb-4.1.0&q=80&w=1080',
+        price: 5,
+      },
+      {
+        type: 'yacht',
+        title: 'Yacht License (Up to 50 Tons)',
+        titleBg: 'Лиценз за яхта (до 50 тона)',
+        description: 'Professional certification for yacht operation and management',
+        descriptionBg: 'Професионална сертификация за управление на яхти',
+        icon: 'Sailboat',
+        color: 'bg-gradient-to-br from-indigo-600 to-purple-700',
+        image: 'https://images.unsplash.com/photo-1598737285721-29346a5c9278?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjB5YWNodCUyMG9jZWFufGVufDF8fHx8MTc2MjMwMjQ5N3ww&ixlib=rb-4.1.0&q=80&w=1080',
+        price: 5,
+      },
+      {
+        type: 'navigation',
+        title: 'Navigation Device License',
+        titleBg: 'Лиценз за навигационно устройство',
+        description: 'Expert knowledge of marine navigation equipment and systems',
+        descriptionBg: 'Експертни познания за морско навигационно оборудване',
+        icon: 'Compass',
+        color: 'bg-gradient-to-br from-teal-500 to-cyan-600',
+        image: 'https://images.unsplash.com/photo-1723988433925-035f8625b5c0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxuYXZpZ2F0aW9uJTIwY29tcGFzcyUyMG1hcmluZXxlbnwxfHx8fDE3NjIzNTQyMzl8MA&ixlib=rb-4.1.0&q=80&w=1080',
+        price: 5,
+      },
+    ];
+    
+    console.log('[POST /debug/init-categories] Saving to KV store key: exam_categories');
+    console.log('[POST /debug/init-categories] Data to save:', JSON.stringify(defaultCategories, null, 2));
+    
+    await kv.set('exam_categories', defaultCategories);
+    
+    console.log('[POST /debug/init-categories] ✅ Data saved to KV store');
+    
+    // Verify it was saved
+    const verification = await kv.get('exam_categories');
+    console.log('[POST /debug/init-categories] Verification read from KV:', JSON.stringify(verification, null, 2));
+    
+    console.log('███████████████████████████████████████████████████');
+    console.log('[POST /debug/init-categories] RESPONSE SENT - SUCCESS');
+    console.log('███████████████████████████████████████████████████');
+    console.log('');
+    
+    return c.json({ 
+      message: 'Categories initialized successfully', 
+      categories: defaultCategories 
+    });
+  } catch (error: any) {
+    console.error('[POST /debug/init-categories] ❌ ERROR:', error);
+    console.error('[POST /debug/init-categories] Error stack:', error.stack);
+    console.log('███████████████████████████████████████████████████');
+    console.log('[POST /debug/init-categories] RESPONSE SENT - ERROR');
+    console.log('███████████████████████████████████████████████████');
+    console.log('');
+    return c.json({ message: 'Error initializing categories', error: error.message }, 500);
+  }
+});
+
+// Initialize categories on server start
+initializeDefaultCategories().catch(console.error);
+
+// Get all categories
+app.get("/make-server-d36f8f91/categories", async (c) => {
+  try {
+    console.log('');
+    console.log('═══════════════════════════════════════════════════');
+    console.log('[GET /categories] REQUEST RECEIVED');
+    console.log('═══════════════════════════════════════════════════');
+    
+    console.log('[GET /categories] Fetching from KV store key: exam_categories');
+    const categories = await kv.get('exam_categories');
+    
+    console.log('[GET /categories] Raw data from KV:');
+    console.log('[GET /categories]   - Type:', typeof categories);
+    console.log('[GET /categories]   - Is Array:', Array.isArray(categories));
+    console.log('[GET /categories]   - Value:', JSON.stringify(categories, null, 2));
+    
+    let result = categories || [];
+    
+    // Add default price to categories that don't have one
+    if (Array.isArray(result)) {
+      result = result.map((cat: any) => ({
+        ...cat,
+        price: cat.price !== undefined ? cat.price : 5, // Default to 5 if price is missing
+      }));
+    }
+    
+    console.log('[GET /categories] Final result to return:');
+    console.log('[GET /categories]   - Array length:', Array.isArray(result) ? result.length : 'N/A');
+    console.log('[GET /categories]   - Data:', JSON.stringify(result, null, 2));
+    console.log('═══════════════════════════════════════════════════');
+    console.log('[GET /categories] RESPONSE SENT');
+    console.log('═══════════════════════════════════════════════════');
+    console.log('');
+    
+    return c.json({ categories: result });
+  } catch (error: any) {
+    console.error('[GET /categories] ❌ ERROR:', error);
+    console.error('[GET /categories] Error stack:', error.stack);
+    return c.json({ message: 'Error fetching categories', error: error.message }, 500);
+  }
+});
+
+// Public endpoint to force-initialize categories (no admin required)
+app.post("/make-server-d36f8f91/categories/force-init", async (c) => {
+  try {
+    console.log('');
+    console.log('▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓');
+    console.log('[POST /categories/force-init] PUBLIC REQUEST RECEIVED');
+    console.log('▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓');
+    console.log('[POST /categories/force-init] Force initializing categories...');
+    
+    const defaultCategories = [
+      {
+        type: 'jet',
+        title: 'Jet Ski License',
+        titleBg: 'Лиценз за джет',
+        description: 'Master jet ski operation and safety procedures',
+        descriptionBg: 'Овладейте управлението на джет и процедурите за безопасност',
+        icon: 'Waves',
+        color: 'bg-gradient-to-br from-cyan-500 to-sky-600',
+        image: 'https://images.unsplash.com/photo-1721798974342-7b2b859493a0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxqZXQlMjBza2klMjBvY2VhbnxlbnwxfHx8fDE3NjIzMjEyOTB8MA&ixlib=rb-4.1.0&q=80&w=1080',
+        price: 5,
+      },
+      {
+        type: 'small',
+        title: 'Small Boat License',
+        titleBg: 'Лиценз за малка лодка',
+        description: 'Learn fundamentals of small boat navigation and handling',
+        descriptionBg: 'Научете основите на навигацията и управлението на малки лодки',
+        icon: 'Ship',
+        color: 'bg-gradient-to-br from-sky-500 to-blue-600',
+        image: 'https://images.unsplash.com/photo-1759809278956-70c6a72eecdd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzbWFsbCUyMGJvYXQlMjBzYWlsaW5nfGVufDF8fHx8MTc2MjM1NDIzMnww&ixlib=rb-4.1.0&q=80&w=1080',
+        price: 5,
+      },
+      {
+        type: 'big',
+        title: 'Big Boat License',
+        titleBg: 'Лиценз за голяма лодка',
+        description: 'Advanced training for operating larger vessels',
+        descriptionBg: 'Разширено обучение за управление на по-големи съдове',
+        icon: 'Anchor',
+        color: 'bg-gradient-to-br from-blue-600 to-indigo-700',
+        image: 'https://images.unsplash.com/photo-1604930270269-67876a4cbe4a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsYXJnZSUyMHNoaXAlMjBkZWNrfGVufDF8fHx8MTc2MjM1NDIzNHww&ixlib=rb-4.1.0&q=80&w=1080',
+        price: 5,
+      },
+      {
+        type: 'yacht',
+        title: 'Yacht License (Up to 50 Tons)',
+        titleBg: 'Лиценз за яхта (до 50 тона)',
+        description: 'Professional certification for yacht operation and management',
+        descriptionBg: 'Професионална сертификация за управление на яхти',
+        icon: 'Sailboat',
+        color: 'bg-gradient-to-br from-indigo-600 to-purple-700',
+        image: 'https://images.unsplash.com/photo-1598737285721-29346a5c9278?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjB5YWNodCUyMG9jZWFufGVufDF8fHx8MTc2MjMwMjQ5N3ww&ixlib=rb-4.1.0&q=80&w=1080',
+        price: 5,
+      },
+      {
+        type: 'navigation',
+        title: 'Navigation Device License',
+        titleBg: 'Лиценз за навигационно устройство',
+        description: 'Expert knowledge of marine navigation equipment and systems',
+        descriptionBg: 'Експертни познания за морско навигационно оборудване',
+        icon: 'Compass',
+        color: 'bg-gradient-to-br from-teal-500 to-cyan-600',
+        image: 'https://images.unsplash.com/photo-1723988433925-035f8625b5c0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxuYXZpZ2F0aW9uJTIwY29tcGFzcyUyMG1hcmluZXxlbnwxfHx8fDE3NjIzNTQyMzl8MA&ixlib=rb-4.1.0&q=80&w=1080',
+        price: 5,
+      },
+    ];
+    
+    console.log('[POST /categories/force-init] Saving to KV store key: exam_categories');
+    console.log('[POST /categories/force-init] Data to save:', JSON.stringify(defaultCategories, null, 2));
+    
+    await kv.set('exam_categories', defaultCategories);
+    
+    console.log('[POST /categories/force-init] ✅ Data saved to KV store');
+    
+    // Verify it was saved
+    const verification = await kv.get('exam_categories');
+    console.log('[POST /categories/force-init] Verification read from KV:', JSON.stringify(verification, null, 2));
+    
+    console.log('▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓');
+    console.log('[POST /categories/force-init] RESPONSE SENT - SUCCESS');
+    console.log('▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓');
+    console.log('');
+    
+    return c.json({ 
+      success: true,
+      message: 'Categories initialized successfully', 
+      categories: defaultCategories 
+    });
+  } catch (error: any) {
+    console.error('[POST /categories/force-init] ❌ ERROR:', error);
+    console.error('[POST /categories/force-init] Error stack:', error.stack);
+    console.log('▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓');
+    console.log('[POST /categories/force-init] RESPONSE SENT - ERROR');
+    console.log('▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓');
+    console.log('');
+    return c.json({ success: false, message: 'Error initializing categories', error: error.message }, 500);
+  }
+});
+
+// Add or update a category (admin only)
+app.post("/make-server-d36f8f91/categories", async (c) => {
+  const { error, user, isAdmin: adminStatus } = await verifyAdmin(c.req.header('Authorization'));
+  
+  if (error || !user || !adminStatus) {
+    return c.json({ message: error || 'Admin access required' }, error ? 401 : 403);
+  }
+
+  try {
+    const body = await c.req.json();
+    const { category, isUpdate } = body;
+
+    if (!category || !category.type || !category.title || !category.description) {
+      return c.json({ message: 'Missing required fields' }, 400);
+    }
+
+    // Get current categories
+    const categories = await kv.get('exam_categories') || [];
+
+    if (isUpdate) {
+      // Update existing category
+      const index = categories.findIndex((c: any) => c.type === category.type);
+      if (index === -1) {
+        return c.json({ message: 'Category not found' }, 404);
+      }
+      categories[index] = category;
+    } else {
+      // Add new category
+      const exists = categories.some((c: any) => c.type === category.type);
+      if (exists) {
+        return c.json({ message: 'Category already exists' }, 400);
+      }
+      categories.push(category);
+    }
+
+    await kv.set('exam_categories', categories);
+    
+    console.log(`Category ${isUpdate ? 'updated' : 'added'}:`, category.type);
+    
+    return c.json({ 
+      message: isUpdate ? 'Category updated successfully' : 'Category added successfully',
+      category 
+    });
+  } catch (error: any) {
+    console.error('Error saving category:', error);
+    return c.json({ message: 'Error saving category', error: error.message }, 500);
+  }
+});
+
+// Delete a category (admin only)
+app.delete("/make-server-d36f8f91/categories/:type", async (c) => {
+  const { error, user, isAdmin: adminStatus } = await verifyAdmin(c.req.header('Authorization'));
+  
+  if (error || !user || !adminStatus) {
+    return c.json({ message: error || 'Admin access required' }, error ? 401 : 403);
+  }
+
+  try {
+    const categoryType = c.req.param('type');
+    
+    if (!categoryType) {
+      return c.json({ message: 'Category type required' }, 400);
+    }
+
+    // Get current categories
+    const categories = await kv.get('exam_categories') || [];
+    
+    const index = categories.findIndex((c: any) => c.type === categoryType);
+    if (index === -1) {
+      return c.json({ message: 'Category not found' }, 404);
+    }
+
+    // Remove the category
+    categories.splice(index, 1);
+    
+    await kv.set('exam_categories', categories);
+    
+    console.log('Category deleted:', categoryType);
+    
+    return c.json({ message: 'Category deleted successfully' });
+  } catch (error: any) {
+    console.error('Error deleting category:', error);
+    return c.json({ message: 'Error deleting category', error: error.message }, 500);
+  }
+});
+
+// ============== PRICING SETTINGS ==============
+
+// Get overall pricing settings
+app.get("/make-server-d36f8f91/pricing-settings", async (c) => {
+  try {
+    console.log('');
+    console.log('💰💰💰 [GET /pricing-settings] Request received');
+    const settings = await kv.get('pricing_settings');
+    console.log('💰 [GET /pricing-settings] Raw settings from KV:', JSON.stringify(settings));
+    console.log('💰 [GET /pricing-settings] Settings type:', typeof settings);
+    const result = settings || { overallPrice: 5 };
+    console.log('💰 [GET /pricing-settings] Final result:', JSON.stringify(result));
+    console.log('💰💰💰 [GET /pricing-settings] Returning settings');
+    console.log('');
+    return c.json({ settings: result });
+  } catch (error: any) {
+    console.error('❌ [GET /pricing-settings] Error fetching pricing settings:', error);
+    console.error('❌ [GET /pricing-settings] Error message:', error.message);
+    console.error('❌ [GET /pricing-settings] Error stack:', error.stack);
+    // Return default pricing on error instead of failing
+    return c.json({ settings: { overallPrice: 5 } });
+  }
+});
+
+// Update overall pricing settings (admin only)
+app.post("/make-server-d36f8f91/pricing-settings", async (c) => {
+  const { error, user, isAdmin: adminStatus } = await verifyAdmin(c.req.header('Authorization'));
+  
+  if (error || !user || !adminStatus) {
+    console.error('❌ [POST /pricing-settings] Auth failed:', { error, user: user?.id, isAdmin: adminStatus });
+    return c.json({ message: error || 'Admin access required' }, error ? 401 : 403);
+  }
+
+  try {
+    const body = await c.req.json();
+    const { overallPrice } = body;
+
+    console.log('');
+    console.log('💰💰💰 [POST /pricing-settings] Save request received');
+    console.log('💰 [POST /pricing-settings] Request body:', JSON.stringify(body));
+    console.log('💰 [POST /pricing-settings] overallPrice value:', overallPrice);
+    console.log('💰 [POST /pricing-settings] overallPrice type:', typeof overallPrice);
+
+    if (overallPrice === undefined || overallPrice === null) {
+      console.error('❌ [POST /pricing-settings] Validation failed: price is undefined or null');
+      return c.json({ message: 'Overall price is required' }, 400);
+    }
+
+    if (typeof overallPrice !== 'number' || overallPrice < 0 || overallPrice > 100) {
+      console.error('❌ [POST /pricing-settings] Validation failed: invalid number or out of range');
+      return c.json({ message: 'Overall price must be a number between 0 and 100' }, 400);
+    }
+
+    const settings = { overallPrice };
+    console.log('💰 [POST /pricing-settings] Settings to save:', JSON.stringify(settings));
+    
+    await kv.set('pricing_settings', settings);
+    console.log('💰 [POST /pricing-settings] KV.SET completed successfully');
+    
+    // Verify the save by reading it back
+    const verification = await kv.get('pricing_settings');
+    console.log('💰 [POST /pricing-settings] Verification read from KV:', JSON.stringify(verification));
+    
+    console.log('💰💰💰 [POST /pricing-settings] Save completed successfully');
+    console.log('');
+    
+    return c.json({ message: 'Pricing settings updated successfully', settings });
+  } catch (error: any) {
+    console.error('❌ [POST /pricing-settings] Error updating pricing settings:', error);
+    console.error('❌ [POST /pricing-settings] Error message:', error.message);
+    console.error('❌ [POST /pricing-settings] Error stack:', error.stack);
+    return c.json({ message: 'Error updating pricing settings', error: error.message }, 500);
   }
 });
 

@@ -5,6 +5,8 @@ import { Language, getTranslation } from '../data/translations';
 import { Button } from './ui/button';
 import { useAuth } from '../contexts/AuthContext';
 import { useDarkMode } from '../contexts/DarkModeContext';
+import { PrivacyPolicyModal } from './PrivacyPolicyModal';
+import { TermsOfServiceModal } from './TermsOfServiceModal';
 
 export function Footer() {
   const navigate = useNavigate();
@@ -13,6 +15,8 @@ export function Footer() {
   const [language] = useState<Language>('English');
   const t = getTranslation(language);
   const currentYear = new Date().getFullYear();
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
   
   // Check if user is admin
   const isAdmin = user?.isAdmin || false;
@@ -60,11 +64,11 @@ export function Footer() {
               }}
             >
               <a 
-                href="tel:+359889660467" 
+                href="tel:+35087661018" 
                 className="flex items-center gap-1.5 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors duration-300"
               >
                 <Phone className="w-3.5 h-3.5" />
-                <span>+359 88 9660467</span>
+                <span>+350 87 66 101 85</span>
               </a>
               <span 
                 className="text-gray-300 dark:text-gray-600 transition-colors duration-[400ms]"
@@ -74,11 +78,11 @@ export function Footer() {
                 }}
               >|</span>
               <a 
-                href="mailto:contact@yachtexamtrainer.com" 
+                href="mailto:bobby_rocks@me.com" 
                 className="flex items-center gap-1.5 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors duration-300"
               >
                 <Mail className="w-3.5 h-3.5" />
-                <span>contact@yachtexamtrainer.com</span>
+                <span>bobby_rocks@me.com</span>
               </a>
             </div>
 
@@ -111,6 +115,10 @@ export function Footer() {
               <a 
                 href="#privacy" 
                 className="hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors duration-300"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setShowPrivacyModal(true);
+                }}
               >
                 Privacy Policy
               </a>
@@ -124,6 +132,10 @@ export function Footer() {
               <a 
                 href="#terms" 
                 className="hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors duration-300"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setShowTermsModal(true);
+                }}
               >
                 Terms of Service
               </a>
@@ -131,6 +143,14 @@ export function Footer() {
           </div>
         </div>
       </div>
+      <PrivacyPolicyModal
+        isOpen={showPrivacyModal}
+        onClose={() => setShowPrivacyModal(false)}
+      />
+      <TermsOfServiceModal
+        isOpen={showTermsModal}
+        onClose={() => setShowTermsModal(false)}
+      />
     </footer>
   );
 }

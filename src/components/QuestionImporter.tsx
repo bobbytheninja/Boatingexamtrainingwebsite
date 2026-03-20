@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
-import { Upload, CheckCircle, AlertCircle, Loader2, Image as ImageIcon } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Upload, CheckCircle, AlertCircle, Loader2, Image as ImageIcon, ChevronDown } from 'lucide-react';
 import { api } from '../utils/api';
 import { projectId, publicAnonKey } from '../utils/supabase/info';
 import { createClient } from '../utils/supabase/client';
 import { useDarkMode } from '../contexts/DarkModeContext';
+import { loadExamCategories } from '../utils/categoryLoader';
 import * as XLSX from 'xlsx';
 import {
   Tooltip,
@@ -11,6 +12,13 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from './ui/tooltip';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from './ui/dropdown-menu';
+import { Button } from './ui/button';
 
 interface QuestionRow {
   questionNumber?: number;
@@ -27,14 +35,6 @@ interface QuestionRow {
   embeddedImageIndex?: number; // Index of the embedded image in the workbook
 }
 
-const EXAM_TYPES = [
-  { value: 'jet', label: 'Jet Ski' },
-  { value: 'small', label: 'Small Boat' },
-  { value: 'big', label: 'Big Boat' },
-  { value: 'yacht', label: 'Yacht (up to 50 tons)' },
-  { value: 'navigation', label: 'Navigation Device' },
-];
-
 export function QuestionImporter() {
   const [adminKey, setAdminKey] = useState('');
   const [file, setFile] = useState<File | null>(null);
@@ -42,7 +42,32 @@ export function QuestionImporter() {
   const [importing, setImporting] = useState(false);
   const [result, setResult] = useState<{ success: boolean; message: string; imageStats?: { withImages: number, withoutImages: number, percentage: string } } | null>(null);
   const [preview, setPreview] = useState<QuestionRow[]>([]);
+  const [examTypes, setExamTypes] = useState<{ value: string; label: string }[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
   const supabase = createClient();
+
+  // Load exam categories on mount
+  useEffect(() => {
+    console.log('🔧 QuestionImporter mounted, starting category load...');
+    const loadCategories = async () => {
+      try {
+        console.log('🔧 Calling loadExamCategories...');
+        const categories = await loadExamCategories();
+        console.log('📊 LOADED CATEGORIES:', categories);
+        setExamTypes(categories);
+        setLoadingCategories(false);
+        
+        // Set default to first category if yacht doesn't exist
+        if (!categories.find(c => c.value === 'yacht') && categories.length > 0) {
+          setSelectedExamType(categories[0].value);
+        }
+      } catch (error) {
+        console.error('❌ Error loading categories:', error);
+        setLoadingCategories(false);
+      }
+    };
+    loadCategories();
+  }, []);
 
   // Helper function to parse a CSV line correctly (handles commas in quotes)
   const parseCSVLine = (line: string): string[] => {
@@ -308,8 +333,8 @@ export function QuestionImporter() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
-      <h2 className="text-2xl mb-6">Question Importer</h2>
+    <div className="max-w-4xl mx-auto p-6">
+      <h2 className="text-2xl mb-6 text-gray-900 dark:text-gray-100">Question Importer</h2>
 
       <div className="space-y-6">
         {/* Admin Key Input */}
@@ -345,20 +370,45 @@ export function QuestionImporter() {
 
         {/* Exam Type Selection */}
         <div>
-          <label className="block mb-2">
-            Exam Type
+          <label className="block mb-2 text-gray-900 dark:text-gray-100">
+            Exam Type {loadingCategories && '(Loading...)'} {!loadingCategories && `(${examTypes.length} types loaded)`}
           </label>
-          <select
-            value={selectedExamType}
-            onChange={(e) => setSelectedExamType(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 bg-white dark:bg-gray-700"
-          >
-            {EXAM_TYPES.map(type => (
-              <option key={type.value} value={type.value}>
-                {type.label}
-              </option>
-            ))}
-          </select>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                className="w-full justify-between bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100"
+                disabled={loadingCategories}
+              >
+                <span>{examTypes.find(t => t.value === selectedExamType)?.label || 'Select exam type'}</span>
+                <ChevronDown className="w-4 h-4 ml-2" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent 
+              className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600"
+              style={{ minWidth: '400px' }}
+            >
+              {examTypes.length === 0 && (
+                <div className="p-4 text-gray-500">No exam types loaded</div>
+              )}
+              {examTypes.map(type => (
+                <DropdownMenuItem
+                  key={type.value}
+                  onClick={() => {
+                    console.log('Selected:', type.value, type.label);
+                    setSelectedExamType(type.value);
+                  }}
+                  className={`cursor-pointer text-gray-900 dark:text-gray-100 ${
+                    selectedExamType === type.value 
+                      ? 'bg-gray-100 dark:bg-gray-700' 
+                      : 'hover:bg-gray-50 dark:hover:bg-gray-700'
+                  }`}
+                >
+                  {type.label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
           <p className="text-sm text-gray-500 mt-1">
             All questions in the file will be imported for this exam type
           </p>
@@ -485,7 +535,7 @@ export function QuestionImporter() {
               </TooltipProvider>
             </div>
             <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
-              ✓ Found {preview.length} questions. Hover over truncated text to see full content. All will be imported to <strong>{EXAM_TYPES.find(t => t.value === selectedExamType)?.label}</strong> exam.
+              ✓ Found {preview.length} questions. Hover over truncated text to see full content. All will be imported to <strong>{examTypes.find(t => t.value === selectedExamType)?.label}</strong> exam.
             </p>
           </div>
         )}

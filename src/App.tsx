@@ -414,7 +414,10 @@ function App() {
       if (stringified.includes('devtools_worker') || 
           stringified.includes('webpack-artifacts') ||
           stringified.includes('figma.com/webpack') ||
-          stringified.includes('.min.js.br')) {
+          stringified.includes('.min.js.br') ||
+          stringified.includes('Invalid hook call') ||
+          stringified.includes('multiple Jotai instances') ||
+          stringified.includes('pmndrs/jotai')) {
         return; // Silently ignore these
       }
       // Log actual application errors
@@ -427,7 +430,9 @@ function App() {
       if (stringified.includes('devtools_worker') || 
           stringified.includes('webpack-artifacts') ||
           stringified.includes('figma.com/webpack') ||
-          stringified.includes('.min.js.br')) {
+          stringified.includes('.min.js.br') ||
+          stringified.includes('multiple Jotai instances') ||
+          stringified.includes('pmndrs/jotai')) {
         return; // Silently ignore these
       }
       // Log actual application warnings

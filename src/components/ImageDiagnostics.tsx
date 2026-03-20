@@ -1,20 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, CheckCircle, XCircle, AlertCircle, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { projectId, publicAnonKey } from '../utils/supabase/info';
-
-const EXAM_TYPES = [
-  { value: 'jet', label: 'Jet Ski' },
-  { value: 'small', label: 'Small Boat' },
-  { value: 'big', label: 'Big Boat' },
-  { value: 'yacht', label: 'Yacht (up to 50 tons)' },
-  { value: 'navigation', label: 'Navigation Device' },
-];
+import { loadExamCategories } from '../utils/categoryLoader';
 
 export function ImageDiagnostics() {
   const [examType, setExamType] = useState('yacht');
   const [questionNumber, setQuestionNumber] = useState('1');
   const [checking, setChecking] = useState(false);
   const [result, setResult] = useState<any>(null);
+  const [examTypes, setExamTypes] = useState<{ value: string; label: string }[]>([]);
+
+  // Load exam categories on mount
+  useEffect(() => {
+    const loadCategories = async () => {
+      const categories = await loadExamCategories();
+      setExamTypes(categories);
+      
+      // Set default to first category if yacht doesn't exist
+      if (!categories.find(c => c.value === 'yacht') && categories.length > 0) {
+        setExamType(categories[0].value);
+      }
+    };
+    loadCategories();
+  }, []);
 
   const checkImage = async () => {
     setChecking(true);
@@ -73,8 +81,8 @@ export function ImageDiagnostics() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
-      <h2 className="text-2xl mb-6 flex items-center gap-2">
+    <div className="max-w-4xl mx-auto p-6">
+      <h2 className="text-2xl mb-6 flex items-center gap-2 text-gray-900 dark:text-gray-100">
         <ImageIcon className="w-6 h-6 text-blue-500" />
         Image Diagnostics
       </h2>
@@ -86,10 +94,10 @@ export function ImageDiagnostics() {
             <select
               value={examType}
               onChange={(e) => setExamType(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
             >
-              {EXAM_TYPES.map(type => (
-                <option key={type.value} value={type.value}>
+              {examTypes.map(type => (
+                <option key={type.value} value={type.value} className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
                   {type.label}
                 </option>
               ))}

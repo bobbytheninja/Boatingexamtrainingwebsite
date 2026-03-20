@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Upload, CheckCircle, AlertCircle, Loader2, Image as ImageIcon, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { createClient } from '../utils/supabase/client';
 import { api } from '../utils/api';
+import { loadExamCategories } from '../utils/categoryLoader';
 
 interface ImagePreview {
   file: File;
@@ -9,20 +10,29 @@ interface ImagePreview {
   preview: string;
 }
 
-const EXAM_TYPES = [
-  { value: 'jet', label: 'Jet Ski' },
-  { value: 'small', label: 'Small Boat' },
-  { value: 'big', label: 'Big Boat' },
-  { value: 'yacht', label: 'Yacht (up to 50 tons)' },
-  { value: 'navigation', label: 'Navigation Device' },
-];
-
 export function ImageUploader() {
   const [adminKey, setAdminKey] = useState('');
   const [selectedExamType, setSelectedExamType] = useState<string>('yacht');
   const [images, setImages] = useState<ImagePreview[]>([]);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
+  const [examTypes, setExamTypes] = useState<{ value: string; label: string }[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
+
+  // Load exam categories on mount
+  useEffect(() => {
+    const loadCategories = async () => {
+      const categories = await loadExamCategories();
+      setExamTypes(categories);
+      setLoadingCategories(false);
+      
+      // Set default to first category if yacht doesn't exist
+      if (!categories.find(c => c.value === 'yacht') && categories.length > 0) {
+        setSelectedExamType(categories[0].value);
+      }
+    };
+    loadCategories();
+  }, []);
   const [result, setResult] = useState<{ success: boolean; message: string } | null>(null);
   const [showPreviews, setShowPreviews] = useState(true);
   const supabase = createClient();
@@ -158,7 +168,7 @@ export function ImageUploader() {
 
       setResult({
         success: true,
-        message: `Successfully uploaded ${uploadResults.length} images and linked them to questions for ${EXAM_TYPES.find(t => t.value === selectedExamType)?.label} exam!`
+        message: `Successfully uploaded ${uploadResults.length} images and linked them to questions for ${examTypes.find(t => t.value === selectedExamType)?.label} exam!`
       });
 
       // Clear images after successful upload
@@ -174,8 +184,8 @@ export function ImageUploader() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
-      <h2 className="text-2xl mb-6">📸 Image Uploader</h2>
+    <div className="max-w-4xl mx-auto p-6">
+      <h2 className="text-2xl mb-6 text-gray-900 dark:text-gray-100">📸 Image Uploader</h2>
 
       <div className="space-y-6">
         {/* Admin Key Input */}
@@ -209,10 +219,11 @@ export function ImageUploader() {
           <select
             value={selectedExamType}
             onChange={(e) => setSelectedExamType(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 bg-white dark:bg-gray-700"
+            disabled={loadingCategories}
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
           >
-            {EXAM_TYPES.map(type => (
-              <option key={type.value} value={type.value}>
+            {examTypes.map(type => (
+              <option key={type.value} value={type.value} className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
                 {type.label}
               </option>
             ))}
@@ -310,7 +321,7 @@ export function ImageUploader() {
           ) : (
             <>
               <Upload className="w-5 h-5" />
-              Upload {images.length} Image{images.length !== 1 ? 's' : ''} to {EXAM_TYPES.find(t => t.value === selectedExamType)?.label}
+              Upload {images.length} Image{images.length !== 1 ? 's' : ''} to {examTypes.find(t => t.value === selectedExamType)?.label}
             </>
           )}
         </button>

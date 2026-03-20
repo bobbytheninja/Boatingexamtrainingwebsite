@@ -12,7 +12,8 @@ import { ImageDiagnostics } from './ImageDiagnostics';
 import { UserManagement } from './UserManagement';
 import { DatabaseDiagnostics } from './DatabaseDiagnostics';
 import { PartnerManagement } from './PartnerManagement';
-import { ArrowLeft, Database, Users, Key, UserPlus, AlertCircle, CheckCircle, Shield, Image as ImageIcon } from 'lucide-react';
+import { CategoryManagement } from './CategoryManagement';
+import { ArrowLeft, Database, Users, Key, UserPlus, AlertCircle, CheckCircle, Shield, Image as ImageIcon, Ship } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useDarkMode } from '../contexts/DarkModeContext';
 import { toast } from 'sonner';
@@ -327,7 +328,7 @@ export function AdminPage({ onBack }: AdminPageProps) {
   // Show loading state while checking admin status
   if (checkingAdminStatus) {
     return (
-      <>
+      <div className={darkMode ? 'dark' : ''}>
         <Navigation
           currentPage="admin"
           onNavigate={handleNavigate}
@@ -340,12 +341,26 @@ export function AdminPage({ onBack }: AdminPageProps) {
           darkMode={darkMode}
           onDarkModeToggle={toggleDarkMode}
         />
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/50 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 pt-24 pb-12 px-4">
+        <div 
+          className="min-h-screen pt-24 pb-12 px-4 transition-all duration-[400ms]"
+          style={{ 
+            background: darkMode 
+              ? 'linear-gradient(to bottom right, #0f172a, #1e293b, #0f172a)'
+              : 'linear-gradient(to bottom right, #ffffff, #f0f9ff, #ffffff)',
+            transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
+          }}
+        >
           <div className="container mx-auto max-w-6xl flex items-center justify-center min-h-[60vh]">
-            <Card className="max-w-md w-full dark:bg-slate-700 dark:border-slate-600">
+            <Card 
+              className="max-w-md w-full border-2 shadow-xl"
+              style={{
+                backgroundColor: darkMode ? '#334155' : '#ffffff',
+                borderColor: darkMode ? '#475569' : '#93c5fd',
+              }}
+            >
               <CardContent className="pt-6 flex flex-col items-center space-y-4">
                 <LoadingSpinner size="lg" />
-                <h3 className="text-xl dark:text-gray-100">Loading Admin Panel...</h3>
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Loading Admin Panel...</h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
                   Checking admin permissions
                 </p>
@@ -354,7 +369,7 @@ export function AdminPage({ onBack }: AdminPageProps) {
           </div>
         </div>
         <Footer />
-      </>
+      </div>
     );
   }
 
@@ -502,119 +517,173 @@ export function AdminPage({ onBack }: AdminPageProps) {
 
         {/* Show admin panel to all logged-in users, but limit features based on admin status */}
         {user && (
-        <Tabs defaultValue={userIsAdmin ? "diagnostics" : "keys"} className="space-y-6">
-          <TabsList className={`grid w-full max-w-4xl mx-auto gap-2 ${userIsAdmin ? 'grid-cols-2 sm:grid-cols-4 lg:grid-cols-6' : 'grid-cols-1 sm:grid-cols-2'} h-auto`}>
+        <Tabs defaultValue={userIsAdmin ? "diagnostics" : "keys"} className="space-y-8">
+          <TabsList className={`grid w-full max-w-6xl mx-auto gap-2.5 ${userIsAdmin ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-7' : 'grid-cols-1 sm:grid-cols-2'} h-auto p-3 ${darkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-slate-50 border-slate-200'} border shadow-lg rounded-lg backdrop-blur-sm`}>
             {userIsAdmin && (
               <>
-                <TabsTrigger value="diagnostics" className="flex items-center justify-center gap-2">
-                  <AlertCircle className="w-4 h-4" />
-                  <span className="hidden sm:inline">Diagnostics</span>
-                  <span className="sm:hidden">Diag</span>
+                <TabsTrigger 
+                  value="diagnostics" 
+                  className="flex flex-col items-center justify-center gap-2 py-4 px-3 rounded-md text-sm font-medium transition-all data-[state=active]:bg-slate-700 data-[state=active]:text-white data-[state=active]:shadow-md dark:data-[state=active]:bg-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700/50"
+                >
+                  <AlertCircle className="w-5 h-5" />
+                  <span className="hidden sm:inline text-xs">Diagnostics</span>
+                  <span className="sm:hidden text-xs">Diag</span>
                 </TabsTrigger>
-                <TabsTrigger value="import" className="flex items-center justify-center gap-2">
-                  <Database className="w-4 h-4" />
-                  <span className="hidden sm:inline">Import Questions</span>
-                  <span className="sm:hidden">Import</span>
+                <TabsTrigger 
+                  value="categories" 
+                  className="flex flex-col items-center justify-center gap-2 py-4 px-3 rounded-md text-sm font-medium transition-all data-[state=active]:bg-slate-700 data-[state=active]:text-white data-[state=active]:shadow-md dark:data-[state=active]:bg-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700/50"
+                >
+                  <Ship className="w-5 h-5" />
+                  <span className="hidden sm:inline text-xs">Categories</span>
+                  <span className="sm:hidden text-xs">Cat</span>
                 </TabsTrigger>
-                <TabsTrigger value="users" className="flex items-center justify-center gap-2">
-                  <Users className="w-4 h-4" />
-                  <span className="hidden sm:inline">Manage Users</span>
-                  <span className="sm:hidden">Users</span>
+                <TabsTrigger 
+                  value="import" 
+                  className="flex flex-col items-center justify-center gap-2 py-4 px-3 rounded-md text-sm font-medium transition-all data-[state=active]:bg-slate-700 data-[state=active]:text-white data-[state=active]:shadow-md dark:data-[state=active]:bg-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700/50"
+                >
+                  <Database className="w-5 h-5" />
+                  <span className="hidden sm:inline text-xs">Import Questions</span>
+                  <span className="sm:hidden text-xs">Import</span>
                 </TabsTrigger>
-                <TabsTrigger value="partners" className="flex items-center justify-center gap-2">
-                  <Users className="w-4 h-4" />
-                  <span className="hidden sm:inline">Partners</span>
-                  <span className="sm:hidden">Partners</span>
+                <TabsTrigger 
+                  value="users" 
+                  className="flex flex-col items-center justify-center gap-2 py-4 px-3 rounded-md text-sm font-medium transition-all data-[state=active]:bg-slate-700 data-[state=active]:text-white data-[state=active]:shadow-md dark:data-[state=active]:bg-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700/50"
+                >
+                  <Users className="w-5 h-5" />
+                  <span className="hidden sm:inline text-xs">Manage Users</span>
+                  <span className="sm:hidden text-xs">Users</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="partners" 
+                  className="flex flex-col items-center justify-center gap-2 py-4 px-3 rounded-md text-sm font-medium transition-all data-[state=active]:bg-slate-700 data-[state=active]:text-white data-[state=active]:shadow-md dark:data-[state=active]:bg-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700/50"
+                >
+                  <Users className="w-5 h-5" />
+                  <span className="hidden sm:inline text-xs">Partners</span>
+                  <span className="sm:hidden text-xs">Partners</span>
                 </TabsTrigger>
               </>
             )}
-            <TabsTrigger value="keys" className="flex items-center justify-center gap-2">
-              <Key className="w-4 h-4" />
-              <span className="hidden sm:inline">Admin Keys</span>
-              <span className="sm:hidden">Keys</span>
+            <TabsTrigger 
+              value="keys" 
+              className="flex flex-col items-center justify-center gap-2 py-4 px-3 rounded-md text-sm font-medium transition-all data-[state=active]:bg-slate-700 data-[state=active]:text-white data-[state=active]:shadow-md dark:data-[state=active]:bg-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700/50"
+            >
+              <Key className="w-5 h-5" />
+              <span className="hidden sm:inline text-xs">Admin Keys</span>
+              <span className="sm:hidden text-xs">Keys</span>
             </TabsTrigger>
-            <TabsTrigger value="demo" className="flex items-center justify-center gap-2">
-              <UserPlus className="w-4 h-4" />
-              <span className="hidden sm:inline">Demo Accounts</span>
-              <span className="sm:hidden">Demo</span>
+            <TabsTrigger 
+              value="demo" 
+              className="flex flex-col items-center justify-center gap-2 py-4 px-3 rounded-md text-sm font-medium transition-all data-[state=active]:bg-slate-700 data-[state=active]:text-white data-[state=active]:shadow-md dark:data-[state=active]:bg-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700/50"
+            >
+              <UserPlus className="w-5 h-5" />
+              <span className="hidden sm:inline text-xs">Demo Accounts</span>
+              <span className="sm:hidden text-xs">Demo</span>
             </TabsTrigger>
           </TabsList>
 
           {userIsAdmin && (
             <>
               <TabsContent value="diagnostics">
-                <div className="space-y-4">
+                <div className="space-y-6">
                   <DatabaseDiagnostics />
                   
                   {/* Quick Link to Image Diagnostics */}
-                  <Card className="border-2 border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-950/30">
+                  <Card className="border-2 border-indigo-200 dark:border-indigo-800 bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-950/30 dark:to-blue-950/20 shadow-lg hover:shadow-xl transition-all">
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        🖼️ Image Diagnostics
+                      <CardTitle className="flex items-center gap-3 text-indigo-900 dark:text-indigo-100">
+                        <div className="p-3 bg-indigo-500 rounded-lg shadow-md">
+                          <ImageIcon className="w-6 h-6 text-white" />
+                        </div>
+                        <span className="text-xl">Image Diagnostics</span>
                       </CardTitle>
                     </CardHeader>
-                    <CardContent>
-                      <p className="text-sm mb-4">
-                        Check if images are properly saved and displaying in questions.
+                    <CardContent className="space-y-4">
+                      <p className="text-sm text-indigo-700 dark:text-indigo-300">
+                        Check if images are properly saved and displaying in questions across all exam categories.
                       </p>
                       <Button
                         onClick={() => window.open('/image-diagnostics', '_blank')}
-                        className="w-full"
-                        variant="default"
+                        className="w-full bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 text-white font-semibold py-3 shadow-md"
                       >
                         Open Image Diagnostics Page
                       </Button>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                        Or manually visit: <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">/image-diagnostics</code>
+                      <p className="text-xs text-indigo-600 dark:text-indigo-400 bg-white dark:bg-indigo-950/30 p-2 rounded border border-indigo-200 dark:border-indigo-700">
+                        💡 Or manually visit: <code className="bg-indigo-100 dark:bg-indigo-900/50 px-2 py-0.5 rounded font-mono">/image-diagnostics</code>
                       </p>
                     </CardContent>
                   </Card>
                 </div>
               </TabsContent>
 
+              <TabsContent value="categories">
+                {accessToken ? (
+                  <CategoryManagement accessToken={accessToken} />
+                ) : (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Category Management</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Alert>
+                        <AlertCircle className="w-4 h-4" />
+                        <AlertDescription>
+                          Please log in to manage categories.
+                        </AlertDescription>
+                      </Alert>
+                    </CardContent>
+                  </Card>
+                )}
+              </TabsContent>
+
               <TabsContent value="import">
                 <Accordion type="single" collapsible className="space-y-4">
-                  <AccordionItem value="questions" className="border border-gray-200 dark:border-gray-700 rounded-lg px-4">
-                    <AccordionTrigger className="hover:no-underline">
-                      <div className="flex items-center gap-3">
-                        <Database className="w-5 h-5 text-blue-500" />
+                  <AccordionItem value="questions" className="border-2 border-blue-200 dark:border-blue-800 bg-gradient-to-br from-blue-50 to-sky-50 dark:from-blue-950/30 dark:to-sky-950/20 rounded-xl px-6 shadow-md hover:shadow-lg transition-all">
+                    <AccordionTrigger className="hover:no-underline py-5">
+                      <div className="flex items-center gap-4">
+                        <div className="p-3 bg-blue-500 rounded-lg shadow-md">
+                          <Database className="w-6 h-6 text-white" />
+                        </div>
                         <div className="text-left">
-                          <h3 className="font-semibold">📊 Import Questions from Excel</h3>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">Upload Excel files to import exam questions</p>
+                          <h3 className="font-bold text-lg text-blue-900 dark:text-blue-100">Import Questions from Excel</h3>
+                          <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">Upload Excel files to import exam questions for all categories</p>
                         </div>
                       </div>
                     </AccordionTrigger>
-                    <AccordionContent>
+                    <AccordionContent className="pt-4">
                       <QuestionImporter />
                     </AccordionContent>
                   </AccordionItem>
 
-                  <AccordionItem value="images" className="border border-gray-200 dark:border-gray-700 rounded-lg px-4">
-                    <AccordionTrigger className="hover:no-underline">
-                      <div className="flex items-center gap-3">
-                        <ImageIcon className="w-5 h-5 text-purple-500" />
+                  <AccordionItem value="images" className="border-2 border-purple-200 dark:border-purple-800 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/30 dark:to-pink-950/20 rounded-xl px-6 shadow-md hover:shadow-lg transition-all">
+                    <AccordionTrigger className="hover:no-underline py-5">
+                      <div className="flex items-center gap-4">
+                        <div className="p-3 bg-purple-500 rounded-lg shadow-md">
+                          <ImageIcon className="w-6 h-6 text-white" />
+                        </div>
                         <div className="text-left">
-                          <h3 className="font-semibold">🖼️ Upload Question Images</h3>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">Link images to questions by question number</p>
+                          <h3 className="font-bold text-lg text-purple-900 dark:text-purple-100">Upload Question Images</h3>
+                          <p className="text-sm text-purple-700 dark:text-purple-300 mt-1">Link images to questions by question number and category</p>
                         </div>
                       </div>
                     </AccordionTrigger>
-                    <AccordionContent>
+                    <AccordionContent className="pt-4">
                       <ImageUploader />
                     </AccordionContent>
                   </AccordionItem>
 
-                  <AccordionItem value="diagnostics" className="border border-gray-200 dark:border-gray-700 rounded-lg px-4">
-                    <AccordionTrigger className="hover:no-underline">
-                      <div className="flex items-center gap-3">
-                        <AlertCircle className="w-5 h-5 text-green-500" />
+                  <AccordionItem value="diagnostics" className="border-2 border-emerald-200 dark:border-emerald-800 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/20 rounded-xl px-6 shadow-md hover:shadow-lg transition-all">
+                    <AccordionTrigger className="hover:no-underline py-5">
+                      <div className="flex items-center gap-4">
+                        <div className="p-3 bg-emerald-500 rounded-lg shadow-md">
+                          <AlertCircle className="w-6 h-6 text-white" />
+                        </div>
                         <div className="text-left">
-                          <h3 className="font-semibold">🔍 Check Image Status</h3>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">Verify if images are properly uploaded and linked</p>
+                          <h3 className="font-bold text-lg text-emerald-900 dark:text-emerald-100">Check Image Status</h3>
+                          <p className="text-sm text-emerald-700 dark:text-emerald-300 mt-1">Verify if images are properly uploaded and linked to questions</p>
                         </div>
                       </div>
                     </AccordionTrigger>
-                    <AccordionContent>
+                    <AccordionContent className="pt-4">
                       <ImageDiagnostics />
                     </AccordionContent>
                   </AccordionItem>
@@ -648,9 +717,9 @@ export function AdminPage({ onBack }: AdminPageProps) {
           )}
 
           <TabsContent value="demo">
-            <Card className="dark:bg-slate-700 dark:border-slate-600">
+            <Card>
               <CardHeader>
-                <CardTitle className="dark:text-gray-100">Test Authentication</CardTitle>
+                <CardTitle>Test Authentication</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
                 {user && (
@@ -810,9 +879,9 @@ export function AdminPage({ onBack }: AdminPageProps) {
           </TabsContent>
 
           <TabsContent value="keys">
-            <Card className="dark:bg-slate-700 dark:border-slate-600">
+            <Card>
               <CardHeader>
-                <CardTitle className="dark:text-gray-100">Environment Variables & Keys</CardTitle>
+                <CardTitle>Environment Variables & Keys</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
                 {user && (

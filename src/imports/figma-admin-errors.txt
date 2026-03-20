@@ -1,0 +1,103 @@
+[Warning] Source Map "https://admin.figma.com/admin/webpack-artifacts/4994d760edcbf31bca6a96dc75ca26ccd18aa611/runtime~figma_app-a9f4d1f5da7ffd14.min.js.map" has SyntaxError: JSON Parse error: Unrecognized token '<'
+[Warning] Source Map "https://admin.figma.com/admin/webpack-artifacts/3a655df22a1c5b210b64851399fccb9ed46afdea/1165-295195d6dc6228df.min.js.map" has SyntaxError: JSON Parse error: Unrecognized token '<'
+[Warning] Source Map "https://admin.figma.com/admin/webpack-artifacts/ea66a4b24a1bce746f136de6cc134d801504ac96/svg-8302926740278639.min.js.map" has SyntaxError: JSON Parse error: Unrecognized token '<'
+[Warning] Source Map "https://admin.figma.com/admin/webpack-artifacts/e0963b11d0fb4fbbdac77632949c6eebfb20ef52/vendor-85ba927b009d50d7.min.js.map" has SyntaxError: JSON Parse error: Unrecognized token '<'
+[Warning] Source Map "https://admin.figma.com/admin/webpack-artifacts/e0963b11d0fb4fbbdac77632949c6eebfb20ef52/7828-97cb55d693c7d01a.min.js.map" has SyntaxError: JSON Parse error: Unrecognized token '<' (x3)
+[Error] Permission policy 'Camera' check failed for document with origin 'https://newassets.hcaptcha.com'.
+	(anonymous function) (hsw.js:2:776488)
+	(anonymous function) (hsw.js:2:7162)
+	(anonymous function) (hsw.js:2:727315)
+	Promise
+	(anonymous function) (hsw.js:2:726897)
+	(anonymous function) (hsw.js:2:2190)
+	(anonymous function) (hsw.js:2:776929)
+	(anonymous function) (hsw.js:2:7162)
+	(anonymous function) (hsw.js:2:727315)
+	Promise
+	(anonymous function) (hsw.js:2:726897)
+	(anonymous function) (hsw.js:2:684182)
+	map
+	(anonymous function) (hsw.js:2:746167)
+	(anonymous function) (hsw.js:2:7162)
+	(anonymous function) (hsw.js:2:727315)
+	Promise
+	(anonymous function) (hsw.js:2:726897)
+	(anonymous function) (hsw.js:2:755619)
+	(anonymous function) (hsw.js:2:7162)
+	(anonymous function) (hsw.js:2:727315)
+	Promise
+	(anonymous function) (hsw.js:2:726897)
+	(anonymous function) (hsw.js:2:842108)
+	GM (hsw.js:2:745435)
+	.wasm-function[233]
+	.wasm-function[529]
+	.wasm-function[451]
+	.wasm-function[500]
+	KJ (hsw.js:2:684889)
+	Ae (hsw.js:2:685123)
+[Error] Permission policy 'Microphone' check failed for document with origin 'https://newassets.hcaptcha.com'.
+	(anonymous function) (hsw.js:2:776488)
+	(anonymous function) (hsw.js:2:7162)
+	(anonymous function) (hsw.js:2:727315)
+	Promise
+	(anonymous function) (hsw.js:2:726897)
+	(anonymous function) (hsw.js:2:2190)
+	(anonymous function) (hsw.js:2:776929)
+	(anonymous function) (hsw.js:2:7162)
+	(anonymous function) (hsw.js:2:727315)
+	Promise
+	(anonymous function) (hsw.js:2:726897)
+	(anonymous function) (hsw.js:2:684182)
+	map
+	(anonymous function) (hsw.js:2:746167)
+	(anonymous function) (hsw.js:2:7162)
+	(anonymous function) (hsw.js:2:727315)
+	Promise
+	(anonymous function) (hsw.js:2:726897)
+	(anonymous function) (hsw.js:2:755619)
+	(anonymous function) (hsw.js:2:7162)
+	(anonymous function) (hsw.js:2:727315)
+	Promise
+	(anonymous function) (hsw.js:2:726897)
+	(anonymous function) (hsw.js:2:842108)
+	GM (hsw.js:2:745435)
+	.wasm-function[233]
+	.wasm-function[529]
+	.wasm-function[451]
+	.wasm-function[500]
+	KJ (hsw.js:2:684889)
+	Ae (hsw.js:2:685123)
+[Error] Not allowed to call enumerateDevices.
+	(anonymous function) (hsw.js:2:776488)
+	(anonymous function) (hsw.js:2:7162)
+	(anonymous function) (hsw.js:2:727315)
+	Promise
+	(anonymous function) (hsw.js:2:726897)
+	(anonymous function) (hsw.js:2:2190)
+	(anonymous function) (hsw.js:2:776929)
+	(anonymous function) (hsw.js:2:7162)
+	(anonymous function) (hsw.js:2:727315)
+	Promise
+	(anonymous function) (hsw.js:2:726897)
+	(anonymous function) (hsw.js:2:684182)
+	map
+	(anonymous function) (hsw.js:2:746167)
+	(anonymous function) (hsw.js:2:7162)
+	(anonymous function) (hsw.js:2:727315)
+	Promise
+	(anonymous function) (hsw.js:2:726897)
+	(anonymous function) (hsw.js:2:755619)
+	(anonymous function) (hsw.js:2:7162)
+	(anonymous function) (hsw.js:2:727315)
+	Promise
+	(anonymous function) (hsw.js:2:726897)
+	(anonymous function) (hsw.js:2:842108)
+	GM (hsw.js:2:745435)
+	.wasm-function[233]
+	.wasm-function[529]
+	.wasm-function[451]
+	.wasm-function[500]
+	KJ (hsw.js:2:684889)
+	Ae (hsw.js:2:685123)
+[Error] Failed to load resource: the server responded with a status of 401 () (authenticate, line 0)
+[Warning] ArrayBuffer is deprecated in XMLHttpRequest.send(). Use ArrayBufferView instead. (vendor-998f6c2559412105.min.js.br, line 3, x5)

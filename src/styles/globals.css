@@ -194,24 +194,21 @@
   
   /* Input Focus States - Enhanced */
   input,
-  textarea,
-  select {
+  textarea {
     background-color: #ffffff !important;
     color: #0f172a !important; /* Very dark slate for maximum readability */
   }
   
   .dark input,
-  .dark textarea,
-  .dark select {
+  .dark textarea {
     background-color: #334155 !important;
-    color: #f3f4f6 !important; /* Light gray for dark mode */
+    color: #f1f5f9 !important; /* Lighter gray for better visibility in dark mode */
   }
   
   input:focus-visible,
   textarea:focus-visible,
   select:focus-visible {
     outline: none;
-    background-color: #f0f9ff;
     box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
     border-color: #0ea5e9;
   }
@@ -219,7 +216,6 @@
   .dark input:focus-visible,
   .dark textarea:focus-visible,
   .dark select:focus-visible {
-    background-color: #334155;
     box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
     border-color: #38bdf8;
   }

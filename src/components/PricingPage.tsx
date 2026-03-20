@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -8,6 +8,21 @@ import { Navigation } from './Navigation';
 import { Footer } from './Footer';
 import { useDarkMode } from '../contexts/DarkModeContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import { projectId } from '../utils/supabase/info';
+import { LoadingSpinner } from './LoadingSpinner';
+
+interface ExamCategory {
+  type: string;
+  title: string;
+  titleBg: string;
+  description: string;
+  descriptionBg: string;
+  icon: string;
+  color: string;
+  image: string;
+  price?: number;
+  order?: number;
+}
 
 interface PricingPageProps {
   onNavigate: (page: string) => void;
@@ -18,6 +33,9 @@ export function PricingPage({ onNavigate, isLoggedIn }: PricingPageProps) {
   const { language } = useLanguage();
   const t = getTranslation(language);
   const { darkMode } = useDarkMode();
+  const [examCategories, setExamCategories] = useState<ExamCategory[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [overallPrice, setOverallPrice] = useState<number>(5);
   
   const handleGetStarted = () => {
     if (isLoggedIn) {
@@ -39,6 +57,55 @@ export function PricingPage({ onNavigate, isLoggedIn }: PricingPageProps) {
       onNavigate(`/${page}`);
     }
   };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        console.log('');
+        console.log('💰💰💰 [PricingPage] FETCHING DATA');
+        
+        // Fetch categories
+        const categoriesResponse = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/categories`);
+        
+        if (categoriesResponse.ok) {
+          const data = await categoriesResponse.json();
+          console.log('💰 [PricingPage] Categories fetched:', data.categories?.length);
+          setExamCategories(data.categories || []);
+        } else {
+          console.warn('❌ [PricingPage] Failed to fetch categories, using empty array');
+        }
+
+        // Fetch pricing settings
+        console.log('💰 [PricingPage] Fetching pricing settings...');
+        const pricingResponse = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/pricing-settings`);
+        
+        console.log('💰 [PricingPage] Pricing response status:', pricingResponse.status);
+        
+        if (pricingResponse.ok) {
+          const pricingData = await pricingResponse.json();
+          console.log('💰 [PricingPage] Pricing data received:', JSON.stringify(pricingData));
+          console.log('💰 [PricingPage] Overall price from data:', pricingData.settings?.overallPrice);
+          const price = pricingData.settings?.overallPrice || 5;
+          console.log('💰 [PricingPage] Setting overall price to:', price);
+          setOverallPrice(price);
+        } else {
+          console.warn('❌ [PricingPage] Failed to fetch pricing settings, using default: 5');
+          setOverallPrice(5);
+        }
+        
+        console.log('💰💰💰 [PricingPage] DATA FETCH COMPLETE');
+        console.log('');
+      } catch (error) {
+        console.error('❌ [PricingPage] Error fetching data:', error);
+        console.warn('❌ [PricingPage] Using defaults due to error');
+        // Keep default values on error
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   return (
     <div className={darkMode ? 'dark' : ''}>
@@ -246,7 +313,7 @@ export function PricingPage({ onNavigate, isLoggedIn }: PricingPageProps) {
                       color: darkMode ? '#f3f4f6' : '#1e293b',
                       transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
                     }}
-                  >€5</span>
+                  >€{overallPrice}</span>
                   <span 
                     className="text-xs transition-colors duration-[400ms]"
                     style={{ 

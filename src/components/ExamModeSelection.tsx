@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
@@ -12,6 +12,7 @@ import { useDarkMode } from '../contexts/DarkModeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'sonner';
+import { projectId, publicAnonKey } from '../utils/supabase/info';
 
 export type ExamMode = 'study' | 'exam';
 export type ExamTier = 'mock' | 'paid';
@@ -23,14 +24,108 @@ export function ExamModeSelection() {
   const { darkMode } = useDarkMode();
   const { language } = useLanguage();
   const t = getTranslation(language);
+  const [selectedMode, setSelectedMode] = useState<ExamMode>('exam');
+  const [examCategory, setExamCategory] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   
   const examType = examTypeParam as ExamType;
-  if (!examType || !examData[examType]) {
-    navigate('/home');
+
+  // Load exam category from server
+  useEffect(() => {
+    const loadCategory = async () => {
+      try {
+        const response = await fetch(
+          `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/categories`,
+          {
+            headers: {
+              'Authorization': `Bearer ${publicAnonKey}`,
+            },
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          const categories = data.categories || [];
+          
+          // Find the category that matches examType
+          const category = categories.find((cat: any) => cat.type === examType);
+          
+          if (category) {
+            setExamCategory(category);
+          } else {
+            // Fallback to hardcoded examData if category not found in server
+            if (examData[examType]) {
+              setExamCategory({
+                type: examType,
+                name: examData[examType].title,
+                description: examData[examType].description,
+              });
+            } else {
+              console.error('Exam category not found:', examType);
+              navigate('/');
+            }
+          }
+        } else {
+          // Fallback to hardcoded examData
+          if (examData[examType]) {
+            setExamCategory({
+              type: examType,
+              name: examData[examType].title,
+              description: examData[examType].description,
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error loading category:', error);
+        // Fallback to hardcoded examData
+        if (examData[examType]) {
+          setExamCategory({
+            type: examType,
+            name: examData[examType].title,
+            description: examData[examType].description,
+          });
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (examType) {
+      loadCategory();
+    } else {
+      navigate('/');
+    }
+  }, [examType, navigate]);
+
+  if (loading) {
+    return (
+      <div className={darkMode ? 'dark' : ''}>
+        <Navigation
+          currentPage="exam"
+          onNavigate={() => {}}
+          isLoggedIn={!!user}
+          transparent={false}
+        />
+        <div 
+          className="min-h-screen pt-32 flex items-center justify-center"
+          style={{ 
+            background: darkMode 
+              ? 'linear-gradient(to bottom right, #0f172a, #1e293b, #0f172a)'
+              : 'linear-gradient(to bottom right, #ffffff, #f0f9ff, #ffffff)'
+          }}
+        >
+          <div className="text-center">
+            <div className="animate-spin h-12 w-12 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+            <p className="text-slate-600 dark:text-slate-400">Loading...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!examCategory) {
     return null;
   }
-  const exam = examData[examType];
-  const [selectedMode, setSelectedMode] = useState<ExamMode>('exam');
 
   const handleBack = () => {
     navigate('/home');
@@ -89,8 +184,13 @@ export function ExamModeSelection() {
 
           <div className="text-center mb-12">
             <h2 className="bg-gradient-to-r from-blue-900 to-blue-700 dark:from-blue-400 dark:to-blue-300 bg-clip-text text-transparent mb-2">
-              {exam.title}
+              {examCategory.name}
             </h2>
+            {examCategory.description && (
+              <p className="text-slate-600 dark:text-slate-400 mt-2">
+                {examCategory.description}
+              </p>
+            )}
           </div>
 
           <div className="space-y-10">

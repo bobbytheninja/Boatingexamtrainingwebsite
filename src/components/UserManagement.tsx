@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { ButtonSpinner } from './LoadingSpinner';
 import { projectId } from '../utils/supabase/info';
 import { Alert, AlertDescription } from './ui/alert';
+import { loadExamCategories } from '../utils/categoryLoader';
 
 interface User {
   id: string;
@@ -23,14 +24,6 @@ interface User {
   language: string;
 }
 
-const EXAM_TYPES = [
-  { value: 'jet', label: 'Jet Ski', short: 'JS' },
-  { value: 'small', label: 'Small Boat', short: 'SB' },
-  { value: 'big', label: 'Big Boat', short: 'BB' },
-  { value: 'yacht', label: 'Yacht (50 tons)', short: 'Y50' },
-  { value: 'navigation', label: 'Navigation Device', short: 'NAV' },
-];
-
 const USERS_PER_PAGE = 20;
 
 export function UserManagement() {
@@ -41,6 +34,16 @@ export function UserManagement() {
   const [selectedLicenses, setSelectedLicenses] = useState<Record<string, string>>({});
   const [processingUsers, setProcessingUsers] = useState<Set<string>>(new Set());
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [examTypes, setExamTypes] = useState<{ value: string; label: string; short: string }[]>([]);
+
+  // Load exam categories on mount
+  useEffect(() => {
+    const loadCategories = async () => {
+      const categories = await loadExamCategories();
+      setExamTypes(categories);
+    };
+    loadCategories();
+  }, []);
 
   const loadUsers = async () => {
     setLoading(true);
@@ -152,7 +155,7 @@ export function UserManagement() {
         throw new Error('No active session');
       }
 
-      const allExamTypes = EXAM_TYPES.map(t => t.value);
+      const allExamTypes = examTypes.map(t => t.value);
 
       const response = await fetch(
         `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/admin/grant-licenses`,
@@ -369,7 +372,7 @@ export function UserManagement() {
                       {hasSubscriptions ? (
                         <div className="flex flex-wrap gap-1">
                           {user.subscriptions.map((examType) => {
-                            const examInfo = EXAM_TYPES.find(t => t.value === examType);
+                            const examInfo = examTypes.find(t => t.value === examType);
                             return (
                               <div key={examType} className="group relative">
                                 <Badge 
@@ -409,7 +412,7 @@ export function UserManagement() {
                                 ⭐ All
                               </span>
                             </SelectItem>
-                            {EXAM_TYPES.map((type) => (
+                            {examTypes.map((type) => (
                               <SelectItem 
                                 key={type.value} 
                                 value={type.value}

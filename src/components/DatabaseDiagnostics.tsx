@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { projectId, publicAnonKey } from '../utils/supabase/info';
 import { toast } from 'sonner';
+import { loadExamCategories } from '../utils/categoryLoader';
 
 interface ExamDiagnostics {
   count: number;
@@ -33,18 +34,20 @@ interface DiagnosticsData {
   timestamp: string;
 }
 
-const EXAM_TYPES = [
-  { value: 'jet', label: 'Jet Ski' },
-  { value: 'small', label: 'Small Boat' },
-  { value: 'big', label: 'Big Boat' },
-  { value: 'yacht', label: 'Yacht (up to 50 tons)' },
-  { value: 'navigation', label: 'Navigation Device' },
-];
-
 export function DatabaseDiagnostics() {
   const [loading, setLoading] = React.useState(false);
   const [diagnosticsData, setDiagnosticsData] = React.useState<DiagnosticsData | null>(null);
   const [error, setError] = React.useState<string | null>(null);
+  const [examTypes, setExamTypes] = React.useState<{ value: string; label: string }[]>([]);
+
+  // Load exam categories on mount
+  React.useEffect(() => {
+    const loadCategories = async () => {
+      const categories = await loadExamCategories();
+      setExamTypes(categories);
+    };
+    loadCategories();
+  }, []);
 
   const runDiagnostics = async () => {
     setLoading(true);
@@ -123,15 +126,15 @@ export function DatabaseDiagnostics() {
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
-      <Card className="dark:bg-slate-700 dark:border-slate-600">
+      <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="dark:text-gray-100 flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2">
                 <Database className="w-6 h-6 text-blue-500" />
                 Database Diagnostics
               </CardTitle>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+              <p className="text-sm text-gray-700 dark:text-gray-400 mt-1">
                 Check the status of questions in your database
               </p>
             </div>
@@ -168,7 +171,7 @@ export function DatabaseDiagnostics() {
           {loading && !diagnosticsData && (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
-              <span className="ml-3 text-gray-600 dark:text-gray-400">Running diagnostics...</span>
+              <span className="ml-3 text-gray-700 dark:text-gray-400">Running diagnostics...</span>
             </div>
           )}
 
@@ -176,27 +179,27 @@ export function DatabaseDiagnostics() {
             <>
               {/* Summary Card */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card className="bg-gradient-to-br from-blue-50 to-white dark:from-blue-900/30 dark:to-slate-700 border-2 dark:border-slate-600">
+                <Card className="bg-gradient-to-br from-blue-50 to-white dark:from-blue-900/30 dark:to-slate-700 border-2">
                   <CardContent className="pt-6 text-center">
-                    <p className="text-sm text-gray-600 dark:text-gray-300 mb-1">Total Questions</p>
+                    <p className="text-sm text-gray-700 dark:text-gray-300 mb-1">Total Questions</p>
                     <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
                       {getTotalQuestions()}
                     </p>
                   </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-green-50 to-white dark:from-green-900/30 dark:to-slate-700 border-2 dark:border-slate-600">
+                <Card className="bg-gradient-to-br from-green-50 to-white dark:from-green-900/30 dark:to-slate-700 border-2">
                   <CardContent className="pt-6 text-center">
-                    <p className="text-sm text-gray-600 dark:text-gray-300 mb-1">Exam Types Ready</p>
+                    <p className="text-sm text-gray-700 dark:text-gray-300 mb-1">Exam Types Ready</p>
                     <p className="text-3xl font-bold text-green-600 dark:text-green-400">
                       {Object.values(diagnosticsData.diagnostics).filter(d => d.count >= 40).length} / 5
                     </p>
                   </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-purple-50 to-white dark:from-purple-900/30 dark:to-slate-700 border-2 dark:border-slate-600">
+                <Card className="bg-gradient-to-br from-purple-50 to-white dark:from-purple-900/30 dark:to-slate-700 border-2">
                   <CardContent className="pt-6 text-center">
-                    <p className="text-sm text-gray-600 dark:text-gray-300 mb-1">Last Updated</p>
+                    <p className="text-sm text-gray-700 dark:text-gray-300 mb-1">Last Updated</p>
                     <p className="text-sm font-semibold text-purple-600 dark:text-purple-400">
                       {new Date(diagnosticsData.timestamp).toLocaleTimeString()}
                     </p>
@@ -208,7 +211,7 @@ export function DatabaseDiagnostics() {
               <div className="space-y-3">
                 <h3 className="font-semibold text-lg dark:text-gray-100">Exam Types Status</h3>
                 
-                {EXAM_TYPES.map(({ value, label }) => {
+                {examTypes.map(({ value, label }) => {
                   const status = getExamTypeStatus(value);
                   const examData = diagnosticsData.diagnostics[value];
                   
@@ -219,7 +222,7 @@ export function DatabaseDiagnostics() {
                   return (
                     <Card 
                       key={value} 
-                      className={`border-2 dark:bg-slate-700 dark:border-slate-600 ${
+                      className={`border-2 ${
                         status.color === 'green' 
                           ? 'border-green-200 bg-green-50/30 dark:border-green-700 dark:bg-green-900/10'
                           : status.color === 'amber'
@@ -254,17 +257,17 @@ export function DatabaseDiagnostics() {
                                 {status.status}
                               </Badge>
                             </div>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 ml-8">
+                            <p className="text-sm text-gray-700 dark:text-gray-400 ml-8">
                               {status.message}
                             </p>
                             
                             {examData?.sampleQuestion && (
                               <div className="ml-8 mt-2 p-2 bg-white dark:bg-slate-600 rounded border border-gray-200 dark:border-slate-500">
-                                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Sample question:</p>
-                                <p className="text-xs font-mono dark:text-gray-200">
+                                <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Sample question:</p>
+                                <p className="text-xs font-mono text-gray-800 dark:text-gray-200">
                                   {examData.sampleQuestion.questionText}
                                 </p>
-                                <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                                <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
                                   ID: {examData.sampleQuestionId}
                                 </p>
                               </div>
