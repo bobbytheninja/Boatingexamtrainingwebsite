@@ -64,73 +64,54 @@
   }
 
   * {
-  border-color: hsl(var(--border));
+    @apply border-border;
   }
 
   body {
-    background-color: hsl(var(--background));
-    color: hsl(var(--foreground));
+    @apply bg-background text-foreground;
     font-family: var(--font-family);
     font-size: var(--font-size);
     min-height: 100vh;
   }
   
   html {
-  background-color: hsl(var(--background));
-  color: hsl(var(--foreground));  }
+    @apply bg-background text-foreground;
+  }
 
   h1, h2, h3, h4, h5, h6 {
-    font-weight: var(--font-weight-bold);
+    @apply font-bold text-foreground;
   }
 
   h1 {
-    font-size: 2.25rem;
-    line-height: 2.5rem;
-  }
-  h2 {
-    font-size: 1.875rem;
-    line-height: 2.25rem;
-  }
-  h3 {
-    font-size: 1.5rem;
-    line-height: 2rem;
-  }
-  h4 {
-    font-size: 1.25rem;
-    line-height: 1.75rem;
-  }
-  h5 {
-    font-size: 1.125rem;
-    line-height: 1.75rem;
+    @apply text-4xl md:text-5xl;
   }
 
-  @media (min-width: 768px) {
-    h5 {
-      font-size: 1.25rem;
-      line-height: 1.75rem;
-    }
+  h2 {
+    @apply text-3xl md:text-4xl;
+  }
+
+  h3 {
+    @apply text-2xl md:text-3xl;
+  }
+
+  h4 {
+    @apply text-xl md:text-2xl;
+  }
+
+  h5 {
+    @apply text-lg md:text-xl;
   }
 
   h6 {
-    font-size: 1rem;
-  }
-
-  @media (min-width: 768px) {
-    h6 {
-      font-size: 1.125rem;
-    }
+    @apply text-base md:text-lg;
   }
   
   .gradient-ocean {
-    background-image: linear-gradient(to right, #0284c7, #0891b2, #2563eb);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+    @apply bg-gradient-to-r from-sky-600 via-cyan-600 to-blue-600 bg-clip-text text-transparent;
   }
   
   .dark .gradient-ocean {
-    /* Replace @apply of color utilities (not supported) with explicit gradient */
-    background-image: linear-gradient(to right, #38bdf8, #22d3ee, #60a5fa);
+    @apply from-sky-400 via-cyan-400 to-blue-400;
   }
   
   /* Dark mode slide-up animation */
