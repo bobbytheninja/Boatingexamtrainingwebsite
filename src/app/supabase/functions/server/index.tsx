@@ -890,11 +890,19 @@ app.post("/make-server-d36f8f91/create-checkout-session", async (c) => {
     // Calculate total and prepare pricing info
     let totalAmount = 0;
     const pricingInfo: { [key: string]: number } = {};
+    const blockedCategories: string[] = [];
     
     for (const examType of examTypes) {
       const category = Array.isArray(categories) 
         ? categories.find((cat: any) => cat.type === examType)
         : null;
+      
+      // 🚨 CHECK: Block purchase if category is marked as "expiring soon"
+      if (category?.expiringSoon) {
+        console.log(`[Checkout] ❌ Category ${examType} is marked as expiring soon - blocking purchase`);
+        blockedCategories.push(examType);
+        continue;
+      }
       
       const pricePerExam = category?.price || 5; // Default to €5 if not found
       const priceInCents = pricePerExam * 100;
@@ -902,6 +910,15 @@ app.post("/make-server-d36f8f91/create-checkout-session", async (c) => {
       pricingInfo[examType] = priceInCents;
       
       console.log(`[Checkout] ${examType}: €${pricePerExam} (${priceInCents} cents)`);
+    }
+    
+    // If any categories are blocked, return error
+    if (blockedCategories.length > 0) {
+      return c.json({ 
+        message: 'Some exam categories are no longer available for purchase',
+        blockedCategories,
+        hint: 'These exams are being phased out and cannot be purchased'
+      }, 400);
     }
 
     console.log('[Checkout] Total amount:', totalAmount, 'cents (€' + (totalAmount / 100) + ')');
@@ -2433,7 +2450,30 @@ app.delete("/make-server-d36f8f91/categories/:type", async (c) => {
     
     console.log('Category deleted:', categoryType);
     
-    return c.json({ message: 'Category deleted successfully' });
+    // 🚨 CLEANUP: Remove this category from ALL user subscriptions
+    console.log(`[Delete Category] Removing ${categoryType} from all user subscriptions...`);
+    const allSubscriptions = await kv.getByPrefix('subscription:');
+    let cleanedCount = 0;
+    
+    for (const { key, value } of allSubscriptions) {
+      if (value && Array.isArray(value.subscriptions)) {
+        const originalLength = value.subscriptions.length;
+        value.subscriptions = value.subscriptions.filter((sub: string) => sub !== categoryType);
+        
+        if (value.subscriptions.length < originalLength) {
+          await kv.set(key, value);
+          cleanedCount++;
+          console.log(`[Delete Category] Removed ${categoryType} from ${key}`);
+        }
+      }
+    }
+    
+    console.log(`[Delete Category] Cleaned up ${cleanedCount} user subscriptions`);
+    
+    return c.json({ 
+      message: 'Category deleted successfully',
+      usersAffected: cleanedCount
+    });
   } catch (error: any) {
     console.error('Error deleting category:', error);
     return c.json({ message: 'Error deleting category', error: error.message }, 500);
@@ -2512,6 +2552,130 @@ app.post("/make-server-d36f8f91/pricing-settings", async (c) => {
     console.error('❌ [POST /pricing-settings] Error message:', error.message);
     console.error('❌ [POST /pricing-settings] Error stack:', error.stack);
     return c.json({ message: 'Error updating pricing settings', error: error.message }, 500);
+  }
+});
+
+// ============== ANALYTICS ==============
+
+// Get active subscribers for a specific exam type (admin only)
+app.get("/make-server-d36f8f91/analytics/subscribers/:examType", async (c) => {
+  const { error, user, isAdmin: adminStatus } = await verifyAdmin(c.req.header('Authorization'));
+  
+  if (error || !user || !adminStatus) {
+    return c.json({ message: error || 'Admin access required' }, error ? 401 : 403);
+  }
+
+  try {
+    const examType = c.req.param('examType');
+    
+    if (!examType) {
+      return c.json({ message: 'Exam type required' }, 400);
+    }
+
+    console.log(`[Analytics] Fetching subscribers for exam type: ${examType}`);
+    
+    // Get all subscriptions
+    const allSubscriptions = await kv.getByPrefix('subscription:');
+    const subscribers: any[] = [];
+    const now = Date.now();
+    
+    for (const { key, value } of allSubscriptions) {
+      if (value && Array.isArray(value.subscriptions) && value.subscriptions.includes(examType)) {
+        const userId = key.replace('subscription:', '');
+        
+        // Check if subscription is still active
+        const isActive = !value.expiresAt || value.expiresAt > now;
+        
+        if (isActive) {
+          // Get user details from Supabase
+          const { data: userData, error: userError } = await supabase.auth.admin.getUserById(userId);
+          
+          if (!userError && userData?.user) {
+            subscribers.push({
+              userId: userId,
+              email: userData.user.email,
+              name: userData.user.user_metadata?.name || 'N/A',
+              expiresAt: value.expiresAt,
+              expiryDate: value.expiresAt ? new Date(value.expiresAt).toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+              }) : 'N/A',
+              daysRemaining: value.expiresAt ? Math.ceil((value.expiresAt - now) / (24 * 60 * 60 * 1000)) : null
+            });
+          }
+        }
+      }
+    }
+    
+    console.log(`[Analytics] Found ${subscribers.length} active subscribers for ${examType}`);
+    
+    return c.json({ 
+      examType,
+      totalActiveSubscribers: subscribers.length,
+      subscribers: subscribers.sort((a, b) => (b.daysRemaining || 0) - (a.daysRemaining || 0))
+    });
+  } catch (error: any) {
+    console.error('[Analytics] Error fetching subscribers:', error);
+    return c.json({ message: 'Error fetching subscribers', error: error.message }, 500);
+  }
+});
+
+// Get overview of all exam types with subscriber counts (admin only)
+app.get("/make-server-d36f8f91/analytics/overview", async (c) => {
+  const { error, user, isAdmin: adminStatus } = await verifyAdmin(c.req.header('Authorization'));
+  
+  if (error || !user || !adminStatus) {
+    return c.json({ message: error || 'Admin access required' }, error ? 401 : 403);
+  }
+
+  try {
+    console.log('[Analytics] Fetching overview of all exam types');
+    
+    // Get all categories
+    const categories = await kv.get('exam_categories') || [];
+    
+    // Get all subscriptions
+    const allSubscriptions = await kv.getByPrefix('subscription:');
+    const now = Date.now();
+    
+    // Count active subscribers per exam type
+    const subscriberCounts: { [key: string]: number } = {};
+    
+    for (const { value } of allSubscriptions) {
+      if (value && Array.isArray(value.subscriptions)) {
+        const isActive = !value.expiresAt || value.expiresAt > now;
+        
+        if (isActive) {
+          for (const examType of value.subscriptions) {
+            subscriberCounts[examType] = (subscriberCounts[examType] || 0) + 1;
+          }
+        }
+      }
+    }
+    
+    // Build overview with category details
+    const overview = Array.isArray(categories) 
+      ? categories.map((cat: any) => ({
+          type: cat.type,
+          title: cat.title,
+          titleBg: cat.titleBg,
+          activeSubscribers: subscriberCounts[cat.type] || 0,
+          expiringSoon: cat.expiringSoon || false,
+          price: cat.price || 5
+        }))
+      : [];
+    
+    console.log('[Analytics] Overview generated for', overview.length, 'exam types');
+    
+    return c.json({ 
+      overview,
+      totalCategories: overview.length,
+      totalActiveSubscriptions: Object.values(subscriberCounts).reduce((sum, count) => sum + count, 0)
+    });
+  } catch (error: any) {
+    console.error('[Analytics] Error fetching overview:', error);
+    return c.json({ message: 'Error fetching overview', error: error.message }, 500);
   }
 });
 

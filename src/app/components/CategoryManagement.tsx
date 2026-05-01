@@ -57,6 +57,7 @@ export interface ExamCategory {
   image: string;
   price?: number;
   order?: number;
+  expiringSoon?: boolean;
 }
 
 interface CategoryManagementProps {
@@ -646,6 +647,23 @@ export function CategoryManagement({ accessToken }: CategoryManagementProps) {
                   Monthly subscription price in euros. Default: €5.00, Maximum: €10.00
                 </p>
               </div>
+
+              {/* Expiring Soon Flag */}
+              <div className="flex items-center space-x-2 pt-6">
+                <input
+                  type="checkbox"
+                  id="expiringSoon"
+                  checked={formData.expiringSoon || false}
+                  onChange={(e) => setFormData({ ...formData, expiringSoon: e.target.checked })}
+                  className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                />
+                <Label htmlFor="expiringSoon" className="cursor-pointer">
+                  <span className="font-medium">Mark as "Expiring Soon"</span>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    When enabled, this category cannot be purchased (existing users retain access)
+                  </p>
+                </Label>
+              </div>
             </div>
 
             {/* Description (English) */}
@@ -742,9 +760,16 @@ export function CategoryManagement({ accessToken }: CategoryManagementProps) {
               </div>
               <CardContent className="pt-4">
                 <div className="mb-3">
-                  <Badge variant="secondary" className="mb-2">
-                    {category.type}
-                  </Badge>
+                  <div className="flex gap-2 mb-2">
+                    <Badge variant="secondary">
+                      {category.type}
+                    </Badge>
+                    {category.expiringSoon && (
+                      <Badge variant="destructive" className="bg-orange-500 hover:bg-orange-600">
+                        Expiring Soon
+                      </Badge>
+                    )}
+                  </div>
                   <h3 className="font-bold text-lg">{category.title}</h3>
                   {category.titleBg && (
                     <p className="text-sm text-gray-500">{category.titleBg}</p>

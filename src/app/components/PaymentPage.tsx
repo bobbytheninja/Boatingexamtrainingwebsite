@@ -25,6 +25,7 @@ interface ExamCategory {
   color: string;
   image: string;
   price?: number;
+  expiringSoon?: boolean;
 }
 
 interface PaymentPageProps {
@@ -146,6 +147,13 @@ export function PaymentPage({ userEmail, onBack, onComplete, onNavigate }: Payme
   const toggleExam = (examType: ExamType) => {
     // Don't allow toggling already subscribed exams
     if (currentSubscriptions.includes(examType)) {
+      return;
+    }
+    
+    // Don't allow toggling expiring soon exams
+    const category = categories.find(c => c.type === examType);
+    if (category?.expiringSoon) {
+      toast.error('This category is expiring soon and cannot be purchased');
       return;
     }
     
@@ -325,6 +333,8 @@ export function PaymentPage({ userEmail, onBack, onComplete, onNavigate }: Payme
                   ) : (
                     examTypes.map((exam) => {
                       const isSubscribed = currentSubscriptions.includes(exam.type);
+                      const category = categories.find(c => c.type === exam.type);
+                      const isExpiringSoon = category?.expiringSoon || false;
                       
                       return (
                         <div
@@ -344,6 +354,8 @@ export function PaymentPage({ userEmail, onBack, onComplete, onNavigate }: Payme
                               : (darkMode ? '#334155' : '#ffffff'),
                             borderColor: isSubscribed
                               ? (darkMode ? '#16a34a' : '#4ade80')
+                              : isExpiringSoon
+                              ? (darkMode ? '#ef4444' : '#dc2626')
                               : selectedExams.includes(exam.type)
                               ? (darkMode ? '#60a5fa' : '#3b82f6')
                               : (darkMode ? '#475569' : '#e5e7eb'),
@@ -357,7 +369,7 @@ export function PaymentPage({ userEmail, onBack, onComplete, onNavigate }: Payme
                         >
                           <Checkbox
                             checked={isSubscribed || selectedExams.includes(exam.type)}
-                            disabled={isSubscribed}
+                            disabled={isSubscribed || isExpiringSoon}
                             onCheckedChange={() => toggleExam(exam.type)}
                             className="mt-1"
                           />
@@ -375,6 +387,13 @@ export function PaymentPage({ userEmail, onBack, onComplete, onNavigate }: Payme
                                     }}
                                   >
                                     ✓ Active until {getExpiryDateString()}
+                                  </Badge>
+                                ) : isExpiringSoon ? (
+                                  <Badge 
+                                    variant="destructive"
+                                    className="bg-red-100 text-red-700 border-red-300 dark:bg-red-900/30 dark:text-red-400 dark:border-red-700"
+                                  >
+                                    ⚠️ Expiring Soon - Not Available
                                   </Badge>
                                 ) : (
                                   <Badge 

@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { ButtonSpinner } from './LoadingSpinner';
 import { Navigation } from './Navigation';
 import { Footer } from './Footer';
+import { projectId } from '../utils/supabase/info';
 
 interface AccountPageProps {
   userEmail: string;
@@ -23,12 +24,40 @@ interface AccountPageProps {
   onLogout: () => void;
 }
 
+interface CategoryData {
+  type: string;
+  title: string;
+  titleBg: string;
+  [key: string]: any;
+}
+
 export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNavigate, onStartExam, onLogout }: AccountPageProps) {
   const { language } = useLanguage();
   const t = getTranslation(language);
   const { deleteAccount } = useAuth();
   const { darkMode } = useDarkMode();
   const [isDeleting, setIsDeleting] = useState(false);
+  const [categories, setCategories] = useState<CategoryData[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
+  
+  // Fetch categories from backend
+  React.useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/categories`);
+        if (response.ok) {
+          const data = await response.json();
+          setCategories(data.categories || []);
+        }
+      } catch (error) {
+        console.error('[AccountPage] Error fetching categories:', error);
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+    
+    fetchCategories();
+  }, []);
   
   // Debug logging
   React.useEffect(() => {
@@ -337,7 +366,21 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
                   ) : (
                     <div className="space-y-4">
                       {paidExams.map((examType) => {
-                        const exam = examData[examType];
+                        // Try to get exam data from dynamic categories first, fallback to static examData
+                        const categoryData = categories.find(cat => cat.type === examType);
+                        const exam = categoryData || examData[examType];
+                        
+                        // Safety check: skip if exam data doesn't exist in either source
+                        if (!exam) {
+                          console.warn(`[AccountPage] Exam data not found for type: ${examType}`);
+                          return null;
+                        }
+                        
+                        // Use dynamic title based on language
+                        const examTitle = language === 'English' 
+                          ? (categoryData?.title || exam.title)
+                          : (categoryData?.titleBg || exam.title);
+                        
                         const daysRemaining = getDaysRemaining();
                         const expiryDate = getExpiryDate();
                         const isExpiringSoon = daysRemaining <= 7;
@@ -356,7 +399,7 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
                               <div className="flex items-start justify-between gap-4">
                                 <div className="flex-1">
                                   <div className="flex items-center gap-3 mb-3">
-                                    <h4 className="font-bold text-lg transition-colors duration-[400ms]" style={{ color: darkMode ? '#f3f4f6' : '#0f172a' }}>{exam.title}</h4>
+                                    <h4 className="font-bold text-lg transition-colors duration-[400ms]" style={{ color: darkMode ? '#f3f4f6' : '#0f172a' }}>{examTitle}</h4>
                                     <Badge 
                                       className={`${
                                         isExpiringSoon 

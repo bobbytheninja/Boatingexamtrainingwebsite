@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#0c4a6e;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0369a1;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bgGradient)"/>
+
+  <!-- Waves pattern -->
+  <path d="M0 400 Q100 380 200 400 T400 400 T600 400 T800 400 T1000 400 T1200 400 L1200 630 L0 630 Z"
+        fill="#0369a1" opacity="0.3"/>
+  <path d="M0 450 Q100 430 200 450 T400 450 T600 450 T800 450 T1000 450 T1200 450 L1200 630 L0 630 Z"
+        fill="#0ea5e9" opacity="0.2"/>
+
+  <!-- Large yacht illustration -->
+  <g transform="translate(200, 200)">
+    <!-- Hull -->
+    <path d="M50 150 L150 180 L300 150 L280 165 L70 165 Z" fill="#ffffff" stroke="#0c4a6e" stroke-width="3"/>
+    <!-- Main sail -->
+    <path d="M150 50 L150 150 L280 130 Z" fill="#ffffff" stroke="#0c4a6e" stroke-width="3"/>
+    <!-- Front sail -->
+    <path d="M150 70 L150 150 L80 120 Z" fill="#f0f9ff" stroke="#0c4a6e" stroke-width="3"/>
+    <!-- Mast -->
+    <line x1="150" y1="40" x2="150" y2="150" stroke="#0c4a6e" stroke-width="4"/>
+    <!-- Flag -->
+    <path d="M150 40 L175 50 L150 60 Z" fill="#ef4444"/>
+  </g>
+
+  <!-- Title -->
+  <text x="600" y="180" font-family="Arial, sans-serif" font-size="64" font-weight="bold"
+        fill="#ffffff" text-anchor="middle">
+    Black Sea Bulgaria
+  </text>
+
+  <!-- Subtitle -->
+  <text x="600" y="240" font-family="Arial, sans-serif" font-size="36"
+        fill="#f0f9ff" text-anchor="middle">
+    Yacht &amp; Boat Exam Training
+  </text>
+
+  <!-- Features -->
+  <text x="600" y="320" font-family="Arial, sans-serif" font-size="28"
+        fill="#bae6fd" text-anchor="middle">
+    🚤 5 Exam Categories • ⏱️ 60-Minute Timer • 📝 40 Questions
+  </text>
+
+  <!-- Price tag -->
+  <rect x="500" y="360" width="200" height="60" rx="30" fill="#ffffff"/>
+  <text x="600" y="398" font-family="Arial, sans-serif" font-size="32" font-weight="bold"
+        fill="#0369a1" text-anchor="middle">
+    €5 / month
+  </text>
+</svg>
