@@ -332,13 +332,20 @@ export function Navigation({
                     <Menu className="w-5 h-5" />
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="right" className="w-[280px] sm:w-[350px] flex flex-col">
-                  <SheetHeader className="flex-shrink-0">
-                    <SheetTitle className="flex items-center gap-2">
-                      <Anchor className="w-5 h-5 text-sky-600" />
+                <SheetContent
+                  side="right"
+                  className="w-[280px] sm:w-[350px] flex flex-col bg-white dark:bg-slate-900 border-l-2 border-gray-200 dark:border-gray-700"
+                  style={{
+                    backgroundColor: darkMode ? 'rgb(15, 23, 42)' : 'rgb(255, 255, 255)',
+                    borderLeftColor: darkMode ? 'rgb(55, 65, 81)' : 'rgb(229, 231, 235)'
+                  }}
+                >
+                  <SheetHeader className="flex-shrink-0 border-b border-gray-200 dark:border-gray-700 pb-4">
+                    <SheetTitle className="flex items-center gap-2 text-gray-900 dark:text-gray-100">
+                      <Anchor className="w-5 h-5 text-sky-600 dark:text-sky-400" />
                       Menu
                     </SheetTitle>
-                    <SheetDescription>
+                    <SheetDescription className="text-gray-600 dark:text-gray-400">
                       Navigate through different sections and settings
                     </SheetDescription>
                   </SheetHeader>
@@ -349,27 +356,31 @@ export function Navigation({
                         key={link.id}
                         onClick={() => handleNavigate(link.id)}
                         variant={currentPage === link.id ? 'default' : 'ghost'}
-                        className="w-full justify-start"
+                        className={`w-full justify-start text-base ${
+                          currentPage === link.id
+                            ? 'bg-sky-600 hover:bg-sky-700 text-white font-semibold'
+                            : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'
+                        }`}
                       >
                         {link.label}
                       </Button>
                     ))}
-                    
-                    <div className="h-px bg-gray-200 dark:bg-gray-700 my-2" />
-                    
+
+                    <div className="h-px bg-gray-300 dark:bg-gray-600 my-2" />
+
                     {/* Dark Mode Toggle */}
                     <Button
                       onClick={toggleDarkMode}
                       variant="ghost"
-                      className="w-full justify-start"
+                      className="w-full justify-start text-base text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
                     >
                       {darkMode ? <Moon className="w-4 h-4 mr-2" /> : <Sun className="w-4 h-4 mr-2" />}
                       {darkMode ? 'Light Mode' : 'Dark Mode'}
                     </Button>
-                    
+
                     {/* Language Selection */}
                     <div className="space-y-2">
-                      <p className="text-sm font-medium text-gray-500 px-3">Language</p>
+                      <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 px-3 mb-2">Language</p>
                       {languages.map((lang) => (
                         <Button
                           key={lang}
@@ -378,17 +389,21 @@ export function Navigation({
                             setMobileMenuOpen(false);
                           }}
                           variant={language === lang ? 'default' : 'ghost'}
-                          className="w-full justify-start"
+                          className={`w-full justify-start text-base ${
+                            language === lang
+                              ? 'bg-sky-600 hover:bg-sky-700 text-white font-semibold'
+                              : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'
+                          }`}
                         >
                           <Globe className="w-4 h-4 mr-2" />
                           {lang}
                         </Button>
                       ))}
                     </div>
-                    
+
                     {/* Region Selection */}
                     <div className="space-y-2">
-                      <p className="text-sm font-medium text-gray-500 px-3">Region</p>
+                      <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 px-3 mb-2">Region</p>
                       {regions.map((reg) => (
                         <Button
                           key={reg}
@@ -397,15 +412,19 @@ export function Navigation({
                             setMobileMenuOpen(false);
                           }}
                           variant={region === reg ? 'default' : 'ghost'}
-                          className="w-full justify-start"
+                          className={`w-full justify-start text-base ${
+                            region === reg
+                              ? 'bg-sky-600 hover:bg-sky-700 text-white font-semibold'
+                              : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'
+                          }`}
                         >
                           <MapPin className="w-4 h-4 mr-2" />
                           {reg}
                         </Button>
                       ))}
                     </div>
-                    
-                    <div className="h-px bg-gray-200 my-2" />
+
+                    <div className="h-px bg-gray-300 dark:bg-gray-600 my-2" />
                     
                     {/* Account/Login */}
                     {isLoggedIn ? (
