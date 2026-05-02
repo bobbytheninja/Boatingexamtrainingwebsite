@@ -84,12 +84,12 @@ export function HomePage() {
 
   // Transform server categories into display format
   const examTypes = categories.map(cat => ({
-    type: cat.type as ExamType,
-    title: language === 'Bulgarian' && cat.titleBg ? cat.titleBg : cat.title,
-    description: language === 'Bulgarian' && cat.descriptionBg ? cat.descriptionBg : cat.description,
-    icon: ICON_MAP[cat.icon] || Waves,
-    color: cat.color,
-    image: cat.image,
+    type: cat?.type as ExamType,
+    title: (language === 'Bulgarian' && cat?.titleBg) ? cat.titleBg : (cat?.title || ''),
+    description: (language === 'Bulgarian' && cat?.descriptionBg) ? cat.descriptionBg : (cat?.description || ''),
+    icon: (cat?.icon && ICON_MAP[cat.icon]) || Waves,
+    color: cat?.color || '#0ea5e9',
+    image: cat?.image || '',
   }));
 
   const handleNavigate = (page: string) => {

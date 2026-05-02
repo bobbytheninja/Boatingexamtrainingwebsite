@@ -334,10 +334,12 @@ export function Navigation({
                 </SheetTrigger>
                 <SheetContent
                   side="right"
-                  className="w-[280px] sm:w-[350px] flex flex-col bg-white dark:bg-slate-900 border-l-2 border-gray-200 dark:border-gray-700"
+                  className="w-[280px] sm:w-[350px] flex flex-col border-l-2"
                   style={{
-                    backgroundColor: darkMode ? 'rgb(15, 23, 42)' : 'rgb(255, 255, 255)',
-                    borderLeftColor: darkMode ? 'rgb(55, 65, 81)' : 'rgb(229, 231, 235)'
+                    backgroundColor: darkMode ? '#0f172a' : '#ffffff',
+                    borderLeftColor: darkMode ? '#374151' : '#e5e7eb',
+                    opacity: 1,
+                    backdropFilter: 'none'
                   }}
                 >
                   <SheetHeader className="flex-shrink-0 border-b border-gray-200 dark:border-gray-700 pb-4">
