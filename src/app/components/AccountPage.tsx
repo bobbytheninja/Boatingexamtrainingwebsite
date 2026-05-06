@@ -367,19 +367,19 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
                     <div className="space-y-4">
                       {paidExams.map((examType) => {
                         // Try to get exam data from dynamic categories first, fallback to static examData
-                        const categoryData = categories.find(cat => cat.type === examType);
+                        const categoryData = categories.find(cat => cat?.type === examType);
                         const exam = categoryData || examData[examType];
-                        
-                        // Safety check: skip if exam data doesn't exist in either source
-                        if (!exam) {
-                          console.warn(`[AccountPage] Exam data not found for type: ${examType}`);
+
+                        // Safety check: skip if exam data doesn't exist or is invalid
+                        if (!exam || typeof exam !== 'object') {
+                          console.warn(`[AccountPage] Exam data not found or invalid for type: ${examType}`);
                           return null;
                         }
-                        
-                        // Use dynamic title based on language
-                        const examTitle = language === 'English' 
-                          ? (categoryData?.title || exam.title)
-                          : (categoryData?.titleBg || exam.title);
+
+                        // Use dynamic title based on language with comprehensive fallbacks
+                        const examTitle = language === 'English'
+                          ? (categoryData?.title || exam?.title || examType || 'Unknown Exam')
+                          : (categoryData?.titleBg || exam?.titleBg || exam?.title || examType || 'Unknown Exam');
                         
                         const daysRemaining = getDaysRemaining();
                         const expiryDate = getExpiryDate();

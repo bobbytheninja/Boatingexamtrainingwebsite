@@ -336,11 +336,13 @@ export function Navigation({
                   side="right"
                   className="w-[280px] sm:w-[350px] flex flex-col border-l-2"
                   style={{
-                    backgroundColor: darkMode ? '#0f172a' : '#ffffff',
+                    backgroundColor: darkMode ? '#0f172a !important' : '#ffffff !important',
                     borderLeftColor: darkMode ? '#374151' : '#e5e7eb',
-                    opacity: 1,
-                    backdropFilter: 'none'
-                  }}
+                    opacity: '1 !important',
+                    backdropFilter: 'none',
+                    WebkitBackdropFilter: 'none',
+                    background: darkMode ? '#0f172a' : '#ffffff'
+                  } as React.CSSProperties}
                 >
                   <SheetHeader className="flex-shrink-0 border-b border-gray-200 dark:border-gray-700 pb-4">
                     <SheetTitle className="flex items-center gap-2 text-gray-900 dark:text-gray-100">
