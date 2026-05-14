@@ -82,15 +82,59 @@ export function HomePage() {
     loadCategories();
   }, []);
 
-  // Transform server categories into display format
-  const examTypes = categories.map(cat => ({
-    type: cat?.type as ExamType,
-    title: (language === 'Bulgarian' && cat?.titleBg) ? cat.titleBg : (cat?.title || ''),
-    description: (language === 'Bulgarian' && cat?.descriptionBg) ? cat.descriptionBg : (cat?.description || ''),
-    icon: (cat?.icon && ICON_MAP[cat.icon]) || Waves,
-    color: cat?.color || '#0ea5e9',
-    image: cat?.image || '',
-  }));
+  // Transform server categories into display format, fallback to static examData
+  const examTypes = categories.length > 0
+    ? categories.map(cat => ({
+        type: cat?.type as ExamType,
+        title: (language === 'Bulgarian' && cat?.titleBg) ? cat.titleBg : (cat?.title || ''),
+        description: (language === 'Bulgarian' && cat?.descriptionBg) ? cat.descriptionBg : (cat?.description || ''),
+        icon: (cat?.icon && ICON_MAP[cat.icon]) || Waves,
+        color: cat?.color || '#0ea5e9',
+        image: cat?.image || '',
+      }))
+    : [
+        // Fallback to static data when backend categories not available
+        {
+          type: 'jet' as ExamType,
+          title: 'Jet Ski License',
+          description: 'Test your knowledge for operating personal watercraft',
+          icon: Waves,
+          color: '#06b6d4',
+          image: 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=800',
+        },
+        {
+          type: 'small' as ExamType,
+          title: 'Small Boat License',
+          description: 'Basic boating skills and safety knowledge',
+          icon: Sailboat,
+          color: '#0ea5e9',
+          image: 'https://images.unsplash.com/photo-1567899378494-47b22a2ae96a?w=800',
+        },
+        {
+          type: 'big' as ExamType,
+          title: 'Big Boat License',
+          description: 'Advanced boat handling and navigation',
+          icon: Ship,
+          color: '#3b82f6',
+          image: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800',
+        },
+        {
+          type: 'yacht' as ExamType,
+          title: 'Yacht License (Up to 50 Tons)',
+          description: 'Professional yacht operation and maritime law',
+          icon: AnchorIcon,
+          color: '#6366f1',
+          image: 'https://images.unsplash.com/photo-1540946485063-a40da27545f8?w=800',
+        },
+        {
+          type: 'navigation' as ExamType,
+          title: 'Navigation Device Exam',
+          description: 'Electronic navigation systems and equipment',
+          icon: Compass,
+          color: '#8b5cf6',
+          image: 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=800',
+        },
+      ];
 
   const handleNavigate = (page: string) => {
     try {
