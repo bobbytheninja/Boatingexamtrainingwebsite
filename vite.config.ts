@@ -24,6 +24,8 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  // Point to the correct public directory
+  publicDir: path.resolve(__dirname, './src/app/public'),
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
