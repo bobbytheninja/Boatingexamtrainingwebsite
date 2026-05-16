@@ -609,32 +609,54 @@ app.post("/make-server-d36f8f91/contact", async (c) => {
 // Get user subscriptions
 app.get("/make-server-d36f8f91/subscriptions", async (c) => {
   const { error, user } = await verifyUser(c.req.header('Authorization'));
-  
+
   if (error || !user) {
     return c.json({ message: 'Unauthorized' }, 401);
   }
 
   try {
+    console.log('');
+    console.log('═══════════════════════════════════════════════════');
+    console.log('[GET /subscriptions] REQUEST for user:', user.id);
+    console.log('═══════════════════════════════════════════════════');
+
     const subscription = await kv.get(`subscription:${user.id}`);
-    
+
+    console.log('[GET /subscriptions] Raw subscription data:', JSON.stringify(subscription, null, 2));
+    console.log('[GET /subscriptions] Exam types:', subscription?.examTypes);
+    console.log('[GET /subscriptions] Exam types count:', subscription?.examTypes?.length);
+
     if (!subscription) {
+      console.log('[GET /subscriptions] No subscription found, returning empty array');
+      console.log('═══════════════════════════════════════════════════');
+      console.log('');
       return c.json({ subscriptions: [], expiresAt: null });
     }
 
     // Check if subscription is expired
     const now = Date.now();
     if (subscription.expiresAt && subscription.expiresAt < now) {
+      console.log('[GET /subscriptions] Subscription EXPIRED, deleting...');
       // Subscription expired, remove it
       await kv.del(`subscription:${user.id}`);
+      console.log('═══════════════════════════════════════════════════');
+      console.log('');
       return c.json({ subscriptions: [], expiresAt: null });
     }
 
-    return c.json({ 
-      subscriptions: subscription.examTypes || [], 
-      expiresAt: subscription.expiresAt || null 
-    });
+    const result = {
+      subscriptions: subscription.examTypes || [],
+      expiresAt: subscription.expiresAt || null
+    };
+
+    console.log('[GET /subscriptions] Returning result:', JSON.stringify(result, null, 2));
+    console.log('═══════════════════════════════════════════════════');
+    console.log('');
+
+    return c.json(result);
   } catch (error: any) {
-    console.error('Error fetching subscriptions:', error);
+    console.error('[GET /subscriptions] ❌ ERROR:', error);
+    console.error('[GET /subscriptions] Error stack:', error.stack);
     return c.json({ message: 'Error fetching subscriptions' }, 500);
   }
 });

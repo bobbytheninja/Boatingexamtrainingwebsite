@@ -5,7 +5,7 @@ import { Badge } from './ui/badge';
 import { Checkbox } from './ui/checkbox';
 import { ArrowLeft, Check, CreditCard } from 'lucide-react';
 import { ExamType, examData } from '../data/examQuestions';
-import { toast } from 'sonner';
+import { toast } from 'sonner@2.0.3';
 import { ButtonSpinner } from './LoadingSpinner';
 import { useAuth } from '../contexts/AuthContext';
 import { useDarkMode } from '../contexts/DarkModeContext';

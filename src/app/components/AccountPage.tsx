@@ -61,13 +61,19 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
   
   // Debug logging
   React.useEffect(() => {
-    console.log('[AccountPage] Mounted with props:', {
-      userEmail,
-      paidExams,
-      subscriptionExpiresAt,
-      language,
-      darkMode
-    });
+    console.log('');
+    console.log('═══════════════════════════════════════════════════');
+    console.log('[AccountPage] 🔍 SUBSCRIPTION DEBUG');
+    console.log('═══════════════════════════════════════════════════');
+    console.log('[AccountPage] User Email:', userEmail);
+    console.log('[AccountPage] Paid Exams Array:', paidExams);
+    console.log('[AccountPage] Paid Exams Count:', paidExams.length);
+    console.log('[AccountPage] Paid Exams (detailed):', JSON.stringify(paidExams, null, 2));
+    console.log('[AccountPage] Subscription Expires At:', subscriptionExpiresAt);
+    console.log('[AccountPage] Language:', language);
+    console.log('[AccountPage] Dark Mode:', darkMode);
+    console.log('═══════════════════════════════════════════════════');
+    console.log('');
   }, [userEmail, paidExams, subscriptionExpiresAt, language, darkMode]);
 
   // Calculate expiry dates from the subscriptionExpiresAt timestamp
@@ -369,10 +375,13 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
                         // Try to get exam data from dynamic categories first, fallback to static examData
                         const categoryData = categories.find(cat => cat.type === examType);
                         const exam = categoryData || examData[examType];
-                        
+
                         // Safety check: skip if exam data doesn't exist in either source
                         if (!exam) {
-                          console.warn(`[AccountPage] Exam data not found for type: ${examType}`);
+                          console.error(`[AccountPage] ❌ SKIPPING EXAM - Exam data not found for type: "${examType}"`);
+                          console.error(`[AccountPage] Available categories:`, categories.map(c => c.type));
+                          console.error(`[AccountPage] Available examData types:`, Object.keys(examData));
+                          console.error(`[AccountPage] All paid exams from backend:`, paidExams);
                           return null;
                         }
                         
