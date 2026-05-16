@@ -376,20 +376,24 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
                         const categoryData = categories.find(cat => cat.type === examType);
                         const exam = categoryData || examData[examType];
 
-                        // Safety check: skip if exam data doesn't exist in either source
-                        if (!exam) {
-                          console.error(`[AccountPage] ❌ SKIPPING EXAM - Exam data not found for type: "${examType}"`);
-                          console.error(`[AccountPage] Available categories:`, categories.map(c => c.type));
-                          console.error(`[AccountPage] Available examData types:`, Object.keys(examData));
-                          console.error(`[AccountPage] All paid exams from backend:`, paidExams);
-                          return null;
+                        // FLEXIBLE SYSTEM: Always show the subscription, even if category data is missing
+                        // Use fallback display with exam type if no data found
+                        const examTitle = (() => {
+                          if (language === 'English') {
+                            return categoryData?.title || exam?.title || `${examType.charAt(0).toUpperCase() + examType.slice(1)} Exam`;
+                          } else {
+                            return categoryData?.titleBg || exam?.title || `Изпит ${examType}`;
+                          }
+                        })();
+
+                        // Log warning but DON'T skip rendering - subscription should always be visible
+                        if (!exam && !categoryData) {
+                          console.warn(`[AccountPage] ⚠️ Category data missing for "${examType}", using fallback display`);
                         }
-                        
-                        // Use dynamic title based on language
-                        const examTitle = language === 'English' 
-                          ? (categoryData?.title || exam.title)
-                          : (categoryData?.titleBg || exam.title);
-                        
+
+                        // Get price from category data, fallback to €5.00
+                        const examPrice = categoryData?.price || 5;
+
                         const daysRemaining = getDaysRemaining();
                         const expiryDate = getExpiryDate();
                         const isExpiringSoon = daysRemaining <= 7;
@@ -431,7 +435,7 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
                                   <div className="mt-4 pt-4 border-t border-gray-200 dark:border-slate-600">
                                     <div className="flex items-center justify-between text-sm">
                                       <span style={{ color: darkMode ? '#d1d5db' : '#475569' }}>{t.monthlySubscription}</span>
-                                      <span className="font-semibold" style={{ color: darkMode ? '#f3f4f6' : '#1e293b' }}>€5.00{t.perMonth}</span>
+                                      <span className="font-semibold" style={{ color: darkMode ? '#f3f4f6' : '#1e293b' }}>€{examPrice.toFixed(2)}{t.perMonth}</span>
                                     </div>
                                   </div>
                                 </div>

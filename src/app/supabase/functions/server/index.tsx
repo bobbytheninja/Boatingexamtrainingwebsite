@@ -644,10 +644,19 @@ app.get("/make-server-d36f8f91/subscriptions", async (c) => {
       return c.json({ subscriptions: [], expiresAt: null });
     }
 
+    // Remove duplicates from exam types array (flexible system - handle data inconsistencies)
+    const uniqueExamTypes = [...new Set(subscription.examTypes || [])];
+
     const result = {
-      subscriptions: subscription.examTypes || [],
+      subscriptions: uniqueExamTypes,
       expiresAt: subscription.expiresAt || null
     };
+
+    if (uniqueExamTypes.length !== subscription.examTypes?.length) {
+      console.log('[GET /subscriptions] ⚠️ Removed duplicate exam types');
+      console.log('[GET /subscriptions] Original count:', subscription.examTypes?.length);
+      console.log('[GET /subscriptions] After deduplication:', uniqueExamTypes.length);
+    }
 
     console.log('[GET /subscriptions] Returning result:', JSON.stringify(result, null, 2));
     console.log('═══════════════════════════════════════════════════');
