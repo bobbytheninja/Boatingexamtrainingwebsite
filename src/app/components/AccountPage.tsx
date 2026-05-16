@@ -379,11 +379,40 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
                         // FLEXIBLE SYSTEM: Always show the subscription, even if category data is missing
                         // Use fallback display with exam type if no data found
                         const examTitle = (() => {
+                          // Try to get title from category data or exam data
                           if (language === 'English') {
-                            return categoryData?.title || exam?.title || `${examType.charAt(0).toUpperCase() + examType.slice(1)} Exam`;
+                            if (categoryData?.title) return categoryData.title;
+                            if (exam?.title) return exam.title;
                           } else {
-                            return categoryData?.titleBg || exam?.title || `Изпит ${examType}`;
+                            if (categoryData?.titleBg) return categoryData.titleBg;
+                            if (exam?.title) return exam.title;
                           }
+
+                          // Fallback: Create a readable title from exam type
+                          // Handle common exam types with proper formatting
+                          const typeMap: Record<string, { en: string; bg: string }> = {
+                            'jet': { en: 'Jet Ski License', bg: 'Лиценз за джет' },
+                            'small': { en: 'Small Boat License', bg: 'Лиценз за малка лодка' },
+                            'big': { en: 'Big Boat License', bg: 'Лиценз за голяма лодка' },
+                            'yacht': { en: 'Yacht License (Up to 50 Tons)', bg: 'Лиценз за яхта (до 50 тона)' },
+                            'navigation': { en: 'Navigation Device License', bg: 'Лиценз за навигационно устройство' },
+                          };
+
+                          // Check if exam type matches known types
+                          const normalizedType = examType.toLowerCase();
+                          if (typeMap[normalizedType]) {
+                            return language === 'English' ? typeMap[normalizedType].en : typeMap[normalizedType].bg;
+                          }
+
+                          // Ultimate fallback: format the exam type nicely
+                          const formatted = examType
+                            .replace(/([a-z])([A-Z])/g, '$1 $2') // Add space before capitals
+                            .replace(/[_-]/g, ' ') // Replace underscores/dashes with spaces
+                            .split(' ')
+                            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                            .join(' ');
+
+                          return language === 'English' ? `${formatted} License` : `Лиценз ${formatted}`;
                         })();
 
                         // Log warning but DON'T skip rendering - subscription should always be visible

@@ -644,8 +644,28 @@ app.get("/make-server-d36f8f91/subscriptions", async (c) => {
       return c.json({ subscriptions: [], expiresAt: null });
     }
 
-    // Remove duplicates from exam types array (flexible system - handle data inconsistencies)
-    const uniqueExamTypes = [...new Set(subscription.examTypes || [])];
+    // Normalize exam types to valid values (flexible system - handle data inconsistencies)
+    const validExamTypes = ['jet', 'small', 'big', 'yacht', 'navigation'];
+    const normalizedExamTypes = (subscription.examTypes || []).map((type: string) => {
+      const normalized = type.toLowerCase().trim();
+      // Check if it matches a valid type
+      if (validExamTypes.includes(normalized)) {
+        return normalized;
+      }
+      // Try to find a match by partial string (e.g., "yacht50ton" -> "yacht")
+      for (const validType of validExamTypes) {
+        if (normalized.includes(validType)) {
+          console.log(`[GET /subscriptions] 🔧 Normalized "${type}" -> "${validType}"`);
+          return validType;
+        }
+      }
+      // If no match, return original (will be handled by frontend)
+      console.log(`[GET /subscriptions] ⚠️ Unknown exam type: "${type}"`);
+      return type;
+    });
+
+    // Remove duplicates from exam types array
+    const uniqueExamTypes = [...new Set(normalizedExamTypes)];
 
     const result = {
       subscriptions: uniqueExamTypes,
@@ -653,9 +673,9 @@ app.get("/make-server-d36f8f91/subscriptions", async (c) => {
     };
 
     if (uniqueExamTypes.length !== subscription.examTypes?.length) {
-      console.log('[GET /subscriptions] ⚠️ Removed duplicate exam types');
-      console.log('[GET /subscriptions] Original count:', subscription.examTypes?.length);
-      console.log('[GET /subscriptions] After deduplication:', uniqueExamTypes.length);
+      console.log('[GET /subscriptions] ⚠️ Cleaned subscription data');
+      console.log('[GET /subscriptions] Original:', subscription.examTypes);
+      console.log('[GET /subscriptions] Cleaned:', uniqueExamTypes);
     }
 
     console.log('[GET /subscriptions] Returning result:', JSON.stringify(result, null, 2));
@@ -1330,6 +1350,84 @@ app.post("/make-server-d36f8f91/admin/revoke-licenses", async (c) => {
   }
 });
 
+// Make a user an admin by email (requires admin key for security - NO AUTH HEADER NEEDED)
+app.post("/make-server-d36f8f91/admin/make-admin-by-email", async (c) => {
+  try {
+    const body = await c.req.json();
+    const { email, adminKey } = body;
+
+    console.log('');
+    console.log('═══════════════════════════════════════════════════');
+    console.log('[POST /admin/make-admin-by-email] REQUEST');
+    console.log('═══════════════════════════════════════════════════');
+    console.log('[make-admin-by-email] Email:', email);
+    console.log('[make-admin-by-email] Admin key provided:', !!adminKey);
+
+    // Require admin key for this sensitive operation (NO user auth needed)
+    const ADMIN_KEY = Deno.env.get('ADMIN_IMPORT_KEY') || 'change-this-key';
+    console.log('[make-admin-by-email] Expected admin key starts with:', ADMIN_KEY.substring(0, 5) + '...');
+
+    if (!adminKey) {
+      console.error('[make-admin-by-email] ❌ No admin key provided');
+      return c.json({ message: 'Admin key required' }, 400);
+    }
+
+    if (adminKey !== ADMIN_KEY) {
+      console.error('[make-admin-by-email] ❌ Invalid admin key provided');
+      console.error('[make-admin-by-email] Received key starts with:', adminKey.substring(0, 5) + '...');
+      return c.json({ message: 'Unauthorized - Invalid admin key' }, 401);
+    }
+
+    if (!email) {
+      console.error('[make-admin-by-email] ❌ No email provided');
+      return c.json({ message: 'Email required' }, 400);
+    }
+
+    // Find user by email
+    console.log('[make-admin-by-email] Looking up user by email...');
+    const { data: { users }, error: listError } = await supabase.auth.admin.listUsers();
+
+    if (listError) {
+      console.error('[make-admin-by-email] ❌ Error listing users:', listError);
+      return c.json({ message: 'Failed to find user' }, 500);
+    }
+
+    const user = users.find(u => u.email?.toLowerCase() === email.toLowerCase());
+
+    if (!user) {
+      console.error('[make-admin-by-email] ❌ User not found:', email);
+      return c.json({ message: 'User not found with that email' }, 404);
+    }
+
+    console.log('[make-admin-by-email] ✅ User found:', user.id, user.email);
+
+    // Update user metadata to add admin role
+    console.log('[make-admin-by-email] Updating user metadata to grant admin role...');
+    const { data, error } = await supabase.auth.admin.updateUserById(user.id, {
+      user_metadata: { role: 'admin' }
+    });
+
+    if (error) {
+      console.error('[make-admin-by-email] ❌ Error updating user metadata:', error);
+      return c.json({ message: 'Failed to update user role' }, 500);
+    }
+
+    console.log(`[make-admin-by-email] ✅ ${user.email} (${user.id}) is now an admin`);
+    console.log('═══════════════════════════════════════════════════');
+    console.log('');
+
+    return c.json({
+      message: 'User is now an admin',
+      email: user.email,
+      userId: user.id,
+    });
+  } catch (error: any) {
+    console.error('[make-admin-by-email] ❌ Exception:', error);
+    console.error('[make-admin-by-email] Stack:', error.stack);
+    return c.json({ message: 'Error updating user role', error: error.message }, 500);
+  }
+});
+
 // Make a user an admin (requires admin key for security)
 app.post("/make-server-d36f8f91/admin/make-admin", async (c) => {
   try {
@@ -1338,7 +1436,7 @@ app.post("/make-server-d36f8f91/admin/make-admin", async (c) => {
 
     // Require admin key for this sensitive operation
     const ADMIN_KEY = Deno.env.get('ADMIN_IMPORT_KEY') || 'change-this-key';
-    
+
     if (adminKey !== ADMIN_KEY) {
       return c.json({ message: 'Unauthorized - Invalid admin key' }, 401);
     }
@@ -1359,7 +1457,7 @@ app.post("/make-server-d36f8f91/admin/make-admin", async (c) => {
 
     console.log(`User ${userId} is now an admin`);
 
-    return c.json({ 
+    return c.json({
       message: 'User is now an admin',
       userId,
     });
