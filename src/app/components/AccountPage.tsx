@@ -69,12 +69,13 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
     console.log('[AccountPage] Paid Exams Array:', paidExams);
     console.log('[AccountPage] Paid Exams Count:', paidExams.length);
     console.log('[AccountPage] Paid Exams (detailed):', JSON.stringify(paidExams, null, 2));
+    console.log('[AccountPage] Categories loaded:', categories.length);
+    console.log('[AccountPage] Categories:', categories.map(c => ({ type: c.type, title: c.title })));
     console.log('[AccountPage] Subscription Expires At:', subscriptionExpiresAt);
     console.log('[AccountPage] Language:', language);
-    console.log('[AccountPage] Dark Mode:', darkMode);
     console.log('═══════════════════════════════════════════════════');
     console.log('');
-  }, [userEmail, paidExams, subscriptionExpiresAt, language, darkMode]);
+  }, [userEmail, paidExams, subscriptionExpiresAt, language, darkMode, categories]);
 
   // Calculate expiry dates from the subscriptionExpiresAt timestamp
   const getExpiryDate = () => {
@@ -371,10 +372,17 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      {paidExams.map((examType) => {
+                      {paidExams.map((examType, index) => {
+                        console.log(`[AccountPage] Rendering exam ${index + 1}/${paidExams.length}: "${examType}"`);
+
                         // Try to get exam data from dynamic categories first, fallback to static examData
                         const categoryData = categories.find(cat => cat.type === examType);
                         const exam = categoryData || examData[examType];
+
+                        console.log(`[AccountPage]   - Category data found:`, !!categoryData);
+                        console.log(`[AccountPage]   - Exam data found:`, !!exam);
+                        console.log(`[AccountPage]   - Category title:`, categoryData?.title);
+                        console.log(`[AccountPage]   - Exam title:`, exam?.title);
 
                         // FLEXIBLE SYSTEM: Always show the subscription, even if category data is missing
                         // Use fallback display with exam type if no data found

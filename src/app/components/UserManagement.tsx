@@ -6,12 +6,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { ScrollArea } from './ui/scroll-area';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { Input } from './ui/input';
-import { Users, Calendar, CheckCircle, XCircle, Shield, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Users, Calendar, CheckCircle, XCircle, Shield, Search, ChevronLeft, ChevronRight, ShieldCheck, ShieldOff, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { ButtonSpinner } from './LoadingSpinner';
 import { projectId } from '../utils/supabase/info';
 import { Alert, AlertDescription } from './ui/alert';
 import { loadExamCategories } from '../utils/categoryLoader';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
 
 interface User {
   id: string;
@@ -236,6 +237,108 @@ export function UserManagement() {
     }
   };
 
+  const handleGrantAdmin = async (userId: string, userEmail: string) => {
+    setProcessingUsers(prev => new Set(prev).add(userId));
+    try {
+      const { createClient } = await import('../utils/supabase/client');
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session?.access_token) {
+        throw new Error('No active session');
+      }
+
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/admin/grant-admin-access`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({ userId }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to grant admin access');
+      }
+
+      toast.success(`Admin access granted to ${userEmail}`);
+      await loadUsers();
+    } catch (error: any) {
+      console.error('Error granting admin:', error);
+      toast.error(`Failed to grant admin access: ${error.message}`);
+    } finally {
+      setProcessingUsers(prev => {
+        const next = new Set(prev);
+        next.delete(userId);
+        return next;
+      });
+    }
+  };
+
+  const handleRevokeAdmin = async (userId: string, userEmail: string) => {
+    setProcessingUsers(prev => new Set(prev).add(userId));
+    try {
+      const { createClient } = await import('../utils/supabase/client');
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session?.access_token) {
+        throw new Error('No active session');
+      }
+
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/admin/revoke-admin-access`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({ userId }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+
+        // Special handling for "last admin" protection
+        if (response.status === 400 && errorData.message?.includes('at least one admin')) {
+          toast.error('Cannot revoke - at least one admin must remain in the system', {
+            description: 'Grant admin access to another user first, then revoke this one.',
+            duration: 5000,
+          });
+        } else if (response.status === 400 && errorData.message?.includes('your own')) {
+          toast.error('You cannot revoke your own admin access', {
+            description: 'Another admin must revoke your access.',
+            duration: 4000,
+          });
+        } else {
+          throw new Error(errorData.message || 'Failed to revoke admin access');
+        }
+        return;
+      }
+
+      const result = await response.json();
+      toast.success(`Admin access revoked from ${userEmail}`, {
+        description: result.remainingAdmins ? `${result.remainingAdmins} admin(s) remaining` : undefined,
+      });
+      await loadUsers();
+    } catch (error: any) {
+      console.error('Error revoking admin:', error);
+      toast.error(`Failed to revoke admin access: ${error.message}`);
+    } finally {
+      setProcessingUsers(prev => {
+        const next = new Set(prev);
+        next.delete(userId);
+        return next;
+      });
+    }
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -340,6 +443,7 @@ export function UserManagement() {
             <TableHeader>
               <TableRow className="dark:border-slate-600">
                 <TableHead className="dark:text-gray-300">User</TableHead>
+                <TableHead className="dark:text-gray-300">Admin Status</TableHead>
                 <TableHead className="dark:text-gray-300">Licenses</TableHead>
                 <TableHead className="dark:text-gray-300">Actions</TableHead>
               </TableRow>
@@ -355,17 +459,90 @@ export function UserManagement() {
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
                           <span className="font-medium dark:text-gray-100">{user.name}</span>
-                          {user.role === 'admin' && (
-                            <Badge variant="destructive" className="text-xs h-5">
-                              <Shield className="w-3 h-3 mr-1" />
-                              Admin
-                            </Badge>
-                          )}
                         </div>
                         <div className="text-sm text-gray-600 dark:text-gray-400">{user.email}</div>
                         <div className="text-xs text-gray-500 dark:text-gray-500">
                           Joined {formatDate(user.createdAt)}
                         </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-col gap-2">
+                        {user.role === 'admin' ? (
+                          <>
+                            <Badge variant="destructive" className="w-fit">
+                              <Shield className="w-3 h-3 mr-1" />
+                              Admin
+                            </Badge>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  disabled={isProcessing}
+                                  className="w-fit text-xs h-7 border-red-500 text-red-600 hover:bg-red-50 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-950"
+                                >
+                                  {isProcessing ? (
+                                    <ButtonSpinner className="w-3 h-3" />
+                                  ) : (
+                                    <>
+                                      <ShieldOff className="w-3 h-3 mr-1" />
+                                      Revoke Admin
+                                    </>
+                                  )}
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent className="dark:bg-slate-800">
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle className="flex items-center gap-2 text-red-600 dark:text-red-400">
+                                    <AlertTriangle className="w-5 h-5" />
+                                    Revoke Admin Access?
+                                  </AlertDialogTitle>
+                                  <AlertDialogDescription className="dark:text-gray-300">
+                                    Are you sure you want to revoke admin access from <strong>{user.email}</strong>?
+                                    <br /><br />
+                                    They will lose access to:
+                                    <ul className="list-disc list-inside mt-2 space-y-1">
+                                      <li>Admin panel</li>
+                                      <li>User management</li>
+                                      <li>License granting</li>
+                                      <li>Question uploads</li>
+                                      <li>Partner management</li>
+                                    </ul>
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel className="dark:bg-slate-700 dark:text-gray-200 dark:hover:bg-slate-600">
+                                    Cancel
+                                  </AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => handleRevokeAdmin(user.id, user.email)}
+                                    className="bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800"
+                                  >
+                                    Yes, Revoke Admin Access
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </>
+                        ) : (
+                          <Button
+                            onClick={() => handleGrantAdmin(user.id, user.email)}
+                            variant="outline"
+                            size="sm"
+                            disabled={isProcessing}
+                            className="w-fit text-xs h-7 border-green-500 text-green-600 hover:bg-green-50 dark:border-green-700 dark:text-green-400 dark:hover:bg-green-950"
+                          >
+                            {isProcessing ? (
+                              <ButtonSpinner className="w-3 h-3" />
+                            ) : (
+                              <>
+                                <ShieldCheck className="w-3 h-3 mr-1" />
+                                Grant Admin
+                              </>
+                            )}
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                     <TableCell>

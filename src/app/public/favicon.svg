@@ -1,30 +1,31 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
   <defs>
-    <linearGradient id="seaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" style="stop-color:#0ea5e9;stop-opacity:1" />
       <stop offset="100%" style="stop-color:#0369a1;stop-opacity:1" />
     </linearGradient>
   </defs>
 
-  <!-- Background circle -->
-  <circle cx="50" cy="50" r="48" fill="url(#seaGradient)"/>
+  <!-- Rounded square background (better for favicons) -->
+  <rect x="0" y="0" width="128" height="128" rx="24" fill="url(#bgGradient)"/>
 
-  <!-- Yacht hull -->
-  <path d="M30 65 L50 75 L70 65 L65 70 L35 70 Z" fill="#ffffff" stroke="#0c4a6e" stroke-width="1.5"/>
+  <!-- White yacht silhouette (bold and simple for small sizes) -->
+  <!-- Hull -->
+  <path d="M35 85 L64 100 L93 85 L88 92 L40 92 Z" fill="#ffffff"/>
 
-  <!-- Main sail -->
-  <path d="M50 30 L50 65 L70 60 Z" fill="#ffffff" stroke="#0c4a6e" stroke-width="1.5"/>
+  <!-- Main sail (larger and bolder) -->
+  <path d="M64 35 L64 85 L95 75 Z" fill="#ffffff" opacity="0.95"/>
 
   <!-- Front sail -->
-  <path d="M50 35 L50 65 L35 55 Z" fill="#f0f9ff" stroke="#0c4a6e" stroke-width="1.5"/>
+  <path d="M64 40 L64 85 L40 70 Z" fill="#ffffff" opacity="0.75"/>
 
-  <!-- Mast -->
-  <line x1="50" y1="25" x2="50" y2="65" stroke="#0c4a6e" stroke-width="2"/>
+  <!-- Mast (thicker) -->
+  <rect x="62" y="30" width="4" height="55" fill="#0c4a6e"/>
 
   <!-- Flag -->
-  <path d="M50 25 L58 28 L50 31 Z" fill="#ef4444"/>
+  <path d="M64 30 L76 35 L64 40 Z" fill="#ef4444"/>
 
-  <!-- Waves -->
-  <path d="M20 75 Q25 72 30 75 T40 75 T50 75 T60 75 T70 75 T80 75"
-        stroke="#ffffff" stroke-width="2" fill="none" opacity="0.5"/>
+  <!-- Simple wave at bottom -->
+  <path d="M10 95 Q25 90 40 95 T70 95 T100 95 T118 95"
+        stroke="#ffffff" stroke-width="3" fill="none" opacity="0.4" stroke-linecap="round"/>
 </svg>

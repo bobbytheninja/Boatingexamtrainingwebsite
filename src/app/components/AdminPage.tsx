@@ -14,7 +14,8 @@ import { DatabaseDiagnostics } from './DatabaseDiagnostics';
 import { PartnerManagement } from './PartnerManagement';
 import { CategoryManagement } from './CategoryManagement';
 import { Analytics } from './Analytics';
-import { ArrowLeft, Database, Users, Key, UserPlus, AlertCircle, CheckCircle, Shield, Image as ImageIcon, Ship } from 'lucide-react';
+import { SubscriptionDebug } from './SubscriptionDebug';
+import { ArrowLeft, Database, Users, Key, UserPlus, AlertCircle, CheckCircle, Shield, Image as ImageIcon, Ship, Search } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useDarkMode } from '../contexts/DarkModeContext';
 import { toast } from 'sonner';
@@ -519,16 +520,24 @@ export function AdminPage({ onBack }: AdminPageProps) {
         {/* Show admin panel to all logged-in users, but limit features based on admin status */}
         {user && (
         <Tabs defaultValue={userIsAdmin ? "diagnostics" : "keys"} className="space-y-8">
-          <TabsList className={`grid w-full max-w-6xl mx-auto gap-2.5 ${userIsAdmin ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-8' : 'grid-cols-1 sm:grid-cols-2'} h-auto p-3 ${darkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-slate-50 border-slate-200'} border shadow-lg rounded-lg backdrop-blur-sm`}>
+          <TabsList className={`grid w-full max-w-6xl mx-auto gap-2.5 ${userIsAdmin ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-9' : 'grid-cols-1 sm:grid-cols-2'} h-auto p-3 ${darkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-slate-50 border-slate-200'} border shadow-lg rounded-lg backdrop-blur-sm`}>
             {userIsAdmin && (
               <>
-                <TabsTrigger 
-                  value="diagnostics" 
+                <TabsTrigger
+                  value="diagnostics"
                   className="flex flex-col items-center justify-center gap-2 py-4 px-3 rounded-md text-sm font-medium transition-all data-[state=active]:bg-slate-700 data-[state=active]:text-white data-[state=active]:shadow-md dark:data-[state=active]:bg-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700/50"
                 >
                   <AlertCircle className="w-5 h-5" />
                   <span className="hidden sm:inline text-xs">Diagnostics</span>
                   <span className="sm:hidden text-xs">Diag</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="subdebug"
+                  className="flex flex-col items-center justify-center gap-2 py-4 px-3 rounded-md text-sm font-medium transition-all data-[state=active]:bg-slate-700 data-[state=active]:text-white data-[state=active]:shadow-md dark:data-[state=active]:bg-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700/50"
+                >
+                  <Search className="w-5 h-5" />
+                  <span className="hidden sm:inline text-xs">Sub Debug</span>
+                  <span className="sm:hidden text-xs">Sub</span>
                 </TabsTrigger>
                 <TabsTrigger 
                   value="categories" 
@@ -592,6 +601,12 @@ export function AdminPage({ onBack }: AdminPageProps) {
 
           {userIsAdmin && (
             <>
+              <TabsContent value="subdebug">
+                <div className="space-y-6">
+                  <SubscriptionDebug />
+                </div>
+              </TabsContent>
+
               <TabsContent value="diagnostics">
                 <div className="space-y-6">
                   <DatabaseDiagnostics />

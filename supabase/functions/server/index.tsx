@@ -224,11 +224,137 @@ async function verifyAdmin(authHeader: string | null) {
 
 // Health check endpoint (no auth required)
 app.get("/make-server-d36f8f91/health", (c) => {
-  return c.json({ 
+  return c.json({
     status: "ok",
     timestamp: new Date().toISOString(),
     version: "1.0.0"
   });
+});
+
+// Debug endpoint to check raw subscription data (admin only)
+app.get("/make-server-d36f8f91/admin/debug-subscription/:email", async (c) => {
+  const { error, user, isAdmin: adminStatus } = await verifyAdmin(c.req.header('Authorization'));
+
+  if (error || !user || !adminStatus) {
+    return c.json({ message: error || 'Admin access required' }, error === 'Unauthorized' ? 401 : 403);
+  }
+
+  try {
+    const email = c.req.param('email');
+
+    console.log('');
+    console.log('═══════════════════════════════════════════════════');
+    console.log('[DEBUG] Getting subscription data for:', email);
+    console.log('═══════════════════════════════════════════════════');
+
+    // Find user by email
+    const { data: { users }, error: listError } = await supabase.auth.admin.listUsers();
+
+    if (listError) {
+      return c.json({ message: 'Failed to find user' }, 500);
+    }
+
+    const targetUser = users.find(u => u.email?.toLowerCase() === email.toLowerCase());
+
+    if (!targetUser) {
+      return c.json({ message: 'User not found' }, 404);
+    }
+
+    console.log('[DEBUG] User found:', targetUser.id, targetUser.email);
+
+    // Get raw subscription data
+    const rawSubscription = await kv.get(`subscription:${targetUser.id}`);
+
+    console.log('[DEBUG] Raw subscription data:', JSON.stringify(rawSubscription, null, 2));
+
+    return c.json({
+      email: targetUser.email,
+      userId: targetUser.id,
+      rawSubscription: rawSubscription,
+      examTypes: rawSubscription?.examTypes || [],
+      examTypesCount: rawSubscription?.examTypes?.length || 0,
+      expiresAt: rawSubscription?.expiresAt || null,
+    });
+  } catch (error: any) {
+    console.error('[DEBUG] Error:', error);
+    return c.json({ message: 'Error fetching subscription data', error: error.message }, 500);
+  }
+});
+
+// Public endpoint to grant admin by email (requires only admin key, NO AUTH)
+app.post("/make-server-d36f8f91/public/grant-admin", async (c) => {
+  try {
+    const body = await c.req.json();
+    const { email, adminKey } = body;
+
+    console.log('');
+    console.log('═══════════════════════════════════════════════════');
+    console.log('[POST /public/grant-admin] PUBLIC REQUEST');
+    console.log('═══════════════════════════════════════════════════');
+    console.log('[grant-admin] Email:', email);
+
+    // Require admin key for this sensitive operation (NO user auth needed)
+    const ADMIN_KEY = Deno.env.get('ADMIN_IMPORT_KEY') || 'change-this-key';
+
+    if (!adminKey) {
+      console.error('[grant-admin] ❌ No admin key provided');
+      return c.json({ message: 'Admin key required' }, 400);
+    }
+
+    if (adminKey !== ADMIN_KEY) {
+      console.error('[grant-admin] ❌ Invalid admin key');
+      return c.json({ message: 'Unauthorized - Invalid admin key' }, 401);
+    }
+
+    if (!email) {
+      console.error('[grant-admin] ❌ No email provided');
+      return c.json({ message: 'Email required' }, 400);
+    }
+
+    // Find user by email
+    console.log('[grant-admin] Looking up user by email...');
+    const { data: { users }, error: listError } = await supabase.auth.admin.listUsers();
+
+    if (listError) {
+      console.error('[grant-admin] ❌ Error listing users:', listError);
+      return c.json({ message: 'Failed to find user' }, 500);
+    }
+
+    const user = users.find(u => u.email?.toLowerCase() === email.toLowerCase());
+
+    if (!user) {
+      console.error('[grant-admin] ❌ User not found:', email);
+      return c.json({ message: 'User not found with that email' }, 404);
+    }
+
+    console.log('[grant-admin] ✅ User found:', user.id, user.email);
+
+    // Update user metadata to add admin role
+    console.log('[grant-admin] Updating user metadata to grant admin role...');
+    const { data, error } = await supabase.auth.admin.updateUserById(user.id, {
+      user_metadata: { role: 'admin' }
+    });
+
+    if (error) {
+      console.error('[grant-admin] ❌ Error updating user metadata:', error);
+      return c.json({ message: 'Failed to update user role' }, 500);
+    }
+
+    console.log(`[grant-admin] ✅ ${user.email} (${user.id}) is now an admin`);
+    console.log('═══════════════════════════════════════════════════');
+    console.log('');
+
+    return c.json({
+      success: true,
+      message: 'User is now an admin',
+      email: user.email,
+      userId: user.id,
+    });
+  } catch (error: any) {
+    console.error('[grant-admin] ❌ Exception:', error);
+    console.error('[grant-admin] Stack:', error.stack);
+    return c.json({ message: 'Error updating user role', error: error.message }, 500);
+  }
 });
 
 // Sitemap XML endpoint (no auth required) - for SEO
@@ -1428,7 +1554,116 @@ app.post("/make-server-d36f8f91/admin/make-admin-by-email", async (c) => {
   }
 });
 
-// Make a user an admin (requires admin key for security)
+// Grant admin access to a user (admin only - more secure than admin key)
+app.post("/make-server-d36f8f91/admin/grant-admin-access", async (c) => {
+  const { error, user, isAdmin: adminStatus } = await verifyAdmin(c.req.header('Authorization'));
+
+  if (error || !user || !adminStatus) {
+    return c.json({ message: error || 'Admin access required' }, error === 'Unauthorized' ? 401 : 403);
+  }
+
+  try {
+    const body = await c.req.json();
+    const { userId } = body;
+
+    if (!userId) {
+      return c.json({ message: 'User ID required' }, 400);
+    }
+
+    console.log(`Admin ${user.email} is granting admin access to user ${userId}`);
+
+    // Update user metadata to add admin role
+    const { data, error: updateError } = await supabase.auth.admin.updateUserById(userId, {
+      user_metadata: { role: 'admin' }
+    });
+
+    if (updateError) {
+      console.error('Error granting admin access:', updateError);
+      return c.json({ message: 'Failed to update user role' }, 500);
+    }
+
+    console.log(`✅ User ${userId} is now an admin (granted by ${user.email})`);
+
+    return c.json({
+      message: 'Admin access granted successfully',
+      userId,
+    });
+  } catch (error: any) {
+    console.error('Error granting admin access:', error);
+    return c.json({ message: 'Error granting admin access', error: error.message }, 500);
+  }
+});
+
+// Revoke admin access from a user (admin only)
+app.post("/make-server-d36f8f91/admin/revoke-admin-access", async (c) => {
+  const { error, user, isAdmin: adminStatus } = await verifyAdmin(c.req.header('Authorization'));
+
+  if (error || !user || !adminStatus) {
+    return c.json({ message: error || 'Admin access required' }, error === 'Unauthorized' ? 401 : 403);
+  }
+
+  try {
+    const body = await c.req.json();
+    const { userId } = body;
+
+    if (!userId) {
+      return c.json({ message: 'User ID required' }, 400);
+    }
+
+    // Prevent self-revocation
+    if (userId === user.id) {
+      console.log(`❌ Admin ${user.email} tried to revoke their own admin access`);
+      return c.json({ message: 'You cannot revoke your own admin access' }, 400);
+    }
+
+    // Count total admins before revoking
+    console.log(`Checking total admin count before revoking access from user ${userId}...`);
+    const { data: { users }, error: listError } = await supabase.auth.admin.listUsers();
+
+    if (listError) {
+      console.error('Error listing users to check admin count:', listError);
+      return c.json({ message: 'Failed to verify admin count' }, 500);
+    }
+
+    const adminCount = users.filter(u => u.user_metadata?.role === 'admin').length;
+    console.log(`Current admin count: ${adminCount}`);
+
+    // Prevent revoking if this would leave zero admins
+    if (adminCount <= 1) {
+      console.log(`❌ Cannot revoke admin access - this would leave the system with zero admins!`);
+      return c.json({
+        message: 'Cannot revoke admin access - at least one admin must remain in the system',
+        adminCount
+      }, 400);
+    }
+
+    console.log(`Admin ${user.email} is revoking admin access from user ${userId}`);
+
+    // Update user metadata to remove admin role
+    const { data, error: updateError } = await supabase.auth.admin.updateUserById(userId, {
+      user_metadata: { role: 'user' }
+    });
+
+    if (updateError) {
+      console.error('Error revoking admin access:', updateError);
+      return c.json({ message: 'Failed to update user role' }, 500);
+    }
+
+    console.log(`✅ Admin access revoked from user ${userId} (by ${user.email})`);
+    console.log(`   Remaining admins: ${adminCount - 1}`);
+
+    return c.json({
+      message: 'Admin access revoked successfully',
+      userId,
+      remainingAdmins: adminCount - 1,
+    });
+  } catch (error: any) {
+    console.error('Error revoking admin access:', error);
+    return c.json({ message: 'Error revoking admin access', error: error.message }, 500);
+  }
+});
+
+// Make a user an admin (requires admin key for security - fallback method)
 app.post("/make-server-d36f8f91/admin/make-admin", async (c) => {
   try {
     const body = await c.req.json();
