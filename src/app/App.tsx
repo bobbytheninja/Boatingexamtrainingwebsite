@@ -403,7 +403,37 @@ function AppContent() {
 function App() {
   React.useEffect(() => {
     console.clear();
-    
+
+    // Inject favicon links into document head
+    const head = document.head;
+
+    // Remove any existing favicon links
+    const existingIcons = head.querySelectorAll('link[rel*="icon"]');
+    existingIcons.forEach(icon => icon.remove());
+
+    // Add new favicon links
+    const favicons = [
+      { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
+      { rel: 'icon', type: 'image/svg+xml', sizes: 'any', href: '/favicon.svg' },
+      { rel: 'apple-touch-icon', sizes: '180x180', href: '/apple-touch-icon.svg' },
+      { rel: 'icon', type: 'image/svg+xml', sizes: '192x192', href: '/icon-192.svg' },
+      { rel: 'icon', type: 'image/svg+xml', sizes: '512x512', href: '/icon-512.svg' },
+    ];
+
+    favicons.forEach(({ rel, type, sizes, href }) => {
+      const link = document.createElement('link');
+      link.rel = rel;
+      if (type) link.type = type;
+      if (sizes) link.setAttribute('sizes', sizes);
+      link.href = href;
+      head.appendChild(link);
+    });
+
+    // Set document title
+    document.title = 'Black Sea Bulgaria - Yacht & Boat Exam Training | Practice Tests Online';
+
+    console.log('%c✓ Favicons injected', 'color: #10b981; font-weight: bold');
+
     // Filter out Figma devtools_worker noise
     const originalError = console.error;
     const originalWarn = console.warn;
