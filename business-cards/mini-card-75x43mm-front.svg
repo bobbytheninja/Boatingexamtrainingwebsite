@@ -1,0 +1,60 @@
+<!-- Mini Business Card: 75.28mm × 43mm (Front) -->
+<!-- Print specs: 75.28mm × 43mm + 2mm bleed = 79.28mm × 47mm -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 299.53 177.17" width="299.53" height="177.17">
+  <!-- Conversion: 1mm = 3.7795px, so 79.28mm × 47mm -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0ea5e9;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#0284c7;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0369a1;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Bleed area border (for reference only - remove before print) -->
+  <rect x="0" y="0" width="299.53" height="177.17" fill="url(#bgGradient)"/>
+
+  <!-- Safe area guide (7.56px = 2mm from edge) -->
+  <!-- Content should stay within this area -->
+
+  <!-- Decorative wave pattern (bottom) -->
+  <path d="M0 140 Q75 130 150 140 T300 140 L300 177.17 L0 177.17 Z"
+        fill="#ffffff"
+        opacity="0.1"/>
+  <path d="M0 155 Q75 148 150 155 T300 155 L300 177.17 L0 177.17 Z"
+        fill="#ffffff"
+        opacity="0.15"/>
+
+  <!-- Yacht icon (top left) -->
+  <g transform="translate(20, 25)">
+    <!-- Hull -->
+    <path d="M12 40 L30 48 L48 40 L45 45 L15 45 Z" fill="#ffffff" opacity="0.95"/>
+    <!-- Main sail -->
+    <path d="M30 10 L30 40 L55 35 Z" fill="#ffffff" opacity="0.9"/>
+    <!-- Front sail -->
+    <path d="M30 15 L30 40 L12 32 Z" fill="#f0f9ff" opacity="0.85"/>
+    <!-- Mast -->
+    <rect x="28" y="8" width="4" height="32" fill="#ffffff"/>
+    <!-- Flag -->
+    <path d="M30 8 L42 12 L30 16 Z" fill="#ef4444"/>
+  </g>
+
+  <!-- Company name (center) -->
+  <text x="150" y="80" font-family="Arial, sans-serif" font-size="22" font-weight="bold" fill="#ffffff" text-anchor="middle">
+    BLACK SEA BULGARIA
+  </text>
+
+  <!-- Tagline (below company name) -->
+  <text x="150" y="100" font-family="Arial, sans-serif" font-size="10" fill="#f0f9ff" text-anchor="middle" letter-spacing="1">
+    YACHT &amp; BOAT EXAM TRAINING
+  </text>
+
+  <!-- Website (bottom right corner) -->
+  <text x="280" y="165" font-family="Arial, sans-serif" font-size="9" font-weight="bold" fill="#ffffff" text-anchor="end">
+    blackseabulgaria.com
+  </text>
+
+  <!-- Bleed/trim marks (REMOVE BEFORE SENDING TO PRINTER) -->
+  <!-- These are just guides -->
+  <line x1="7.56" y1="0" x2="7.56" y2="10" stroke="red" stroke-width="0.5" opacity="0.3"/>
+  <line x1="0" y1="7.56" x2="10" y2="7.56" stroke="red" stroke-width="0.5" opacity="0.3"/>
+</svg>

@@ -1,0 +1,65 @@
+<!-- Standard Business Card: 85mm × 55mm (Back) -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 336.38 223" width="336.38" height="223">
+  <defs>
+    <linearGradient id="stdBackGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f0f9ff;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect x="0" y="0" width="336.38" height="223" fill="url(#stdBackGrad)"/>
+
+  <!-- Top accent wave -->
+  <path d="M0 0 Q84 18 168 0 T336.38 0 L336.38 35 Q252 45 168 35 T0 35 Z"
+        fill="#0ea5e9"
+        opacity="0.08"/>
+
+  <!-- QR Code placeholder (left side, larger) -->
+  <rect x="30" y="55" width="110" height="110" fill="#1e293b" rx="10"/>
+  <text x="85" y="108" font-family="Arial, sans-serif" font-size="12" fill="#ffffff" text-anchor="middle">
+    QR CODE
+  </text>
+  <text x="85" y="125" font-family="Arial, sans-serif" font-size="8" fill="#94a3b8" text-anchor="middle">
+    Scan for instant access
+  </text>
+
+  <!-- Contact info (right side) -->
+  <g transform="translate(160, 65)">
+    <!-- Phone -->
+    <text x="0" y="0" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#0369a1">
+      📞 Phone
+    </text>
+    <text x="0" y="18" font-family="Arial, sans-serif" font-size="11" fill="#475569">
+      +359 XXX XXX XXX
+    </text>
+
+    <!-- Email -->
+    <text x="0" y="40" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#0369a1">
+      ✉️ Email
+    </text>
+    <text x="0" y="58" font-family="Arial, sans-serif" font-size="10" fill="#475569">
+      info@blackseabulgaria.com
+    </text>
+
+    <!-- Website -->
+    <text x="0" y="80" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#0ea5e9">
+      🌐 Website
+    </text>
+    <text x="0" y="98" font-family="Arial, sans-serif" font-size="11" fill="#0369a1">
+      blackseabulgaria.com
+    </text>
+  </g>
+
+  <!-- Bottom section -->
+  <g transform="translate(30, 185)">
+    <text x="0" y="0" font-family="Arial, sans-serif" font-size="9" fill="#64748b">
+      📍 Bulgaria, Black Sea Coast
+    </text>
+  </g>
+
+  <!-- Right bottom -->
+  <text x="305" y="200" font-family="Arial, sans-serif" font-size="8" fill="#94a3b8" text-anchor="end" font-style="italic">
+    Professional Maritime Training
+  </text>
+</svg>
