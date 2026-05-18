@@ -1,0 +1,83 @@
+<!-- Square Water & Sky QR Sticker -->
+<!-- Square sticker: 90mm × 90mm -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 340.16 340.16" width="340.16" height="340.16">
+  <!-- 90mm × 90mm at 3.7795px/mm -->
+
+  <defs>
+    <!-- Sky gradient (top half) -->
+    <linearGradient id="sqSkyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#87ceeb;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#e0f2fe;stop-opacity:1" />
+    </linearGradient>
+
+    <!-- Water gradient (bottom half) -->
+    <linearGradient id="sqWaterGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#0ea5e9;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0369a1;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Rounded square background -->
+  <rect x="10" y="10" width="320.16" height="320.16" rx="25" fill="#ffffff"/>
+
+  <!-- Sky (top half) -->
+  <rect x="10" y="10" width="320.16" height="160.08" rx="25" fill="url(#sqSkyGrad)"/>
+  <rect x="10" y="10" width="320.16" height="160.08" fill="url(#sqSkyGrad)"/>
+
+  <!-- Water (bottom half) -->
+  <rect x="10" y="170.08" width="320.16" height="160.08" rx="25" fill="url(#sqWaterGrad)"/>
+  <rect x="10" y="170.08" width="320.16" height="170.08" fill="url(#sqWaterGrad)"/>
+
+  <!-- Clouds decoration in sky -->
+  <ellipse cx="70" cy="50" rx="35" ry="18" fill="#ffffff" opacity="0.5"/>
+  <ellipse cx="100" cy="45" rx="40" ry="20" fill="#ffffff" opacity="0.6"/>
+  <ellipse cx="240" cy="60" rx="30" ry="15" fill="#ffffff" opacity="0.5"/>
+  <ellipse cx="270" cy="55" rx="35" ry="18" fill="#ffffff" opacity="0.6"/>
+
+  <!-- Wave patterns in water -->
+  <path d="M 20 200 Q 60 193 100 200 T 180 200 T 260 200 T 320 200"
+        stroke="#ffffff"
+        stroke-width="4"
+        fill="none"
+        opacity="0.3"
+        stroke-linecap="round"/>
+  <path d="M 20 230 Q 60 225 100 230 T 180 230 T 260 230 T 320 230"
+        stroke="#ffffff"
+        stroke-width="3"
+        fill="none"
+        opacity="0.25"
+        stroke-linecap="round"/>
+  <path d="M 20 260 Q 60 255 100 260 T 180 260 T 260 260 T 320 260"
+        stroke="#ffffff"
+        stroke-width="3"
+        fill="none"
+        opacity="0.2"
+        stroke-linecap="round"/>
+
+  <!-- White square for QR code in center (on horizon line) -->
+  <rect x="95.08" y="95.08" width="150" height="150" rx="12" fill="#ffffff"/>
+
+  <!-- QR Code -->
+  <image xlink:href="qr-code.png" x="105.08" y="105.08" width="130" height="130" preserveAspectRatio="xMidYMid meet"/>
+
+  <!-- Square outline (blue) -->
+  <rect x="10" y="10" width="320.16" height="320.16" rx="25" fill="none" stroke="#0284c7" stroke-width="8"/>
+
+  <!-- Text: YACHT at top (in sky) -->
+  <text x="170.08" y="85" font-family="Arial, sans-serif" font-size="22" font-weight="bold" fill="#0369a1" text-anchor="middle">
+    YACHT
+  </text>
+
+  <!-- Text: TRAINER at bottom (in water) -->
+  <text x="170.08" y="280" font-family="Arial, sans-serif" font-size="22" font-weight="bold" fill="#ffffff" text-anchor="middle">
+    TRAINER
+  </text>
+
+  <!-- Small tagline -->
+  <text x="170.08" y="40" font-family="Arial, sans-serif" font-size="10" fill="#64748b" text-anchor="middle">
+    Black Sea Bulgaria
+  </text>
+  <text x="170.08" y="310" font-family="Arial, sans-serif" font-size="10" fill="#e0f2fe" text-anchor="middle">
+    blackseabulgaria.com
+  </text>
+</svg>

@@ -1,0 +1,98 @@
+<!-- Anchor-Shaped Artistic QR Code Sticker -->
+<!-- Die-cut sticker: 80mm × 100mm -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 302.36 377.95" width="302.36" height="377.95">
+  <!-- 80mm × 100mm at 3.7795px/mm -->
+
+  <defs>
+    <!-- Light blue glow effect -->
+    <filter id="blueGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="4"/>
+      <feOffset dx="0" dy="0" result="offsetblur"/>
+      <feFlood flood-color="#0ea5e9" flood-opacity="0.8"/>
+      <feComposite in2="offsetblur" operator="in"/>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Anchor outline path for die-cut -->
+  <path id="anchorOutline" d="
+    M 151 30
+    A 18 18 0 1 1 151 30
+    M 151 48
+    L 151 220
+    M 100 165
+    L 202 165
+    M 151 220
+    L 100 220 Q 80 220 80 240 L 80 270 Q 80 285 95 285
+    M 151 220
+    L 202 220 Q 222 220 222 240 L 222 270 Q 222 285 207 285
+    M 95 285 L 80 300
+    M 207 285 L 222 300"
+    fill="none"
+    stroke="#0ea5e9"
+    stroke-width="8"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    filter="url(#blueGlow)"/>
+
+  <!-- QR Code positioned to fill anchor shape -->
+  <!-- Clip to anchor shape -->
+  <defs>
+    <clipPath id="anchorClip">
+      <path d="
+        M 151 30
+        A 22 22 0 1 1 151 30
+        M 145 52
+        L 145 218
+        L 157 218
+        L 157 52
+        M 98 160
+        L 98 170
+        L 204 170
+        L 204 160
+        M 145 218
+        L 98 218 Q 75 218 75 240 L 75 273 Q 75 290 98 290 L 82 308
+        M 157 218
+        L 204 218 Q 227 218 227 240 L 227 273 Q 227 290 204 290 L 220 308"
+        fill="#000000"/>
+    </clipPath>
+  </defs>
+
+  <!-- QR code image masked by anchor shape -->
+  <g clip-path="url(#anchorClip)">
+    <!-- White background for QR readability -->
+    <rect x="70" y="25" width="162" height="285" fill="#ffffff"/>
+
+    <!-- QR CODE - Replace with your actual QR code -->
+    <image xlink:href="qr-code.png" x="75" y="30" width="152" height="152" preserveAspectRatio="xMidYMid meet"/>
+
+    <!-- Extended QR pattern for anchor body -->
+    <image xlink:href="qr-code.png" x="130" y="160" width="42" height="60" preserveAspectRatio="xMidYMid slice"/>
+
+    <!-- QR pattern for cross bar -->
+    <image xlink:href="qr-code.png" x="95" y="160" width="112" height="15" preserveAspectRatio="xMidYMid slice"/>
+
+    <!-- QR pattern for flukes -->
+    <image xlink:href="qr-code.png" x="75" y="215" width="70" height="95" preserveAspectRatio="xMidYMid slice"/>
+    <image xlink:href="qr-code.png" x="157" y="215" width="70" height="95" preserveAspectRatio="xMidYMid slice"/>
+  </g>
+
+  <!-- Light blue outline (main feature) -->
+  <use xlink:href="#anchorOutline"/>
+
+  <!-- Company text at bottom -->
+  <g transform="translate(151, 335)">
+    <text x="0" y="0" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#0369a1" text-anchor="middle">
+      BLACK SEA BULGARIA
+    </text>
+    <text x="0" y="20" font-family="Arial, sans-serif" font-size="10" fill="#0284c7" text-anchor="middle">
+      Yacht Exam Training
+    </text>
+    <text x="0" y="35" font-family="Arial, sans-serif" font-size="9" fill="#64748b" text-anchor="middle">
+      Scan to start →
+    </text>
+  </g>
+</svg>

@@ -1,0 +1,60 @@
+<!-- Blue Box QR Code Sticker with Blue Outline -->
+<!-- Square sticker: 80mm × 80mm -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 302.36 302.36" width="302.36" height="302.36">
+  <!-- 80mm × 80mm at 3.7795px/mm -->
+
+  <defs>
+    <linearGradient id="blueBoxGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0ea5e9;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0284c7;stop-opacity:1" />
+    </linearGradient>
+
+    <!-- Blue glow for outline -->
+    <filter id="boxGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+      <feOffset dx="0" dy="0"/>
+      <feFlood flood-color="#0ea5e9" flood-opacity="0.6"/>
+      <feComposite in2="offsetblur" operator="in"/>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Blue gradient background -->
+  <rect x="15" y="15" width="272.36" height="272.36" rx="25" fill="url(#blueBoxGrad)"/>
+
+  <!-- White area for QR code -->
+  <rect x="40" y="65" width="222.36" height="222.36" rx="15" fill="#ffffff"/>
+
+  <!-- QR Code -->
+  <image xlink:href="qr-code.png" x="61" y="86" width="180" height="180" preserveAspectRatio="xMidYMid meet"/>
+
+  <!-- Blue outline with glow -->
+  <rect x="15" y="15" width="272.36" height="272.36" rx="25"
+        fill="none"
+        stroke="#0ea5e9"
+        stroke-width="8"
+        filter="url(#boxGlow)"/>
+
+  <!-- Inner frame -->
+  <rect x="40" y="65" width="222.36" height="222.36" rx="15"
+        fill="none"
+        stroke="#0ea5e9"
+        stroke-width="3"
+        opacity="0.5"/>
+
+  <!-- Top text -->
+  <g transform="translate(151.18, 45)">
+    <text x="0" y="0" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#ffffff" text-anchor="middle">
+      BLACK SEA BULGARIA
+    </text>
+  </g>
+
+  <!-- Bottom corner accents -->
+  <circle cx="30" cy="30" r="8" fill="#ffffff" opacity="0.3"/>
+  <circle cx="272.36" cy="30" r="8" fill="#ffffff" opacity="0.3"/>
+  <circle cx="30" cy="272.36" r="8" fill="#ffffff" opacity="0.3"/>
+  <circle cx="272.36" cy="272.36" r="8" fill="#ffffff" opacity="0.3"/>
+</svg>
