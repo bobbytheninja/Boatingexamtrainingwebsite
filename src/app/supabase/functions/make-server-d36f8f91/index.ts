@@ -3,7 +3,7 @@ import { cors } from "npm:hono/cors";
 import { logger } from "npm:hono/logger";
 import { createClient } from "npm:@supabase/supabase-js";
 import Stripe from "npm:stripe";
-import * as kv from "./kv_store.tsx";
+import * as kv from "./kv_store.ts";
 import * as questions from "./questions.ts";
 
 const app = new Hono();

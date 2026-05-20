@@ -1,5 +1,2 @@
-[project]
-id = "abtrsjhvjfgcxxpkszwi"
-
-[functions.server]
+[functions.make-server-d36f8f91]
 verify_jwt = false
