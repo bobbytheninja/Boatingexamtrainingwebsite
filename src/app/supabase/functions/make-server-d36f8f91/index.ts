@@ -2000,20 +2000,25 @@ app.post("/make-server-d36f8f91/images/upload", async (c) => {
 // Database diagnostics endpoint (helps debug question loading issues)
 app.get("/make-server-d36f8f91/diagnostics/questions", async (c) => {
   try {
-    const examTypes = ['jet', 'small', 'big', 'yacht', 'navigation'];
+    // Use registered categories, not a hardcoded list, so the UI matches what the admin set up.
+    const categories = await kv.get('exam_categories') || [];
+    const examTypes: string[] = Array.isArray(categories)
+      ? categories.map((cat: any) => cat.type).filter(Boolean)
+      : [];
+
     const diagnostics: any = {};
 
     for (const examType of examTypes) {
       const questionIds = await questions.getQuestionIds(examType);
       const count = questionIds.length;
-      
+
       let sampleQuestionId = null;
       let sampleQuestion = null;
 
       if (questionIds.length > 0) {
         sampleQuestionId = questionIds[0];
-        const q = await kv.get(sampleQuestionId);
-        
+        const q = await kv.get(`question:${sampleQuestionId}`);
+
         if (q) {
           sampleQuestion = {
             id: sampleQuestionId,
@@ -2031,7 +2036,7 @@ app.get("/make-server-d36f8f91/diagnostics/questions", async (c) => {
       };
     }
 
-    return c.json({ 
+    return c.json({
       diagnostics,
       timestamp: new Date().toISOString(),
     });
@@ -2806,11 +2811,11 @@ app.delete("/make-server-d36f8f91/categories/:type", async (c) => {
     let cleanedCount = 0;
     
     for (const { key, value } of allSubscriptions) {
-      if (value && Array.isArray(value.subscriptions)) {
-        const originalLength = value.subscriptions.length;
-        value.subscriptions = value.subscriptions.filter((sub: string) => sub !== categoryType);
-        
-        if (value.subscriptions.length < originalLength) {
+      if (value && Array.isArray(value.examTypes)) {
+        const originalLength = value.examTypes.length;
+        value.examTypes = value.examTypes.filter((sub: string) => sub !== categoryType);
+
+        if (value.examTypes.length < originalLength) {
           await kv.set(key, value);
           cleanedCount++;
           console.log(`[Delete Category] Removed ${categoryType} from ${key}`);
@@ -2930,7 +2935,7 @@ app.get("/make-server-d36f8f91/analytics/subscribers/:examType", async (c) => {
     const now = Date.now();
     
     for (const { key, value } of allSubscriptions) {
-      if (value && Array.isArray(value.subscriptions) && value.subscriptions.includes(examType)) {
+      if (value && Array.isArray(value.examTypes) && value.examTypes.includes(examType)) {
         const userId = key.replace('subscription:', '');
         
         // Check if subscription is still active
@@ -2993,11 +2998,11 @@ app.get("/make-server-d36f8f91/analytics/overview", async (c) => {
     const subscriberCounts: { [key: string]: number } = {};
     
     for (const { value } of allSubscriptions) {
-      if (value && Array.isArray(value.subscriptions)) {
+      if (value && Array.isArray(value.examTypes)) {
         const isActive = !value.expiresAt || value.expiresAt > now;
-        
+
         if (isActive) {
-          for (const examType of value.subscriptions) {
+          for (const examType of value.examTypes) {
             subscriberCounts[examType] = (subscriberCounts[examType] || 0) + 1;
           }
         }

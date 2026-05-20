@@ -56,8 +56,8 @@ export function PrivacyPolicyModal({ isOpen, onClose }: PrivacyPolicyModalProps)
             </p>
             <p className="text-gray-700 dark:text-gray-300">
               <strong>Data Controller:</strong> Yacht Exam Trainer<br />
-              <strong>Contact:</strong> bobby_rocks@me.com<br />
-              <strong>Phone:</strong> +350 87 66 101 85
+              <strong>Contact:</strong> gramatikovbobby@gmail.com<br />
+              <strong>Phone:</strong> +359 87 66 101 85
             </p>
           </section>
 
@@ -160,7 +160,7 @@ export function PrivacyPolicyModal({ isOpen, onClose }: PrivacyPolicyModalProps)
               <li><strong>Right to Lodge a Complaint:</strong> File a complaint with the Bulgarian Commission for Personal Data Protection (CPDP)</li>
             </ul>
             <p className="text-gray-700 dark:text-gray-300 mt-3">
-              To exercise these rights, contact us at: <a href="mailto:bobby_rocks@me.com" className="text-cyan-600 dark:text-cyan-400 hover:underline">bobby_rocks@me.com</a>
+              To exercise these rights, contact us at: <a href="mailto:gramatikovbobby@gmail.com" className="text-cyan-600 dark:text-cyan-400 hover:underline">gramatikovbobby@gmail.com</a>
             </p>
           </section>
 
@@ -224,16 +224,10 @@ export function PrivacyPolicyModal({ isOpen, onClose }: PrivacyPolicyModalProps)
             <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-4 mt-3">
               <p className="text-gray-800 dark:text-gray-200">
                 <strong>Yacht Exam Trainer</strong><br />
-                Email: <a href="mailto:bobby_rocks@me.com" className="text-cyan-600 dark:text-cyan-400 hover:underline">bobby_rocks@me.com</a><br />
-                Phone: <a href="tel:+35087661018" className="text-cyan-600 dark:text-cyan-400 hover:underline">+350 87 66 101 85</a>
+                Email: <a href="mailto:gramatikovbobby@gmail.com" className="text-cyan-600 dark:text-cyan-400 hover:underline">gramatikovbobby@gmail.com</a><br />
+                Phone: <a href="tel:+359876610185" className="text-cyan-600 dark:text-cyan-400 hover:underline">+359 87 66 101 85</a>
               </p>
             </div>
-            <p className="text-gray-700 dark:text-gray-300 mt-3">
-              <strong>Supervisory Authority (Bulgaria):</strong><br />
-              Commission for Personal Data Protection (CPDP)<br />
-              Address: 2 Prof. Tsvetan Lazarov Blvd., Sofia 1592, Bulgaria<br />
-              Website: <a href="https://www.cpdp.bg" target="_blank" rel="noopener noreferrer" className="text-cyan-600 dark:text-cyan-400 hover:underline">www.cpdp.bg</a>
-            </p>
           </section>
 
           <section className="space-y-3">

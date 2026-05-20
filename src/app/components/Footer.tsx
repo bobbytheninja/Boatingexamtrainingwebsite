@@ -63,26 +63,26 @@ export function Footer() {
                 transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
               }}
             >
-              <a 
-                href="tel:+35087661018" 
+              <a
+                href="tel:+359876610185"
                 className="flex items-center gap-1.5 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors duration-300"
               >
                 <Phone className="w-3.5 h-3.5" />
-                <span>+350 87 66 101 85</span>
+                <span>+359 87 66 101 85</span>
               </a>
-              <span 
+              <span
                 className="text-gray-300 dark:text-gray-600 transition-colors duration-[400ms]"
-                style={{ 
+                style={{
                   color: darkMode ? '#4b5563' : '#d1d5db',
                   transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
                 }}
               >|</span>
-              <a 
-                href="mailto:bobby_rocks@me.com" 
+              <a
+                href="mailto:gramatikovbobby@gmail.com"
                 className="flex items-center gap-1.5 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors duration-300"
               >
                 <Mail className="w-3.5 h-3.5" />
-                <span>bobby_rocks@me.com</span>
+                <span>gramatikovbobby@gmail.com</span>
               </a>
             </div>
 

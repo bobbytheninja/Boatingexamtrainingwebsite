@@ -65,33 +65,55 @@ export function QuestionImporter() {
     loadCategories();
   }, []);
 
-  // Helper function to parse a CSV line correctly (handles commas in quotes)
-  const parseCSVLine = (line: string): string[] => {
-    const result: string[] = [];
+  // Parse a full CSV text into rows, correctly handling quoted multiline fields.
+  // Splitting by newline first (the old approach) breaks fields that contain literal newlines.
+  const parseCSVText = (text: string): string[][] => {
+    const rows: string[][] = [];
+    let currentRow: string[] = [];
     let current = '';
     let inQuotes = false;
-    
-    for (let i = 0; i < line.length; i++) {
-      const char = line[i];
-      const nextChar = line[i + 1];
-      
+    let i = 0;
+
+    while (i < text.length) {
+      const char = text[i];
+
       if (char === '"') {
-        if (inQuotes && nextChar === '"') {
+        if (inQuotes && text[i + 1] === '"') {
           current += '"';
-          i++;
-        } else {
-          inQuotes = !inQuotes;
+          i += 2;
+          continue;
         }
+        inQuotes = !inQuotes;
       } else if (char === ',' && !inQuotes) {
-        result.push(current.trim());
+        currentRow.push(current.trim());
+        current = '';
+      } else if (char === '\r' && text[i + 1] === '\n' && !inQuotes) {
+        i++; // skip \r, let \n be handled next iteration
+        currentRow.push(current.trim());
+        if (currentRow.some(c => c.trim())) rows.push(currentRow);
+        currentRow = [];
+        current = '';
+      } else if (char === '\n' && !inQuotes) {
+        currentRow.push(current.trim());
+        if (currentRow.some(c => c.trim())) rows.push(currentRow);
+        currentRow = [];
         current = '';
       } else {
         current += char;
       }
+      i++;
     }
-    
-    result.push(current.trim());
-    return result;
+
+    // Last row (no trailing newline)
+    currentRow.push(current.trim());
+    if (currentRow.some(c => c.trim())) rows.push(currentRow);
+
+    return rows;
+  };
+
+  // Keep for any single-line use; full text parsing now uses parseCSVText above.
+  const parseCSVLine = (line: string): string[] => {
+    return parseCSVText(line)[0] || [];
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -114,35 +136,34 @@ export function QuestionImporter() {
     const reader = new FileReader();
     reader.onload = (e) => {
       const text = e.target?.result as string;
-      const lines = text.split(/\r?\n/).filter(line => line.trim());
-      
-      if (lines.length === 0) {
+      const rows = parseCSVText(text);
+
+      if (rows.length === 0) {
         setResult({ success: false, message: 'CSV file is empty' });
         return;
       }
-      
-      // Skip header row if exists
-      const dataLines = lines[0].toLowerCase().includes('question') || lines[0].toLowerCase().includes('number') ? lines.slice(1) : lines;
-      
-      const parsed: QuestionRow[] = dataLines.map((line) => {
-        const columns = parseCSVLine(line);
 
-        return {
-          questionNumber: parseInt(columns[0]) || undefined, // Column 1: question number
-          examType: selectedExamType,
-          questionText: columns[1] || '', // Column 2: question
-          imageUrl: columns[2] || undefined, // Column 3: image
-          answerA: columns[3] || '', // Column 4: answer A
-          answerB: columns[4] || '', // Column 5: answer B
-          answerC: columns[5] || '', // Column 6: answer C
-          answerD: columns[6] || '', // Column 7: answer D
-          correctAnswer: (columns[7] || 'a').toLowerCase(), // Column 8: correct answer
-          difficulty: 2, // Default difficulty
-          language: 'English', // Default language
-        };
-      }).filter(q => q.questionText); // Filter out empty rows
+      // Skip header row if first cell mentions "question" or "number"
+      const firstRow = rows[0];
+      const dataRows = (firstRow[0]?.toLowerCase().includes('question') || firstRow[0]?.toLowerCase().includes('number'))
+        ? rows.slice(1)
+        : rows;
 
-      setPreview(parsed.slice(0, 5)); // Show first 5 for preview
+      const parsed: QuestionRow[] = dataRows.map((columns) => ({
+        questionNumber: parseInt(columns[0]) || undefined,
+        examType: selectedExamType,
+        questionText: columns[1] || '',
+        imageUrl: columns[2] || undefined,
+        answerA: columns[3] || '',
+        answerB: columns[4] || '',
+        answerC: columns[5] || '',
+        answerD: columns[6] || '',
+        correctAnswer: (columns[7] || 'a').toLowerCase(),
+        difficulty: 2,
+        language: 'English',
+      })).filter(q => q.questionText);
+
+      setPreview(parsed.slice(0, 5));
     };
     reader.readAsText(file);
   };
@@ -283,32 +304,34 @@ export function QuestionImporter() {
             };
           });
       } else {
-        // Parse CSV file
+        // Parse CSV file (using full-text parser that handles multiline quoted fields)
         const text = await file.text();
-        const lines = text.split(/\r?\n/).filter(line => line.trim());
-        const dataLines = lines[0].toLowerCase().includes('question') ? lines.slice(1) : lines;
-        
-        questions = dataLines.map((line, index) => {
-          const columns = parseCSVLine(line);
-          const questionNumber = parseInt(columns[0]) || (index + 1);
-          const paddedNumber = String(questionNumber).padStart(3, '0');
+        const rows = parseCSVText(text);
+        const firstRow = rows[0] || [];
+        const dataRows = (firstRow[0]?.toLowerCase().includes('question') || firstRow[0]?.toLowerCase().includes('number'))
+          ? rows.slice(1)
+          : rows;
 
-          return {
-            // Use deterministic ID based on exam type and question number (prevents duplicates!)
-            id: `${selectedExamType}_${paddedNumber}`,
-            questionNumber,
-            examType: selectedExamType,
-            questionText: columns[1] || '', // Column 2: question
-            imageUrl: columns[2] || undefined, // Column 3: image
-            answerA: columns[3] || '', // Column 4: answer A
-            answerB: columns[4] || '', // Column 5: answer B
-            answerC: columns[5] || '', // Column 6: answer C
-            answerD: columns[6] || '', // Column 7: answer D
-            correctAnswer: (columns[7] || 'a').toLowerCase(), // Column 8: correct answer
-            difficulty: 2 as 1 | 2 | 3, // Default difficulty
-            language: 'English',
-          };
-        }).filter(q => q.questionText); // Filter out empty rows
+        questions = dataRows
+          .filter(columns => columns[1]?.trim())
+          .map((columns, index) => {
+            const questionNumber = parseInt(columns[0]) || (index + 1);
+            const paddedNumber = String(questionNumber).padStart(3, '0');
+            return {
+              id: `${selectedExamType}_${paddedNumber}`,
+              questionNumber,
+              examType: selectedExamType,
+              questionText: columns[1] || '',
+              imageUrl: columns[2] || undefined,
+              answerA: columns[3] || '',
+              answerB: columns[4] || '',
+              answerC: columns[5] || '',
+              answerD: columns[6] || '',
+              correctAnswer: (columns[7] || 'a').toLowerCase(),
+              difficulty: 2 as 1 | 2 | 3,
+              language: 'English',
+            };
+          });
       }
 
       const response = await api.importQuestions(questions, adminKey);

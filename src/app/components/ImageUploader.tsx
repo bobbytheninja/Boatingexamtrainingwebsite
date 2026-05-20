@@ -12,7 +12,7 @@ interface ImagePreview {
 
 export function ImageUploader() {
   const [adminKey, setAdminKey] = useState('');
-  const [selectedExamType, setSelectedExamType] = useState<string>('yacht');
+  const [selectedExamType, setSelectedExamType] = useState<string>('');
   const [images, setImages] = useState<ImagePreview[]>([]);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
@@ -26,10 +26,7 @@ export function ImageUploader() {
       setExamTypes(categories);
       setLoadingCategories(false);
       
-      // Set default to first category if yacht doesn't exist
-      if (!categories.find(c => c.value === 'yacht') && categories.length > 0) {
-        setSelectedExamType(categories[0].value);
-      }
+      // Do NOT auto-select — user must choose manually
     };
     loadCategories();
   }, []);
@@ -93,6 +90,11 @@ export function ImageUploader() {
   };
 
   const handleUpload = async () => {
+    if (!selectedExamType) {
+      setResult({ success: false, message: 'Please select an exam type before uploading' });
+      return;
+    }
+
     if (!adminKey) {
       setResult({ success: false, message: 'Please provide admin key' });
       return;
@@ -220,8 +222,9 @@ export function ImageUploader() {
             value={selectedExamType}
             onChange={(e) => setSelectedExamType(e.target.value)}
             disabled={loadingCategories}
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+            className={`w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 bg-white dark:bg-gray-700 ${selectedExamType ? 'text-gray-900 dark:text-gray-100' : 'text-gray-400 dark:text-gray-500'}`}
           >
+            <option value="" disabled>Select exam type...</option>
             {examTypes.map(type => (
               <option key={type.value} value={type.value} className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
                 {type.label}

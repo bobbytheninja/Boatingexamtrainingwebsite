@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import { Check } from 'lucide-react';
+import { Check, AlertTriangle } from 'lucide-react';
 import { getTranslation } from '../data/translations';
 import { Navigation } from './Navigation';
 import { Footer } from './Footer';
 import { useDarkMode } from '../contexts/DarkModeContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useAuth } from '../contexts/AuthContext';
 import { projectId } from '../utils/supabase/info';
 import { LoadingSpinner } from './LoadingSpinner';
 
@@ -34,9 +35,11 @@ export function PricingPage({ onNavigate, isLoggedIn, paidExams = [] }: PricingP
   const { language } = useLanguage();
   const t = getTranslation(language);
   const { darkMode } = useDarkMode();
+  const { signOut } = useAuth();
   const [examCategories, setExamCategories] = useState<ExamCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [overallPrice, setOverallPrice] = useState<number>(5);
+  const [sessionError, setSessionError] = useState(false);
   
   const handleGetStarted = () => {
     if (isLoggedIn) {
@@ -67,13 +70,16 @@ export function PricingPage({ onNavigate, isLoggedIn, paidExams = [] }: PricingP
         
         // Fetch categories
         const categoriesResponse = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/categories`);
-        
+
         if (categoriesResponse.ok) {
           const data = await categoriesResponse.json();
           console.log('💰 [PricingPage] Categories fetched:', data.categories?.length);
           setExamCategories(data.categories || []);
         } else {
-          console.warn('❌ [PricingPage] Failed to fetch categories, using empty array');
+          console.warn('❌ [PricingPage] Failed to fetch categories, status:', categoriesResponse.status);
+          if (categoriesResponse.status === 404 || categoriesResponse.status === 401 || categoriesResponse.status === 403) {
+            setSessionError(true);
+          }
         }
 
         // Fetch pricing settings
@@ -98,8 +104,7 @@ export function PricingPage({ onNavigate, isLoggedIn, paidExams = [] }: PricingP
         console.log('');
       } catch (error) {
         console.error('❌ [PricingPage] Error fetching data:', error);
-        console.warn('❌ [PricingPage] Using defaults due to error');
-        // Keep default values on error
+        setSessionError(true);
       } finally {
         setLoading(false);
       }
@@ -127,6 +132,31 @@ export function PricingPage({ onNavigate, isLoggedIn, paidExams = [] }: PricingP
         }}
       >
         <div className="container mx-auto px-4 md:px-6 lg:px-8">
+          {sessionError && (
+            <div className="mb-6 flex items-start gap-3 rounded-lg border border-amber-300 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-600 px-4 py-3">
+              <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-amber-800 dark:text-amber-200">
+                  {language === 'English' ? 'Session may be outdated' : 'Сесията може да е остаряла'}
+                </p>
+                <p className="text-sm text-amber-700 dark:text-amber-300 mt-0.5">
+                  {language === 'English'
+                    ? 'If you recently received access to a new exam, please log out and log back in to refresh your session.'
+                    : 'Ако наскоро сте получили достъп до нов изпит, моля излезте и влезте отново.'}
+                </p>
+              </div>
+              {isLoggedIn && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="border-amber-400 text-amber-700 hover:bg-amber-100 dark:border-amber-500 dark:text-amber-300 flex-shrink-0"
+                  onClick={async () => { await signOut(); onNavigate('/login'); }}
+                >
+                  {language === 'English' ? 'Log Out' : 'Излез'}
+                </Button>
+              )}
+            </div>
+          )}
 
         <div className="text-center mb-10 animate-fadeIn">
           <div 

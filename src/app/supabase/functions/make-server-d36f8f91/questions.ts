@@ -32,10 +32,16 @@ export async function getQuestionCount(examType: string): Promise<number> {
   return questionIds.length;
 }
 
+// Fetch multiple questions in parallel to avoid sequential round-trips.
+async function fetchQuestionsParallel(ids: string[]): Promise<Question[]> {
+  const results = await Promise.all(ids.map(id => kv.get(`question:${id}`)));
+  return results.filter(Boolean) as Question[];
+}
+
 // Get random questions for an exam
 export async function getRandomQuestions(examType: string, count: number): Promise<Question[]> {
   const questionIds = await getQuestionIds(examType);
-  
+
   if (questionIds.length === 0) {
     return [];
   }
@@ -44,39 +50,19 @@ export async function getRandomQuestions(examType: string, count: number): Promi
   const shuffled = [...questionIds].sort(() => Math.random() - 0.5);
   const selectedIds = shuffled.slice(0, Math.min(count, questionIds.length));
 
-  // Fetch all selected questions
-  const questions: Question[] = [];
-  for (const id of selectedIds) {
-    const question = await kv.get(`question:${id}`);
-    if (question) {
-      questions.push(question);
-    }
-  }
-
-  return questions;
+  return fetchQuestionsParallel(selectedIds);
 }
 
 // Get first N questions for an exam (for mock/test mode)
 export async function getFirstQuestions(examType: string, count: number): Promise<Question[]> {
   const questionIds = await getQuestionIds(examType);
-  
+
   if (questionIds.length === 0) {
     return [];
   }
 
-  // Take first N questions
   const selectedIds = questionIds.slice(0, Math.min(count, questionIds.length));
-
-  // Fetch all selected questions
-  const questions: Question[] = [];
-  for (const id of selectedIds) {
-    const question = await kv.get(`question:${id}`);
-    if (question) {
-      questions.push(question);
-    }
-  }
-
-  return questions;
+  return fetchQuestionsParallel(selectedIds);
 }
 
 // Save questions (replace all mode - deletes existing questions first)
