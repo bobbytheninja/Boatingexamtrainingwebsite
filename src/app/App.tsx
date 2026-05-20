@@ -67,7 +67,7 @@ function PricingPageWrapper() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  return <PricingPage onNavigate={navigate} isLoggedIn={!!user} />;
+  return <PricingPage onNavigate={navigate} isLoggedIn={!!user} paidExams={user?.subscriptions || []} />;
 }
 
 // Wrapper for PartnersPage
@@ -102,16 +102,39 @@ function ExamPageWrapper() {
   const { examType } = useParams<{ examType: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  
-  // Get mode and tier from location state
-  const mode = (location.state as any)?.mode || 'study';
-  const tier = (location.state as any)?.tier || 'mock';
-  
+
+  // Persist mode and tier so they survive a page refresh (F5 clears location.state)
+  const sessionKey = `exam_session_${examType}`;
+  const locationState = location.state as any;
+
+  let mode: string;
+  let tier: string;
+
+  if (locationState?.mode && locationState?.tier) {
+    // Fresh navigation — save to sessionStorage for refresh recovery
+    mode = locationState.mode;
+    tier = locationState.tier;
+    try {
+      sessionStorage.setItem(sessionKey, JSON.stringify({ mode, tier }));
+    } catch {}
+  } else {
+    // Page was refreshed — try to recover from sessionStorage
+    try {
+      const saved = sessionStorage.getItem(sessionKey);
+      const parsed = saved ? JSON.parse(saved) : null;
+      mode = parsed?.mode || 'study';
+      tier = parsed?.tier || 'mock';
+    } catch {
+      mode = 'study';
+      tier = 'mock';
+    }
+  }
+
   console.log('[ExamPageWrapper] 🎯 Exam initialization:', {
     examType,
     mode,
     tier,
-    locationState: location.state,
+    locationState,
   });
 
   if (!examType) {

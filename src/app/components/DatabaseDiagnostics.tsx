@@ -192,7 +192,7 @@ export function DatabaseDiagnostics() {
                   <CardContent className="pt-6 text-center">
                     <p className="text-sm text-gray-700 dark:text-gray-300 mb-1">Exam Types Ready</p>
                     <p className="text-3xl font-bold text-green-600 dark:text-green-400">
-                      {Object.values(diagnosticsData.diagnostics).filter(d => d.count >= 40).length} / 5
+                      {Object.values(diagnosticsData.diagnostics).filter(d => d.count >= 40).length} / {Object.keys(diagnosticsData.diagnostics).length}
                     </p>
                   </CardContent>
                 </Card>
@@ -207,23 +207,27 @@ export function DatabaseDiagnostics() {
                 </Card>
               </div>
 
-              {/* Exam Type Details */}
+              {/* Exam Type Details — driven by the backend response, not loadExamCategories */}
               <div className="space-y-3">
                 <h3 className="font-semibold text-lg dark:text-gray-100">Exam Types Status</h3>
-                
-                {examTypes.map(({ value, label }) => {
-                  const status = getExamTypeStatus(value);
-                  const examData = diagnosticsData.diagnostics[value];
-                  
+
+                {Object.entries(diagnosticsData.diagnostics).map(([examType, examData]) => {
+                  // Prefer a label from the loaded categories; fall back to a formatted version of the key
+                  const categoryLabel = examTypes.find(t => t.value === examType)?.label;
+                  const label = categoryLabel || (
+                    examType.charAt(0).toUpperCase() + examType.slice(1) + ' Exam'
+                  );
+
+                  const status = getExamTypeStatus(examType);
                   if (!status) return null;
-                  
+
                   const StatusIcon = status.icon;
-                  
+
                   return (
-                    <Card 
-                      key={value} 
+                    <Card
+                      key={examType}
                       className={`border-2 ${
-                        status.color === 'green' 
+                        status.color === 'green'
                           ? 'border-green-200 bg-green-50/30 dark:border-green-700 dark:bg-green-900/10'
                           : status.color === 'amber'
                           ? 'border-amber-200 bg-amber-50/30 dark:border-amber-700 dark:bg-amber-900/10'
@@ -234,17 +238,17 @@ export function DatabaseDiagnostics() {
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2">
-                              <StatusIcon 
+                              <StatusIcon
                                 className={`w-5 h-5 ${
-                                  status.color === 'green' 
+                                  status.color === 'green'
                                     ? 'text-green-600 dark:text-green-400'
                                     : status.color === 'amber'
                                     ? 'text-amber-600 dark:text-amber-400'
                                     : 'text-red-600 dark:text-red-400'
-                                }`} 
+                                }`}
                               />
                               <h4 className="font-semibold dark:text-gray-100">{label}</h4>
-                              <Badge 
+                              <Badge
                                 variant="outline"
                                 className={`${
                                   status.color === 'green'
@@ -260,7 +264,7 @@ export function DatabaseDiagnostics() {
                             <p className="text-sm text-gray-700 dark:text-gray-400 ml-8">
                               {status.message}
                             </p>
-                            
+
                             {examData?.sampleQuestion && (
                               <div className="ml-8 mt-2 p-2 bg-white dark:bg-slate-600 rounded border border-gray-200 dark:border-slate-500">
                                 <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Sample question:</p>

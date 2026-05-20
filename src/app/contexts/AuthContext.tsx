@@ -105,13 +105,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Listen for auth state changes
     const { data: { subscription } } = supabaseClient.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
+      if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session?.user) {
         const token = session.access_token;
-        
+
         // Try to fetch subscriptions, but don't fail if backend is down
         let subscriptions: ExamType[] = [];
         let expiresAt: number | null = null;
-        
+
         try {
           const result = await fetchSubscriptions(session.user.id, token);
           subscriptions = result.subscriptions;
@@ -119,10 +119,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } catch (subError) {
           console.warn('Could not fetch subscriptions on auth change, continuing with empty subscriptions:', subError);
         }
-        
+
         // Check admin status
         const isAdmin = session.user.user_metadata?.role === 'admin' || false;
-        
+
         setUser({
           id: session.user.id,
           email: session.user.email!,
@@ -132,6 +132,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           isAdmin,
         });
         setAccessToken(token);
+      } else if (event === 'TOKEN_REFRESHED' && session?.user) {
+        // Token was silently refreshed (e.g., after laptop sleep/wake).
+        // Update the access token so all API calls use the fresh token.
+        const token = session.access_token;
+        setAccessToken(token);
+
+        // Re-fetch subscriptions in case they changed
+        try {
+          const result = await fetchSubscriptions(session.user.id, token);
+          setUser(prev => prev ? {
+            ...prev,
+            subscriptions: result.subscriptions,
+            subscriptionExpiresAt: result.expiresAt,
+          } : prev);
+        } catch (subError) {
+          console.warn('Could not refresh subscriptions after token refresh:', subError);
+        }
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
         setAccessToken(null);

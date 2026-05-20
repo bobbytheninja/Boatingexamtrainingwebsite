@@ -110,8 +110,8 @@ export function ContactPage({ onNavigate, isLoggedIn = false }: ContactPageProps
                   </div>
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">{t.emailUs}</p>
-                    <a href="mailto:bobby_rocks@me.com" className="text-base font-medium text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300">
-                      bobby_rocks@me.com
+                    <a href="mailto:gramatikovbobby@gmail.com" className="text-base font-medium text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300">
+                      gramatikovbobby@gmail.com
                     </a>
                   </div>
                 </div>
@@ -122,15 +122,15 @@ export function ContactPage({ onNavigate, isLoggedIn = false }: ContactPageProps
                   </div>
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">{t.phone}</p>
-                    <a 
-                      href="tel:+35087661018" 
+                    <a
+                      href="tel:+359876610185"
                       className="text-base font-medium hover:text-sky-600 dark:hover:text-sky-400 transition-colors duration-[400ms]"
-                      style={{ 
+                      style={{
                         color: darkMode ? '#e0f2fe' : '#0c4a6e',
                         transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
                       }}
                     >
-                      +350 87 66 101 85
+                      +359 87 66 101 85
                     </a>
                   </div>
                 </div>

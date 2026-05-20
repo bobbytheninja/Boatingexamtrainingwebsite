@@ -38,7 +38,7 @@ interface QuestionRow {
 export function QuestionImporter() {
   const [adminKey, setAdminKey] = useState('');
   const [file, setFile] = useState<File | null>(null);
-  const [selectedExamType, setSelectedExamType] = useState<string>('yacht');
+  const [selectedExamType, setSelectedExamType] = useState<string>('');
   const [importing, setImporting] = useState(false);
   const [result, setResult] = useState<{ success: boolean; message: string; imageStats?: { withImages: number, withoutImages: number, percentage: string } } | null>(null);
   const [preview, setPreview] = useState<QuestionRow[]>([]);
@@ -56,11 +56,7 @@ export function QuestionImporter() {
         console.log('📊 LOADED CATEGORIES:', categories);
         setExamTypes(categories);
         setLoadingCategories(false);
-        
-        // Set default to first category if yacht doesn't exist
-        if (!categories.find(c => c.value === 'yacht') && categories.length > 0) {
-          setSelectedExamType(categories[0].value);
-        }
+        // Do NOT auto-select a category — user must choose manually
       } catch (error) {
         console.error('❌ Error loading categories:', error);
         setLoadingCategories(false);
@@ -236,6 +232,10 @@ export function QuestionImporter() {
   };
 
   const handleImport = async () => {
+    if (!selectedExamType) {
+      setResult({ success: false, message: 'Please select an exam type before importing' });
+      return;
+    }
     if (!file || !adminKey) {
       setResult({ success: false, message: 'Please provide admin key and select a file' });
       return;
@@ -380,7 +380,9 @@ export function QuestionImporter() {
                 className="w-full justify-between bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100"
                 disabled={loadingCategories}
               >
-                <span>{examTypes.find(t => t.value === selectedExamType)?.label || 'Select exam type'}</span>
+                <span className={selectedExamType ? '' : 'text-gray-400 dark:text-gray-500'}>
+                  {examTypes.find(t => t.value === selectedExamType)?.label || 'Select exam type...'}
+                </span>
                 <ChevronDown className="w-4 h-4 ml-2" />
               </Button>
             </DropdownMenuTrigger>

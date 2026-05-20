@@ -384,43 +384,30 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
                         console.log(`[AccountPage]   - Category title:`, categoryData?.title);
                         console.log(`[AccountPage]   - Exam title:`, exam?.title);
 
-                        // FLEXIBLE SYSTEM: Always show the subscription, even if category data is missing
-                        // Use fallback display with exam type if no data found
+                        // Always use the English title (no Bulgarian title/description needed)
                         const examTitle = (() => {
-                          // Try to get title from category data or exam data
-                          if (language === 'English') {
-                            if (categoryData?.title) return categoryData.title;
-                            if (exam?.title) return exam.title;
-                          } else {
-                            if (categoryData?.titleBg) return categoryData.titleBg;
-                            if (exam?.title) return exam.title;
-                          }
+                          if (categoryData?.title) return categoryData.title;
+                          if (exam?.title) return exam.title;
 
-                          // Fallback: Create a readable title from exam type
-                          // Handle common exam types with proper formatting
-                          const typeMap: Record<string, { en: string; bg: string }> = {
-                            'jet': { en: 'Jet Ski License', bg: 'Лиценз за джет' },
-                            'small': { en: 'Small Boat License', bg: 'Лиценз за малка лодка' },
-                            'big': { en: 'Big Boat License', bg: 'Лиценз за голяма лодка' },
-                            'yacht': { en: 'Yacht License (Up to 50 Tons)', bg: 'Лиценз за яхта (до 50 тона)' },
-                            'navigation': { en: 'Navigation Device License', bg: 'Лиценз за навигационно устройство' },
+                          // Fallback map using English titles
+                          const typeMap: Record<string, string> = {
+                            'jet': 'Jet Ski License',
+                            'small': 'Small Boat License',
+                            'big': 'Big Boat License',
+                            'yacht': 'Yacht License (Up to 50 Tons)',
+                            'navigation': 'Navigation Device License',
                           };
 
-                          // Check if exam type matches known types
                           const normalizedType = examType.toLowerCase();
-                          if (typeMap[normalizedType]) {
-                            return language === 'English' ? typeMap[normalizedType].en : typeMap[normalizedType].bg;
-                          }
+                          if (typeMap[normalizedType]) return typeMap[normalizedType];
 
                           // Ultimate fallback: format the exam type nicely
-                          const formatted = examType
-                            .replace(/([a-z])([A-Z])/g, '$1 $2') // Add space before capitals
-                            .replace(/[_-]/g, ' ') // Replace underscores/dashes with spaces
+                          return examType
+                            .replace(/([a-z])([A-Z])/g, '$1 $2')
+                            .replace(/[_-]/g, ' ')
                             .split(' ')
-                            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-                            .join(' ');
-
-                          return language === 'English' ? `${formatted} License` : `Лиценз ${formatted}`;
+                            .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                            .join(' ') + ' License';
                         })();
 
                         // Log warning but DON'T skip rendering - subscription should always be visible

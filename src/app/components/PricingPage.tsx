@@ -27,9 +27,10 @@ interface ExamCategory {
 interface PricingPageProps {
   onNavigate: (page: string) => void;
   isLoggedIn: boolean;
+  paidExams?: string[];
 }
 
-export function PricingPage({ onNavigate, isLoggedIn }: PricingPageProps) {
+export function PricingPage({ onNavigate, isLoggedIn, paidExams = [] }: PricingPageProps) {
   const { language } = useLanguage();
   const t = getTranslation(language);
   const { darkMode } = useDarkMode();
@@ -399,12 +400,33 @@ export function PricingPage({ onNavigate, isLoggedIn }: PricingPageProps) {
                   >{t.cancelAnytime}</span>
                 </li>
               </ul>
-              <Button
-                onClick={handleGetStarted}
-                className="w-full h-9 bg-gradient-to-r from-sky-500 via-sky-600 to-blue-600 hover:from-sky-600 hover:via-sky-700 hover:to-blue-700 shadow-md hover:shadow-lg transition-all transform hover:scale-[1.02] font-semibold text-sm"
-              >
-                {t.getFullAccess}
-              </Button>
+              {paidExams.length > 0 ? (
+                <div className="space-y-2">
+                  <div
+                    className="w-full h-9 flex items-center justify-center rounded-lg font-semibold text-sm border-2"
+                    style={{
+                      backgroundColor: darkMode ? 'rgba(34,197,94,0.1)' : '#f0fdf4',
+                      borderColor: darkMode ? '#16a34a' : '#22c55e',
+                      color: darkMode ? '#4ade80' : '#15803d',
+                    }}
+                  >
+                    ✓ {language === 'English' ? `${paidExams.length} active subscription${paidExams.length > 1 ? 's' : ''}` : `${paidExams.length} активен абонамент`}
+                  </div>
+                  <Button
+                    onClick={handleGetStarted}
+                    className="w-full h-9 bg-gradient-to-r from-sky-500 via-sky-600 to-blue-600 hover:from-sky-600 hover:via-sky-700 hover:to-blue-700 shadow-md font-semibold text-sm"
+                  >
+                    {language === 'English' ? 'Add More Exams' : 'Добави още изпити'}
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  onClick={handleGetStarted}
+                  className="w-full h-9 bg-gradient-to-r from-sky-500 via-sky-600 to-blue-600 hover:from-sky-600 hover:via-sky-700 hover:to-blue-700 shadow-md hover:shadow-lg transition-all transform hover:scale-[1.02] font-semibold text-sm"
+                >
+                  {t.getFullAccess}
+                </Button>
+              )}
             </CardContent>
           </Card>
         </div>

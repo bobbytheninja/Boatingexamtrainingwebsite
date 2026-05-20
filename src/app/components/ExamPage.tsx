@@ -96,7 +96,8 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
       }
       
       setLoadingQuestions(true);
-      
+      setQuestionLoadError(null);
+
       if (tier === 'paid') {
         console.log('[ExamPage] 💳 Loading PAID exam (40 questions)...');
         // Fetch from database for paid tier
@@ -128,13 +129,17 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
             
             const isMultiple = correctAnswersArray.length > 1;
             
+            const rawAnswers = [q.answerA, q.answerB, q.answerC, q.answerD].filter(
+              (a: any) => a != null && String(a).trim() !== ''
+            );
+
             return {
               id: index + 1,
               question: q.questionText,
-              answers: [q.answerA, q.answerB, q.answerC, q.answerD],
-              correctAnswer: isMultiple ? correctAnswersArray[0] : correctAnswersArray[0], // Single answer (always set)
-              correctAnswers: isMultiple ? correctAnswersArray : undefined, // Only set for multiple answers
-              points: q.difficulty || 1, // Default to 1 if difficulty not set
+              answers: rawAnswers,
+              correctAnswer: isMultiple ? correctAnswersArray[0] : correctAnswersArray[0],
+              correctAnswers: isMultiple ? correctAnswersArray : undefined,
+              points: q.difficulty || 1,
               image: q.imageUrl,
             };
           });
@@ -146,7 +151,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
         } catch (error: any) {
           console.error('[ExamPage] Failed to load questions:', error);
           const errorMsg = error.message || 'Failed to load questions';
-          
+
           // Provide helpful error messages
           if (errorMsg.includes('Subscription required')) {
             setQuestionLoadError('You need an active subscription for this exam type. Please purchase access or contact support.');
@@ -155,7 +160,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
           } else {
             setQuestionLoadError(`Error loading questions: ${errorMsg}. Please try again or contact support.`);
           }
-          
+
           setLoadingQuestions(false);
           toast.error('Failed to load exam questions. Please try again.');
         }
@@ -165,29 +170,33 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
         try {
           console.log(`[ExamPage] Loading mock questions for exam type: ${examType}`);
           const response = await api.getMockQuestions(examType);
-          
+
           console.log(`[ExamPage] Received ${response.questions?.length || 0} mock questions from API`);
-          
+
           if (!response.questions || response.questions.length === 0) {
             // Show error - no fallback to demo questions
             setQuestionLoadError(`No questions available for ${examType} exam. Please check the Admin Panel > Diagnostics tab to verify questions were imported.`);
             setLoadingQuestions(false);
             return;
           }
-          
+
           // Convert database questions to Question format
           const dbQuestions: Question[] = response.questions.map((q: any, index: number) => {
             // Parse correct answers - can be single (e.g., "a") or multiple (e.g., "a,c")
-            const correctAnswersArray = q.correctAnswer.includes(',') 
+            const correctAnswersArray = q.correctAnswer.includes(',')
               ? q.correctAnswer.split(',').map((a: string) => a.trim().toLowerCase().charCodeAt(0) - 97)
               : [q.correctAnswer.trim().toLowerCase().charCodeAt(0) - 97];
-            
+
             const isMultiple = correctAnswersArray.length > 1;
-            
+
+            const rawAnswers = [q.answerA, q.answerB, q.answerC, q.answerD].filter(
+              (a: any) => a != null && String(a).trim() !== ''
+            );
+
             return {
               id: index + 1,
               question: q.questionText,
-              answers: [q.answerA, q.answerB, q.answerC, q.answerD],
+              answers: rawAnswers,
               correctAnswer: isMultiple ? correctAnswersArray[0] : correctAnswersArray[0], // Single answer (always set)
               correctAnswers: isMultiple ? correctAnswersArray : undefined, // Only set for multiple answers
               points: q.difficulty || 1, // Default to 1 if difficulty not set
