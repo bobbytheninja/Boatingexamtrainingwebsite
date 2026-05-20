@@ -15,6 +15,7 @@ import {
 import { projectId, publicAnonKey } from '../utils/supabase/info';
 import { toast } from 'sonner';
 import { loadExamCategories } from '../utils/categoryLoader';
+import { useDarkMode } from '../contexts/DarkModeContext';
 
 interface ExamDiagnostics {
   count: number;
@@ -35,6 +36,7 @@ interface DiagnosticsData {
 }
 
 export function DatabaseDiagnostics() {
+  const { darkMode } = useDarkMode();
   const [loading, setLoading] = React.useState(false);
   const [diagnosticsData, setDiagnosticsData] = React.useState<DiagnosticsData | null>(null);
   const [error, setError] = React.useState<string | null>(null);
@@ -179,28 +181,28 @@ export function DatabaseDiagnostics() {
             <>
               {/* Summary Card */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card className="bg-gradient-to-br from-blue-50 to-white dark:from-blue-900/30 dark:to-slate-700 border-2">
+                <Card className="border-2" style={{ background: darkMode ? 'linear-gradient(to bottom right, #1e3a5f, #1e293b)' : 'linear-gradient(to bottom right, #eff6ff, #ffffff)' }}>
                   <CardContent className="pt-6 text-center">
-                    <p className="text-sm text-gray-700 dark:text-gray-300 mb-1">Total Questions</p>
-                    <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
+                    <p className="text-sm mb-1" style={{ color: darkMode ? '#94a3b8' : '#374151' }}>Total Questions</p>
+                    <p className="text-3xl font-bold" style={{ color: darkMode ? '#60a5fa' : '#2563eb' }}>
                       {getTotalQuestions()}
                     </p>
                   </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-green-50 to-white dark:from-green-900/30 dark:to-slate-700 border-2">
+                <Card className="border-2" style={{ background: darkMode ? 'linear-gradient(to bottom right, #14532d, #1e293b)' : 'linear-gradient(to bottom right, #f0fdf4, #ffffff)' }}>
                   <CardContent className="pt-6 text-center">
-                    <p className="text-sm text-gray-700 dark:text-gray-300 mb-1">Exam Types Ready</p>
-                    <p className="text-3xl font-bold text-green-600 dark:text-green-400">
+                    <p className="text-sm mb-1" style={{ color: darkMode ? '#94a3b8' : '#374151' }}>Exam Types Ready</p>
+                    <p className="text-3xl font-bold" style={{ color: darkMode ? '#4ade80' : '#16a34a' }}>
                       {Object.values(diagnosticsData.diagnostics).filter(d => d.count >= 40).length} / {Object.keys(diagnosticsData.diagnostics).length}
                     </p>
                   </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-purple-50 to-white dark:from-purple-900/30 dark:to-slate-700 border-2">
+                <Card className="border-2" style={{ background: darkMode ? 'linear-gradient(to bottom right, #2d1b4e, #1e293b)' : 'linear-gradient(to bottom right, #faf5ff, #ffffff)' }}>
                   <CardContent className="pt-6 text-center">
-                    <p className="text-sm text-gray-700 dark:text-gray-300 mb-1">Last Updated</p>
-                    <p className="text-sm font-semibold text-purple-600 dark:text-purple-400">
+                    <p className="text-sm mb-1" style={{ color: darkMode ? '#94a3b8' : '#374151' }}>Last Updated</p>
+                    <p className="text-sm font-semibold" style={{ color: darkMode ? '#c084fc' : '#7c3aed' }}>
                       {new Date(diagnosticsData.timestamp).toLocaleTimeString()}
                     </p>
                   </CardContent>

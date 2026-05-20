@@ -11,6 +11,7 @@ import { Footer } from './Footer';
 import { useAuth } from '../contexts/AuthContext';
 import { useDarkMode } from '../contexts/DarkModeContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useRegion } from '../contexts/RegionContext';
 import { AnimatedStatCard } from './AnimatedCounter';
 import { projectId, publicAnonKey } from '../utils/supabase/info';
 
@@ -26,12 +27,11 @@ const ICON_MAP: Record<string, LucideIcon> = {
 interface ExamCategory {
   type: string;
   title: string;
-  titleBg: string;
   description: string;
-  descriptionBg: string;
   icon: string;
   color: string;
   image: string;
+  country?: string;
 }
 
 export function HomePage() {
@@ -39,6 +39,7 @@ export function HomePage() {
   const { user } = useAuth();
   const { darkMode } = useDarkMode();
   const { language } = useLanguage();
+  const { region } = useRegion();
   const t = getTranslation(language);
   const isLoggedIn = !!user;
   const [categories, setCategories] = useState<ExamCategory[]>([]);
@@ -82,15 +83,17 @@ export function HomePage() {
     loadCategories();
   }, []);
 
-  // Transform server categories into display format
-  const examTypes = categories.map(cat => ({
-    type: cat.type as ExamType,
-    title: language === 'Bulgarian' && cat.titleBg ? cat.titleBg : cat.title,
-    description: language === 'Bulgarian' && cat.descriptionBg ? cat.descriptionBg : cat.description,
-    icon: ICON_MAP[cat.icon] || Waves,
-    color: cat.color,
-    image: cat.image,
-  }));
+  // Transform server categories into display format, filtered by selected region
+  const examTypes = categories
+    .filter((cat) => !cat.country || cat.country === region)
+    .map((cat) => ({
+      type: cat.type as ExamType,
+      title: cat.title,
+      description: cat.description,
+      icon: ICON_MAP[cat.icon] || Waves,
+      color: cat.color,
+      image: cat.image,
+    }));
 
   const handleNavigate = (page: string) => {
     try {
@@ -153,10 +156,10 @@ export function HomePage() {
         >
           <div className="container mx-auto px-4 md:px-6 lg:px-8">
             <div className="text-center mb-12 max-w-3xl mx-auto pt-16">
-              <h2 
-                className="text-gray-900 dark:text-gray-100 mb-2 tracking-wide transition-colors duration-[400ms]" 
-                style={{ 
-                  fontSize: 'clamp(1.75rem, 4vw, 2.25rem)', 
+              <h2
+                className="text-gray-900 dark:text-gray-100 mb-2 tracking-wide transition-colors duration-[400ms]"
+                style={{
+                  fontSize: 'clamp(1.75rem, 4vw, 2.25rem)',
                   fontWeight: '400',
                   color: darkMode ? '#f3f4f6' : '#111827',
                   transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
@@ -164,9 +167,14 @@ export function HomePage() {
               >
                 {t.examCategories}
               </h2>
-              <p 
+              <div className="flex items-center justify-center mb-3">
+                <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium transition-colors duration-[400ms] ${darkMode ? 'bg-sky-900/50 text-sky-300 border border-sky-700' : 'bg-sky-100 text-sky-700 border border-sky-200'}`}>
+                  For: {region}
+                </span>
+              </div>
+              <p
                 className="text-gray-600 dark:text-gray-300 text-lg font-light leading-relaxed transition-colors duration-[400ms]"
-                style={{ 
+                style={{
                   color: darkMode ? '#d1d5db' : '#4b5563',
                   transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
                 }}

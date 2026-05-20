@@ -208,6 +208,7 @@ export interface Translations {
   confirmSubmit: string;
   complete: string;
   pointsLost: string;
+  questionsWrong: string;
   maximum: string;
   correct: string;
   incorrect: string;
@@ -447,6 +448,7 @@ export const translations: Record<Language, Translations> = {
     confirmSubmit: 'Submit',
     complete: 'Complete',
     pointsLost: 'Points Lost',
+    questionsWrong: 'Questions Wrong',
     maximum: 'Maximum',
     correct: 'Correct!',
     incorrect: 'Incorrect.',
@@ -684,6 +686,7 @@ export const translations: Record<Language, Translations> = {
     confirmSubmit: 'Предай',
     complete: 'Завършен',
     pointsLost: 'Загубени Точки',
+    questionsWrong: 'Грешни Въпроси',
     maximum: 'Максимум',
     correct: 'Вярно!',
     incorrect: 'Грешно.',
@@ -921,6 +924,7 @@ export const translations: Record<Language, Translations> = {
     confirmSubmit: 'Enviar',
     complete: 'Completo',
     pointsLost: 'Puntos Perdidos',
+    questionsWrong: 'Respuestas Incorrectas',
     maximum: 'Máximo',
     correct: '¡Correcto!',
     incorrect: 'Incorrecto.',
@@ -1158,6 +1162,7 @@ export const translations: Record<Language, Translations> = {
     confirmSubmit: 'Υποβολή',
     complete: 'Ολοκληρώθηκε',
     pointsLost: 'Πόντοι που Χάθηκαν',
+    questionsWrong: 'Λανθασμένες Ερωτήσεις',
     maximum: 'Μέγιστο',
     correct: 'Σωστό!',
     incorrect: 'Λάθος.',

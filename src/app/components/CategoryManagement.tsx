@@ -24,6 +24,7 @@ import {
 import { toast } from 'sonner';
 import { projectId } from '../utils/supabase/info';
 import { LoadingSpinner } from './LoadingSpinner';
+import { useDarkMode } from '../contexts/DarkModeContext';
 
 // Available icons for categories
 const AVAILABLE_ICONS = [
@@ -46,15 +47,37 @@ const AVAILABLE_COLORS = [
   { name: 'Purple-Pink', value: 'bg-gradient-to-br from-purple-500 to-pink-600' },
 ];
 
+const WORLD_COUNTRIES = [
+  'Afghanistan','Albania','Algeria','Andorra','Angola','Antigua and Barbuda','Argentina','Armenia','Australia','Austria',
+  'Azerbaijan','Bahamas','Bahrain','Bangladesh','Barbados','Belarus','Belgium','Belize','Benin','Bhutan',
+  'Bolivia','Bosnia and Herzegovina','Botswana','Brazil','Brunei','Bulgaria','Burkina Faso','Burundi','Cabo Verde','Cambodia',
+  'Cameroon','Canada','Central African Republic','Chad','Chile','China','Colombia','Comoros','Congo','Costa Rica',
+  'Croatia','Cuba','Cyprus','Czech Republic','Denmark','Djibouti','Dominica','Dominican Republic','Ecuador','Egypt',
+  'El Salvador','Equatorial Guinea','Eritrea','Estonia','Eswatini','Ethiopia','Fiji','Finland','France','Gabon',
+  'Gambia','Georgia','Germany','Ghana','Greece','Grenada','Guatemala','Guinea','Guinea-Bissau','Guyana',
+  'Haiti','Honduras','Hungary','Iceland','India','Indonesia','Iran','Iraq','Ireland','Israel',
+  'Italy','Jamaica','Japan','Jordan','Kazakhstan','Kenya','Kiribati','Kuwait','Kyrgyzstan','Laos',
+  'Latvia','Lebanon','Lesotho','Liberia','Libya','Liechtenstein','Lithuania','Luxembourg','Madagascar','Malawi',
+  'Malaysia','Maldives','Mali','Malta','Marshall Islands','Mauritania','Mauritius','Mexico','Micronesia','Moldova',
+  'Monaco','Mongolia','Montenegro','Morocco','Mozambique','Myanmar','Namibia','Nauru','Nepal','Netherlands',
+  'New Zealand','Nicaragua','Niger','Nigeria','North Korea','North Macedonia','Norway','Oman','Pakistan','Palau',
+  'Palestine','Panama','Papua New Guinea','Paraguay','Peru','Philippines','Poland','Portugal','Qatar','Romania',
+  'Russia','Rwanda','Saint Kitts and Nevis','Saint Lucia','Saint Vincent and the Grenadines','Samoa','San Marino','Sao Tome and Principe','Saudi Arabia','Senegal',
+  'Serbia','Seychelles','Sierra Leone','Singapore','Slovakia','Slovenia','Solomon Islands','Somalia','South Africa','South Korea',
+  'South Sudan','Spain','Sri Lanka','Sudan','Suriname','Sweden','Switzerland','Syria','Taiwan','Tajikistan',
+  'Tanzania','Thailand','Timor-Leste','Togo','Tonga','Trinidad and Tobago','Tunisia','Turkey','Turkmenistan','Tuvalu',
+  'Uganda','Ukraine','United Arab Emirates','United Kingdom','United States','Uruguay','Uzbekistan','Vanuatu','Vatican City','Venezuela',
+  'Vietnam','Yemen','Zambia','Zimbabwe',
+];
+
 export interface ExamCategory {
   type: string;
   title: string;
-  titleBg: string;
   description: string;
-  descriptionBg: string;
   icon: string;
   color: string;
   image: string;
+  country?: string;
   price?: number;
   order?: number;
   expiringSoon?: boolean;
@@ -65,6 +88,7 @@ interface CategoryManagementProps {
 }
 
 export function CategoryManagement({ accessToken }: CategoryManagementProps) {
+  const { darkMode } = useDarkMode();
   const [categories, setCategories] = useState<ExamCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingCategory, setEditingCategory] = useState<ExamCategory | null>(null);
@@ -75,22 +99,28 @@ export function CategoryManagement({ accessToken }: CategoryManagementProps) {
   const [savingPrice, setSavingPrice] = useState(false);
   const [loadingPrice, setLoadingPrice] = useState(true);
 
+  // Regions state
+  const [regions, setRegions] = useState<string[]>([]);
+  const [loadingRegions, setLoadingRegions] = useState(true);
+  const [newRegion, setNewRegion] = useState('');
+  const [savingRegion, setSavingRegion] = useState(false);
+
   // Form state
   const [formData, setFormData] = useState<ExamCategory>({
     type: '',
     title: '',
-    titleBg: '',
     description: '',
-    descriptionBg: '',
     icon: 'Waves',
     color: 'bg-gradient-to-br from-cyan-500 to-sky-600',
     image: '',
-    price: 5, // Default price
+    country: '',
+    price: 5,
   });
 
   useEffect(() => {
     loadCategories();
     loadPricingSettings();
+    loadRegions();
   }, []);
 
   const loadCategories = async () => {
@@ -172,17 +202,75 @@ export function CategoryManagement({ accessToken }: CategoryManagementProps) {
     }
   };
 
+  const loadRegions = async () => {
+    setLoadingRegions(true);
+    try {
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/regions`,
+        { headers: { 'Authorization': `Bearer ${accessToken}` } }
+      );
+      if (response.ok) {
+        const data = await response.json();
+        setRegions(data.regions || ['Bulgaria']);
+      }
+    } catch {
+      setRegions(['Bulgaria']);
+    } finally {
+      setLoadingRegions(false);
+    }
+  };
+
+  const handleAddRegion = async () => {
+    const name = newRegion.trim();
+    if (!name) { toast.error('Enter a country/region name'); return; }
+    setSavingRegion(true);
+    try {
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/regions`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
+          body: JSON.stringify({ name }),
+        }
+      );
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'Failed');
+      setRegions(data.regions);
+      setNewRegion('');
+      toast.success(`✅ "${name}" added`);
+    } catch (err: any) {
+      toast.error(`Failed to add region: ${err.message}`);
+    } finally {
+      setSavingRegion(false);
+    }
+  };
+
+  const handleDeleteRegion = async (name: string) => {
+    if (!confirm(`Remove "${name}" from available regions?`)) return;
+    try {
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/regions/${encodeURIComponent(name)}`,
+        { method: 'DELETE', headers: { 'Authorization': `Bearer ${accessToken}` } }
+      );
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'Failed');
+      setRegions(data.regions);
+      toast.success(`✅ "${name}" removed`);
+    } catch (err: any) {
+      toast.error(`Failed to remove region: ${err.message}`);
+    }
+  };
+
   const handleAddNew = () => {
     setFormData({
       type: '',
       title: '',
-      titleBg: '',
       description: '',
-      descriptionBg: '',
       icon: 'Waves',
       color: 'bg-gradient-to-br from-cyan-500 to-sky-600',
       image: '',
-      price: 5, // Default price
+      country: '',
+      price: 5,
     });
     setIsAddingNew(true);
     setEditingCategory(null);
@@ -200,20 +288,19 @@ export function CategoryManagement({ accessToken }: CategoryManagementProps) {
     setFormData({
       type: '',
       title: '',
-      titleBg: '',
       description: '',
-      descriptionBg: '',
       icon: 'Waves',
       color: 'bg-gradient-to-br from-cyan-500 to-sky-600',
       image: '',
-      price: 5, // Default price
+      country: '',
+      price: 5,
     });
   };
 
   const handleSave = async () => {
     // Validation
-    if (!formData.type || !formData.title || !formData.description) {
-      toast.error('Please fill in all required fields');
+    if (!formData.type || !formData.title || !formData.description || !formData.country) {
+      toast.error('Please fill in all required fields including Country');
       return;
     }
 
@@ -542,10 +629,11 @@ export function CategoryManagement({ accessToken }: CategoryManagementProps) {
                   id="icon"
                   value={formData.icon}
                   onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
-                  className="w-full mt-1 px-3 py-2 border rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                  className="w-full mt-1 px-3 py-2 border rounded-md"
+                  style={{ backgroundColor: darkMode ? '#374151' : '#ffffff', color: darkMode ? '#f3f4f6' : '#111827', borderColor: darkMode ? '#4b5563' : '#d1d5db' }}
                 >
                   {AVAILABLE_ICONS.map((icon) => (
-                    <option key={icon.name} value={icon.name} className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
+                    <option key={icon.name} value={icon.name}>
                       {icon.name}
                     </option>
                   ))}
@@ -566,16 +654,25 @@ export function CategoryManagement({ accessToken }: CategoryManagementProps) {
                 />
               </div>
 
-              {/* Title (Bulgarian) */}
+              {/* Country */}
               <div>
-                <Label htmlFor="titleBg">Title (Bulgarian)</Label>
-                <Input
-                  id="titleBg"
-                  value={formData.titleBg}
-                  onChange={(e) => setFormData({ ...formData, titleBg: e.target.value })}
-                  placeholder="e.g., Лиценз за джет"
-                  className="mt-1"
-                />
+                <Label htmlFor="country">
+                  Country <span className="text-red-500">*</span>
+                </Label>
+                <select
+                  id="country"
+                  value={formData.country || ''}
+                  onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                  className="w-full mt-1 px-3 py-2 border rounded-md"
+                  style={{ backgroundColor: darkMode ? '#374151' : '#ffffff', color: darkMode ? '#f3f4f6' : '#111827', borderColor: darkMode ? '#4b5563' : '#d1d5db' }}
+                >
+                  <option value="" disabled>Select a country...</option>
+                  {WORLD_COUNTRIES.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               {/* Color Gradient */}
@@ -585,10 +682,11 @@ export function CategoryManagement({ accessToken }: CategoryManagementProps) {
                   id="color"
                   value={formData.color}
                   onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                  className="w-full mt-1 px-3 py-2 border rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                  className="w-full mt-1 px-3 py-2 border rounded-md"
+                  style={{ backgroundColor: darkMode ? '#374151' : '#ffffff', color: darkMode ? '#f3f4f6' : '#111827', borderColor: darkMode ? '#4b5563' : '#d1d5db' }}
                 >
                   {AVAILABLE_COLORS.map((color) => (
-                    <option key={color.name} value={color.value} className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
+                    <option key={color.name} value={color.value}>
                       {color.name}
                     </option>
                   ))}
@@ -681,18 +779,6 @@ export function CategoryManagement({ accessToken }: CategoryManagementProps) {
               />
             </div>
 
-            {/* Description (Bulgarian) */}
-            <div>
-              <Label htmlFor="descriptionBg">Description (Bulgarian)</Label>
-              <Textarea
-                id="descriptionBg"
-                value={formData.descriptionBg}
-                onChange={(e) => setFormData({ ...formData, descriptionBg: e.target.value })}
-                placeholder="Bulgarian description"
-                className="mt-1"
-                rows={3}
-              />
-            </div>
 
             {/* Icon Preview */}
             <div>
@@ -771,14 +857,14 @@ export function CategoryManagement({ accessToken }: CategoryManagementProps) {
                     )}
                   </div>
                   <h3 className="font-bold text-lg">{category.title}</h3>
-                  {category.titleBg && (
-                    <p className="text-sm text-gray-500">{category.titleBg}</p>
+                  {category.country && (
+                    <p className="text-xs text-gray-500 mt-0.5">📍 {category.country}</p>
                   )}
                   <p className="text-sm text-gray-600 mt-1 line-clamp-2">
                     {category.description}
                   </p>
                   {category.price && (
-                    <p className="text-sm font-semibold text-blue-600 dark:text-blue-400 mt-2">
+                    <p className="text-sm font-semibold mt-2" style={{ color: darkMode ? '#60a5fa' : '#2563eb' }}>
                       €{category.price.toFixed(2)}/month
                     </p>
                   )}
@@ -880,6 +966,69 @@ export function CategoryManagement({ accessToken }: CategoryManagementProps) {
               )}
             </Button>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Regions Management */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Compass className="w-5 h-5 text-blue-500" />
+            Regions / Countries
+          </CardTitle>
+          <CardDescription>
+            Manage which countries/regions appear in the navigation selector. Users will see only exams for their selected region.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {loadingRegions ? (
+            <LoadingSpinner size="sm" />
+          ) : (
+            <>
+              <div className="flex flex-wrap gap-2">
+                {regions.map((reg) => (
+                  <div key={reg} className="flex items-center gap-1 rounded-full px-3 py-1 text-sm" style={{ backgroundColor: darkMode ? 'rgba(8,47,73,0.4)' : '#f0f9ff', border: `1px solid ${darkMode ? '#075985' : '#bae6fd'}`, color: darkMode ? '#bae6fd' : '#075985' }}>
+                    <span>{reg}</span>
+                    <button
+                      onClick={() => handleDeleteRegion(reg)}
+                      className="ml-1 text-sky-500 hover:text-red-500 transition-colors font-bold leading-none"
+                      title={`Remove ${reg}`}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+                {regions.length === 0 && (
+                  <p className="text-sm text-gray-500">No regions configured.</p>
+                )}
+              </div>
+              <div className="flex gap-2 items-end">
+                <div className="flex-1">
+                  <Label htmlFor="newRegion">Add Region / Country</Label>
+                  <select
+                    id="newRegion"
+                    value={newRegion}
+                    onChange={(e) => setNewRegion(e.target.value)}
+                    className="w-full mt-1 px-3 py-2 border rounded-md"
+                    style={{ backgroundColor: darkMode ? '#374151' : '#ffffff', color: darkMode ? '#f3f4f6' : '#111827', borderColor: darkMode ? '#4b5563' : '#d1d5db' }}
+                  >
+                    <option value="" disabled>Select a country to add...</option>
+                    {WORLD_COUNTRIES.filter((c) => !regions.includes(c)).map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+                <Button
+                  onClick={handleAddRegion}
+                  disabled={savingRegion || !newRegion}
+                  className="flex items-center gap-2"
+                >
+                  {savingRegion ? <LoadingSpinner size="sm" /> : <Plus className="w-4 h-4" />}
+                  Add
+                </Button>
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
     </div>

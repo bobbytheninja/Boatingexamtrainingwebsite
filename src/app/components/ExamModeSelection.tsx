@@ -218,36 +218,48 @@ export function ExamModeSelection() {
                   
                   <button
                     onClick={() => setSelectedMode('exam')}
-                    className={`relative z-10 flex items-center gap-2 px-6 py-3 rounded-md transition-all ${
-                      selectedMode === 'exam'
-                        ? 'bg-gradient-to-r from-blue-700 to-blue-900 text-white shadow-md'
-                        : 'hover:bg-white/80 hover:shadow-sm'
-                    }`}
-                    style={{ 
-                      color: selectedMode === 'exam' ? '#ffffff' : (darkMode ? '#d1d5db' : '#334155')
+                    className="relative z-10 flex items-center gap-2 px-6 py-3 rounded-md transition-all"
+                    style={{
+                      background: selectedMode === 'exam'
+                        ? 'linear-gradient(to right, #1d4ed8, #1e3a8a)'
+                        : 'transparent',
+                      boxShadow: selectedMode === 'exam' ? '0 4px 6px -1px rgba(0,0,0,0.3)' : 'none',
+                      color: selectedMode === 'exam' ? '#ffffff' : (darkMode ? '#d1d5db' : '#334155'),
+                    }}
+                    onMouseEnter={(e) => {
+                      if (selectedMode !== 'exam') e.currentTarget.style.backgroundColor = darkMode ? 'rgba(51,65,85,0.7)' : 'rgba(255,255,255,0.8)';
+                    }}
+                    onMouseLeave={(e) => {
+                      if (selectedMode !== 'exam') e.currentTarget.style.backgroundColor = 'transparent';
                     }}
                   >
                     <FileText className="w-5 h-5" />
                     <span className="font-semibold">{t.examMode}</span>
                   </button>
-                  
+
                   {/* Divider */}
-                  <div 
+                  <div
                     className="w-px h-8 self-center mx-1 transition-colors duration-[400ms]"
-                    style={{ 
+                    style={{
                       backgroundColor: darkMode ? '#475569' : '#cbd5e1'
                     }}
                   />
-                  
+
                   <button
                     onClick={() => setSelectedMode('study')}
-                    className={`relative z-10 flex items-center gap-2 px-6 py-3 rounded-md transition-all ${
-                      selectedMode === 'study'
-                        ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-md'
-                        : 'hover:bg-white/80 hover:shadow-sm'
-                    }`}
-                    style={{ 
-                      color: selectedMode === 'study' ? '#ffffff' : (darkMode ? '#d1d5db' : '#334155')
+                    className="relative z-10 flex items-center gap-2 px-6 py-3 rounded-md transition-all"
+                    style={{
+                      background: selectedMode === 'study'
+                        ? 'linear-gradient(to right, #10b981, #0d9488)'
+                        : 'transparent',
+                      boxShadow: selectedMode === 'study' ? '0 4px 6px -1px rgba(0,0,0,0.3)' : 'none',
+                      color: selectedMode === 'study' ? '#ffffff' : (darkMode ? '#d1d5db' : '#334155'),
+                    }}
+                    onMouseEnter={(e) => {
+                      if (selectedMode !== 'study') e.currentTarget.style.backgroundColor = darkMode ? 'rgba(51,65,85,0.7)' : 'rgba(255,255,255,0.8)';
+                    }}
+                    onMouseLeave={(e) => {
+                      if (selectedMode !== 'study') e.currentTarget.style.backgroundColor = 'transparent';
                     }}
                   >
                     <BookOpen className="w-5 h-5" />
@@ -295,7 +307,7 @@ export function ExamModeSelection() {
                       >
                         {t.fullAccessTitle}
                       </CardTitle>
-                      <Badge className="shadow-md bg-gradient-to-r from-amber-400 to-sky-500">€5{t.perMonth}</Badge>
+                      <Badge className="shadow-md bg-gradient-to-r from-amber-400 to-sky-500">PAID</Badge>
                     </div>
                     <CardDescription 
                       className="transition-colors duration-[400ms]"
@@ -396,13 +408,6 @@ export function ExamModeSelection() {
               </div>
             </div>
 
-            <Card className="bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200 shadow-lg">
-              <CardContent className="pt-6">
-                <p className="text-sm text-amber-900 text-center">
-                  {t.fullAccessNote}
-                </p>
-              </CardContent>
-            </Card>
           </div>
         </div>
       </div>

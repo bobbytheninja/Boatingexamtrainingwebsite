@@ -28,7 +28,7 @@ export function Navigation({
 }: NavigationProps) {
   // Use contexts for global state
   const { language, setLanguage } = useLanguage();
-  const { region, setRegion } = useRegion();
+  const { region, setRegion, regions } = useRegion();
   const { darkMode, toggleDarkMode } = useDarkMode();
   
   const t = getTranslation(language);
@@ -41,7 +41,6 @@ export function Navigation({
   ];
 
   const languages: Language[] = ['English', 'Bulgarian', 'Spanish', 'Greek', 'Italian'];
-  const regions = ['Bulgaria'];
   
   const handleNavigate = (page: string) => {
     onNavigate(page);
@@ -51,32 +50,25 @@ export function Navigation({
   return (
     <>
       <style dangerouslySetInnerHTML={{__html: `
-        .nav-dropdown-btn:hover {
-          background-color: rgb(241, 245, 249) !important;
-        }
-        .dark .nav-dropdown-btn:hover {
-          background-color: rgb(51, 65, 85) !important;
-        }
-        
         /* Fix selected dropdown items - target exact classes */
         [data-slot="dropdown-menu-item"].bg-sky-50 {
           background-color: rgb(240, 249, 255) !important;
           color: rgb(3, 105, 161) !important;
         }
-        
+
         [data-slot="dropdown-menu-item"].bg-sky-50:hover,
         [data-slot="dropdown-menu-item"].bg-sky-50:focus,
         [data-slot="dropdown-menu-item"].bg-sky-50[data-highlighted] {
           background-color: rgb(224, 242, 254) !important;
           color: rgb(3, 105, 161) !important;
         }
-        
+
         /* Dark mode versions */
         .dark [data-slot="dropdown-menu-item"].bg-sky-50 {
           background-color: rgb(12, 74, 110) !important;
           color: rgb(125, 211, 252) !important;
         }
-        
+
         .dark [data-slot="dropdown-menu-item"].bg-sky-50:hover,
         .dark [data-slot="dropdown-menu-item"].bg-sky-50:focus,
         .dark [data-slot="dropdown-menu-item"].bg-sky-50[data-highlighted] {
@@ -209,25 +201,23 @@ export function Navigation({
               {/* Language Dropdown - Desktop */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <div className="dropdown-trigger-wrapper">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className={`hidden sm:flex nav-dropdown-btn ${
-                        transparent
-                          ? 'text-white hover:bg-white/10 backdrop-blur-sm'
-                          : 'hover:bg-slate-100 dark:hover:bg-gray-700'
-                      } gap-1 px-2 md:px-3 min-w-[100px] sm:min-w-[130px] flex-shrink-0`}
-                      style={{ 
-                        willChange: 'auto',
-                        color: transparent ? undefined : (darkMode ? '#e5e7eb' : '#1f2937')
-                      }}
-                    >
-                      <Globe className="w-4 h-4 flex-shrink-0" />
-                      <span className="hidden sm:inline truncate flex-1 text-left">{language}</span>
-                      <ChevronDown className="w-3 h-3 flex-shrink-0" />
-                    </Button>
-                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={`hidden sm:flex nav-dropdown-btn ${
+                      transparent
+                        ? 'text-white hover:bg-white/10 backdrop-blur-sm'
+                        : 'hover:bg-slate-100 dark:hover:bg-gray-700'
+                    } gap-1 px-2 md:px-3 min-w-[100px] sm:min-w-[130px] flex-shrink-0 rounded-md`}
+                    style={{
+                      willChange: 'auto',
+                      color: transparent ? undefined : (darkMode ? '#e5e7eb' : '#1f2937')
+                    }}
+                  >
+                    <Globe className="w-4 h-4 flex-shrink-0" />
+                    <span className="hidden sm:inline truncate flex-1 text-left">{language}</span>
+                    <ChevronDown className="w-3 h-3 flex-shrink-0" />
+                  </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl border-gray-200 dark:border-gray-600 w-[130px]">
                   {languages.map((lang) => (

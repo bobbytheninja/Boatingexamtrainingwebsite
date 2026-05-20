@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useDarkMode } from '../contexts/DarkModeContext';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -28,6 +29,7 @@ interface User {
 const USERS_PER_PAGE = 20;
 
 export function UserManagement() {
+  const { darkMode } = useDarkMode();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -364,17 +366,21 @@ export function UserManagement() {
     setCurrentPage(1);
   }, [searchQuery]);
 
+  const cardStyle = { backgroundColor: darkMode ? '#334155' : '#ffffff', borderColor: darkMode ? '#475569' : '#e2e8f0' };
+  const titleStyle = { color: darkMode ? '#f1f5f9' : '#0f172a' };
+  const mutedStyle = { color: darkMode ? '#94a3b8' : '#6b7280' };
+
   if (loading) {
     return (
-      <Card className="dark:bg-slate-700 dark:border-slate-600">
+      <Card style={cardStyle}>
         <CardHeader>
-          <CardTitle className="dark:text-gray-100 flex items-center gap-2">
+          <CardTitle style={titleStyle} className="flex items-center gap-2">
             <Users className="w-5 h-5" />
             User Management
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-center py-8">
+          <div className="flex items-center justify-center py-8" style={{ color: darkMode ? '#94a3b8' : '#6b7280' }}>
             <ButtonSpinner className="mr-2" />
             Loading users...
           </div>
@@ -385,9 +391,9 @@ export function UserManagement() {
 
   if (errorMessage) {
     return (
-      <Card className="dark:bg-slate-700 dark:border-slate-600">
+      <Card style={cardStyle}>
         <CardHeader>
-          <CardTitle className="dark:text-gray-100 flex items-center gap-2">
+          <CardTitle style={titleStyle} className="flex items-center gap-2">
             <Users className="w-5 h-5" />
             User Management
           </CardTitle>
@@ -415,14 +421,14 @@ export function UserManagement() {
   }
 
   return (
-    <Card className="dark:bg-slate-700 dark:border-slate-600">
+    <Card style={cardStyle}>
       <CardHeader>
         <div className="flex items-center justify-between gap-4">
-          <CardTitle className="dark:text-gray-100 flex items-center gap-2">
+          <CardTitle style={titleStyle} className="flex items-center gap-2">
             <Users className="w-5 h-5" />
             User Management
           </CardTitle>
-          <Badge variant="outline" className="dark:border-gray-500">
+          <Badge variant="outline" style={{ borderColor: darkMode ? '#64748b' : '#cbd5e1', color: darkMode ? '#cbd5e1' : '#374151' }}>
             {filteredUsers.length} {filteredUsers.length === 1 ? 'user' : 'users'}
           </Badge>
         </div>
@@ -433,7 +439,8 @@ export function UserManagement() {
             placeholder="Search by email or name..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 dark:bg-slate-600 dark:border-slate-500"
+            className="pl-10"
+            style={{ backgroundColor: darkMode ? '#1e293b' : '#ffffff', borderColor: darkMode ? '#475569' : '#cbd5e1', color: darkMode ? '#f1f5f9' : '#0f172a' }}
           />
         </div>
       </CardHeader>
@@ -441,11 +448,11 @@ export function UserManagement() {
         <ScrollArea className="h-[500px]">
           <Table>
             <TableHeader>
-              <TableRow className="dark:border-slate-600">
-                <TableHead className="dark:text-gray-300">User</TableHead>
-                <TableHead className="dark:text-gray-300">Admin Status</TableHead>
-                <TableHead className="dark:text-gray-300">Licenses</TableHead>
-                <TableHead className="dark:text-gray-300">Actions</TableHead>
+              <TableRow style={{ borderColor: darkMode ? '#334155' : '#e2e8f0' }}>
+                <TableHead style={{ color: darkMode ? '#94a3b8' : '#6b7280' }}>User</TableHead>
+                <TableHead style={{ color: darkMode ? '#94a3b8' : '#6b7280' }}>Admin Status</TableHead>
+                <TableHead style={{ color: darkMode ? '#94a3b8' : '#6b7280' }}>Licenses</TableHead>
+                <TableHead style={{ color: darkMode ? '#94a3b8' : '#6b7280' }}>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -454,14 +461,14 @@ export function UserManagement() {
                 const hasSubscriptions = user.subscriptions.length > 0;
 
                 return (
-                  <TableRow key={user.id} className="dark:border-slate-600">
+                  <TableRow key={user.id} style={{ borderColor: darkMode ? '#334155' : '#e2e8f0' }}>
                     <TableCell>
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
-                          <span className="font-medium dark:text-gray-100">{user.name}</span>
+                          <span className="font-medium" style={{ color: darkMode ? '#f1f5f9' : '#0f172a' }}>{user.name}</span>
                         </div>
-                        <div className="text-sm text-gray-600 dark:text-gray-400">{user.email}</div>
-                        <div className="text-xs text-gray-500 dark:text-gray-500">
+                        <div className="text-sm" style={{ color: darkMode ? '#94a3b8' : '#6b7280' }}>{user.email}</div>
+                        <div className="text-xs" style={{ color: darkMode ? '#64748b' : '#9ca3af' }}>
                           Joined {formatDate(user.createdAt)}
                         </div>
                       </div>
@@ -552,9 +559,10 @@ export function UserManagement() {
                             const examInfo = examTypes.find(t => t.value === examType);
                             return (
                               <div key={examType} className="group relative">
-                                <Badge 
-                                  variant="secondary" 
-                                  className="text-xs dark:bg-teal-900/30 dark:text-teal-300 cursor-pointer"
+                                <Badge
+                                  variant="secondary"
+                                  className="text-xs cursor-pointer"
+                                  style={{ backgroundColor: darkMode ? 'rgba(19,78,74,0.4)' : undefined, color: darkMode ? '#5eead4' : undefined }}
                                   title={examInfo?.label}
                                 >
                                   {examInfo?.short || examType}
@@ -580,7 +588,7 @@ export function UserManagement() {
                           value={selectedLicenses[user.id] || ''}
                           onValueChange={(value) => setSelectedLicenses({ ...selectedLicenses, [user.id]: value })}
                         >
-                          <SelectTrigger className="w-32 h-8 text-xs dark:bg-slate-600 dark:border-slate-500">
+                          <SelectTrigger className="w-32 h-8 text-xs" style={{ backgroundColor: darkMode ? '#1e293b' : '#ffffff', borderColor: darkMode ? '#475569' : '#cbd5e1', color: darkMode ? '#f1f5f9' : '#0f172a' }}>
                             <SelectValue placeholder="Grant..." />
                           </SelectTrigger>
                           <SelectContent>

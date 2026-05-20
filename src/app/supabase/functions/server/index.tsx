@@ -514,6 +514,16 @@ app.post("/make-server-d36f8f91/signup", async (c) => {
   }
 });
 
+// Lightweight session validity check — used by client polling to detect forced logout
+app.get("/make-server-d36f8f91/session-check", async (c) => {
+  const authHeader = c.req.header('Authorization');
+  const { error, user } = await verifyUser(authHeader);
+  if (error || !user) {
+    return c.json({ error }, 401);
+  }
+  return c.json({ valid: true });
+});
+
 // Invalidate all other sessions for a user (for concurrent session limiting)
 app.post("/make-server-d36f8f91/invalidate-sessions", async (c) => {
   try {
@@ -2832,6 +2842,57 @@ app.delete("/make-server-d36f8f91/categories/:type", async (c) => {
   } catch (error: any) {
     console.error('Error deleting category:', error);
     return c.json({ message: 'Error deleting category', error: error.message }, 500);
+  }
+});
+
+// ============== REGIONS ==============
+
+// Get all regions
+app.get("/make-server-d36f8f91/regions", async (c) => {
+  try {
+    const regions = await kv.get('regions') || ['Bulgaria'];
+    return c.json({ regions });
+  } catch (error: any) {
+    console.error('Error fetching regions:', error);
+    return c.json({ regions: ['Bulgaria'] });
+  }
+});
+
+// Add a region (admin only)
+app.post("/make-server-d36f8f91/regions", async (c) => {
+  const { error, user, isAdmin: adminStatus } = await verifyAdmin(c.req.header('Authorization'));
+  if (error || !user || !adminStatus) {
+    return c.json({ message: error || 'Admin access required' }, error ? 401 : 403);
+  }
+  try {
+    const body = await c.req.json();
+    const name = (body.name || '').trim();
+    if (!name) return c.json({ message: 'Region name required' }, 400);
+    const regions: string[] = await kv.get('regions') || ['Bulgaria'];
+    if (regions.includes(name)) return c.json({ message: 'Region already exists' }, 409);
+    regions.push(name);
+    await kv.set('regions', regions);
+    return c.json({ regions, message: 'Region added' });
+  } catch (error: any) {
+    return c.json({ message: 'Error adding region', error: error.message }, 500);
+  }
+});
+
+// Delete a region (admin only)
+app.delete("/make-server-d36f8f91/regions/:name", async (c) => {
+  const { error, user, isAdmin: adminStatus } = await verifyAdmin(c.req.header('Authorization'));
+  if (error || !user || !adminStatus) {
+    return c.json({ message: error || 'Admin access required' }, error ? 401 : 403);
+  }
+  try {
+    const name = decodeURIComponent(c.req.param('name'));
+    const regions: string[] = await kv.get('regions') || ['Bulgaria'];
+    const filtered = regions.filter((r: string) => r !== name);
+    if (filtered.length === regions.length) return c.json({ message: 'Region not found' }, 404);
+    await kv.set('regions', filtered);
+    return c.json({ regions: filtered, message: 'Region deleted' });
+  } catch (error: any) {
+    return c.json({ message: 'Error deleting region', error: error.message }, 500);
   }
 });
 

@@ -256,10 +256,10 @@ function AdminPageWrapper() {
   // This allows the admin panel to show helpful error messages
 
   const handleBack = () => {
-    navigate('/home');
+    navigate('/');
   };
 
-  return <AdminPage onBack={handleBack} />;
+  return <AdminPage onBack={handleBack} onNavigate={navigate} />;
 }
 
 // Wrapper for PaymentPage
@@ -347,6 +347,8 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 function AppContent() {
   const [showDiagnostics, setShowDiagnostics] = React.useState(false);
   const { darkMode } = useDarkMode();
+  const { forcedLogoutMessage, clearForcedLogoutMessage } = useAuth();
+  const navigate = useNavigate();
 
   React.useEffect(() => {
     console.log('[YachtExam AppContent] Mounted successfully');
@@ -363,6 +365,24 @@ function AppContent() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-sky-50/50 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
       {showDiagnostics && <AppDiagnostics />}
+      {forcedLogoutMessage && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+          <div
+            className="rounded-xl p-8 max-w-sm mx-4 text-center shadow-2xl"
+            style={{ background: darkMode ? '#1e293b' : '#ffffff' }}
+          >
+            <p className="text-lg font-semibold mb-6" style={{ color: darkMode ? '#f3f4f6' : '#0f172a' }}>
+              {forcedLogoutMessage}
+            </p>
+            <button
+              onClick={() => { clearForcedLogoutMessage(); navigate('/login'); }}
+              className="px-6 py-2 rounded-lg font-semibold text-white bg-sky-600 hover:bg-sky-700 transition-colors"
+            >
+              Sign In Again
+            </button>
+          </div>
+        </div>
+      )}
       <Routes>
         {/* Root route - shows HomePage for both logged in and logged out users */}
         <Route path="/" element={<HomePage />} />

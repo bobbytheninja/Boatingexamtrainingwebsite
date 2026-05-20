@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { createClient } from '../utils/supabase/client';
 import { projectId } from '../utils/supabase/info';
 import { ExamType } from '../data/examQuestions';
@@ -16,6 +16,9 @@ interface AuthContextType {
   user: UserData | null;
   loading: boolean;
   accessToken: string | null;
+  forcedLogoutMessage: string | null;
+  clearForcedLogoutMessage: () => void;
+  triggerForcedLogout: (message: string) => Promise<void>;
   signUp: (email: string, password: string, name: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -33,6 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [forcedLogoutMessage, setForcedLogoutMessage] = useState<string | null>(null);
 
   // Fetch user subscriptions from backend
   const fetchSubscriptions = async (userId: string, token: string): Promise<{ subscriptions: ExamType[], expiresAt: number | null }> => {
@@ -61,6 +65,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { subscriptions: [], expiresAt: null };
     }
   };
+
+  const clearForcedLogoutMessage = useCallback(() => setForcedLogoutMessage(null), []);
+
+  const triggerForcedLogout = useCallback(async (message: string) => {
+    await supabaseClient.auth.signOut({ scope: 'local' });
+    setUser(null);
+    setAccessToken(null);
+    setForcedLogoutMessage(message);
+  }, []);
+
+  // Check if the current session is still the active one on the backend
+  const checkSessionValidity = useCallback(async (token: string) => {
+    try {
+      const res = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/session-check`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (res.status === 401) {
+        const data = await res.json().catch(() => ({}));
+        const msg = typeof data.error === 'string' && data.error.includes('another device')
+          ? 'You were signed in on another device. You have been logged out here.'
+          : 'Your session has expired. Please sign in again.';
+        await supabaseClient.auth.signOut({ scope: 'local' });
+        setUser(null);
+        setAccessToken(null);
+        setForcedLogoutMessage(msg);
+      }
+    } catch {
+      // Network error — don't sign out
+    }
+  }, []);
 
   // Load user session on mount
   useEffect(() => {
@@ -159,6 +194,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       subscription.unsubscribe();
     };
   }, []);
+
+  // Poll session validity every 30 s, on window focus, and on tab visibility change
+  useEffect(() => {
+    if (!user || !accessToken) return;
+    // Run once immediately after a short delay (avoids false positive during login flow)
+    const initial = setTimeout(() => checkSessionValidity(accessToken), 3_000);
+    const interval = setInterval(() => checkSessionValidity(accessToken), 30_000);
+    const onFocus = () => checkSessionValidity(accessToken);
+    // visibilitychange fires when switching tabs; focus fires when switching OS windows
+    const onVisible = () => { if (!document.hidden) checkSessionValidity(accessToken); };
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      clearTimeout(initial);
+      clearInterval(interval);
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [user, accessToken, checkSessionValidity]);
 
   const signUp = async (email: string, password: string, name: string) => {
     try {
@@ -428,6 +482,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user,
         loading,
         accessToken,
+        forcedLogoutMessage,
+        clearForcedLogoutMessage,
+        triggerForcedLogout,
         signUp,
         signIn,
         signOut,

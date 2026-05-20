@@ -449,11 +449,17 @@ export function PaymentPage({ userEmail, onBack, onComplete, onNavigate }: Payme
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-4 space-y-2">
+                  <div
+                    className="rounded-lg p-4 space-y-2"
+                    style={{
+                      background: darkMode ? 'rgba(30, 41, 59, 0.8)' : '#eff6ff',
+                      border: darkMode ? '1px solid rgba(71, 85, 105, 0.6)' : '1px solid #bfdbfe',
+                    }}
+                  >
                     <p className="text-sm" style={{ color: darkMode ? '#93c5fd' : '#1e3a8a' }}>
                       You will be redirected to Stripe's secure checkout page to complete your payment.
                     </p>
-                    <ul className="text-xs space-y-1 ml-4" style={{ color: darkMode ? '#bfdbfe' : '#1e40af' }}>
+                    <ul className="text-xs space-y-1 ml-4" style={{ color: darkMode ? '#94a3b8' : '#1e40af' }}>
                       <li>• Your email: <strong>{userEmail}</strong></li>
                       <li>• Receipt will be sent automatically</li>
                       <li>• 30-day access per category</li>
@@ -487,15 +493,15 @@ export function PaymentPage({ userEmail, onBack, onComplete, onNavigate }: Payme
             </div>
 
             <div className="lg:col-span-1">
-              <Card 
+              <Card
                 className="border-2 sticky top-6 transition-all duration-[400ms]"
-                style={{ 
-                  background: darkMode 
-                    ? 'linear-gradient(to bottom right, #334155, #475569)'
+                style={{
+                  background: darkMode
+                    ? 'linear-gradient(to bottom right, #1e3a5f, #1e3358)'
                     : 'linear-gradient(to bottom right, #eff6ff, #ffffff)',
-                  borderColor: darkMode ? '#2563eb' : '#bfdbfe',
-                  boxShadow: darkMode 
-                    ? '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)'
+                  borderColor: darkMode ? '#3b82f6' : '#bfdbfe',
+                  boxShadow: darkMode
+                    ? '0 20px 25px -5px rgb(0 0 0 / 0.4), 0 8px 10px -6px rgb(0 0 0 / 0.3)'
                     : '0 10px 15px -3px rgb(0 0 0 / 0.05), 0 4px 6px -4px rgb(0 0 0 / 0.05)',
                   transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
                 }}
@@ -534,7 +540,7 @@ export function PaymentPage({ userEmail, onBack, onComplete, onNavigate }: Payme
                         </div>
                       </div>
 
-                      <div className="bg-blue-100 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg p-4 space-y-2">
+                      <div className="rounded-lg p-4 space-y-2" style={{ background: darkMode ? 'rgba(59, 130, 246, 0.2)' : '#dbeafe', border: darkMode ? '1px solid rgba(96, 165, 250, 0.4)' : '1px solid #bfdbfe' }}>
                         <p className="text-sm font-medium" style={{ color: darkMode ? '#93c5fd' : '#1e3a8a' }}>What's included:</p>
                         <ul className="text-xs space-y-1" style={{ color: darkMode ? '#bfdbfe' : '#1e40af' }}>
                           <li className="flex items-start gap-2">

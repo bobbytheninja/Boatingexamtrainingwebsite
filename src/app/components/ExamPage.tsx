@@ -52,7 +52,7 @@ interface AnswerData {
 export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNeedPayment }: ExamPageProps) {
   const { language } = useLanguage();
   const t = getTranslation(language);
-  const { accessToken, user } = useAuth();
+  const { accessToken, user, triggerForcedLogout } = useAuth();
   const { darkMode } = useDarkMode();
   const [examQuestions, setExamQuestions] = useState<Question[]>([]);
   const [loadingQuestions, setLoadingQuestions] = useState(true); // Always start with loading state
@@ -152,7 +152,11 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
           console.error('[ExamPage] Failed to load questions:', error);
           const errorMsg = error.message || 'Failed to load questions';
 
-          // Provide helpful error messages
+          if (errorMsg.toLowerCase().includes('session invalidated') || errorMsg.toLowerCase().includes('another device')) {
+            await triggerForcedLogout('You were signed in on another device. You have been logged out here.');
+            return;
+          }
+
           if (errorMsg.includes('Subscription required')) {
             setQuestionLoadError('You need an active subscription for this exam type. Please purchase access or contact support.');
           } else if (errorMsg.includes('No questions available')) {
@@ -209,21 +213,19 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
           setLoadingQuestions(false);
         } catch (error: any) {
           console.error('[ExamPage] Failed to load mock questions:', error);
-          console.error('[ExamPage] Error details:', {
-            message: error.message,
-            stack: error.stack,
-            examType,
-          });
-          
-          // Show error with helpful message
           const errorMsg = error.message || 'Failed to load questions';
-          
+
+          if (errorMsg.toLowerCase().includes('session invalidated') || errorMsg.toLowerCase().includes('another device')) {
+            await triggerForcedLogout('You were signed in on another device. You have been logged out here.');
+            return;
+          }
+
           if (errorMsg.includes('No questions available')) {
             setQuestionLoadError(`No questions found for ${examType} exam. The admin needs to import questions first. Please check the Admin Panel to upload question files.`);
           } else {
             setQuestionLoadError(`Error loading questions: ${errorMsg}. Please try again or contact support.`);
           }
-          
+
           setLoadingQuestions(false);
           toast.error('Failed to load exam questions. Please try again.');
         }
@@ -236,7 +238,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
   const currentQuestion = examQuestions[currentQuestionIndex];
   const totalQuestions = examQuestions.length;
   const progress = totalQuestions > 0 ? ((currentQuestionIndex + 1) / totalQuestions) * 100 : 0;
-  const MAX_POINTS_LOSS = 6;
+  const MAX_WRONG_ANSWERS = 2;
   
   // Early safety check - must happen before using currentQuestion
   const hasValidQuestion = examQuestions && examQuestions.length > 0 && currentQuestion;
@@ -464,26 +466,25 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
   };
 
   const calculateResults = () => {
-    let totalPointsLost = 0;
+    let wrongCount = 0;
     let correctCount = 0;
 
     examQuestions.forEach((question, index) => {
       const answer = answeredQuestions[index];
       if (answer) {
-        totalPointsLost += answer.pointsLost;
         if (answer.isCorrect) correctCount++;
+        else wrongCount++;
       } else {
-        // Unanswered questions lose full points
-        totalPointsLost += question.points;
+        wrongCount++;
       }
     });
 
-    return { totalPointsLost, correctCount };
+    return { wrongCount, correctCount };
   };
 
   if (showResults) {
-    const { totalPointsLost, correctCount } = calculateResults();
-    const passed = totalPointsLost <= MAX_POINTS_LOSS;
+    const { wrongCount, correctCount } = calculateResults();
+    const passed = wrongCount < MAX_WRONG_ANSWERS;
     const percentage = Math.round((correctCount / totalQuestions) * 100);
 
     return (
@@ -527,43 +528,61 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                   <XCircle className="w-16 h-16 text-red-500 mx-auto drop-shadow-lg" />
                 )}
               </div>
-              <CardTitle className="mb-2 text-xl dark:text-gray-100">
+              <CardTitle className="mb-2 text-xl" style={{ color: darkMode ? '#f3f4f6' : '#0f172a' }}>
                 {t.examResults}
               </CardTitle>
               <CardDescription className="text-lg font-bold">
                 {passed ? (
-                  <span className="text-green-600 dark:text-green-400">{t.passed}! 🎉</span>
+                  <span style={{ color: darkMode ? '#4ade80' : '#16a34a' }}>{t.passed}! 🎉</span>
                 ) : (
-                  <span className="text-red-600 dark:text-red-400">{t.notPassed}</span>
+                  <span style={{ color: darkMode ? '#f87171' : '#dc2626' }}>{t.notPassed}</span>
                 )}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 pt-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Card className="bg-gradient-to-br from-blue-50 to-white dark:from-blue-900/30 dark:to-slate-700 border-2 dark:border-slate-600">
+                <Card
+                  className="border-2"
+                  style={{
+                    background: darkMode ? 'linear-gradient(to bottom right, #1e3a5f, #1e293b)' : 'linear-gradient(to bottom right, #eff6ff, #ffffff)',
+                    borderColor: darkMode ? '#475569' : '#bfdbfe',
+                  }}
+                >
                   <CardContent className="pt-4 pb-4 text-center">
-                    <p className="text-xs text-gray-600 dark:text-gray-300 mb-1">{t.yourScore}</p>
-                    <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">{percentage}%</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{correctCount} {t.of} {totalQuestions} {t.correctAnswers.toLowerCase()}</p>
+                    <p className="text-xs mb-1" style={{ color: darkMode ? '#94a3b8' : '#4b5563' }}>{t.yourScore}</p>
+                    <p className="text-3xl font-bold" style={{ color: darkMode ? '#60a5fa' : '#2563eb' }}>{percentage}%</p>
+                    <p className="text-xs mt-1" style={{ color: darkMode ? '#64748b' : '#6b7280' }}>{correctCount} {t.of} {totalQuestions} {t.correctAnswers.toLowerCase()}</p>
                   </CardContent>
                 </Card>
-                <Card className="bg-gradient-to-br from-purple-50 to-white dark:from-purple-900/30 dark:to-slate-700 border-2 dark:border-slate-600">
+                <Card
+                  className="border-2"
+                  style={{
+                    background: darkMode ? 'linear-gradient(to bottom right, #2d1b4e, #1e293b)' : 'linear-gradient(to bottom right, #f5f3ff, #ffffff)',
+                    borderColor: darkMode ? '#475569' : '#ddd6fe',
+                  }}
+                >
                   <CardContent className="pt-4 pb-4 text-center">
-                    <p className="text-xs text-gray-600 dark:text-gray-300 mb-1">{t.pointsLost}</p>
-                    <p className={`text-3xl font-bold ${passed ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                      {totalPointsLost}
+                    <p className="text-xs mb-1" style={{ color: darkMode ? '#94a3b8' : '#4b5563' }}>{t.questionsWrong}</p>
+                    <p className="text-3xl font-bold" style={{ color: passed ? (darkMode ? '#4ade80' : '#16a34a') : (darkMode ? '#f87171' : '#dc2626') }}>
+                      {wrongCount}
                     </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t.maximum}: {MAX_POINTS_LOSS}</p>
+                    <p className="text-xs mt-1" style={{ color: darkMode ? '#64748b' : '#6b7280' }}>{t.maximum}: {MAX_WRONG_ANSWERS}</p>
                   </CardContent>
                 </Card>
               </div>
 
               {mode === 'exam' && (
-                <Card className="bg-gradient-to-br from-slate-50 to-white dark:from-slate-600 dark:to-slate-700 border-2 dark:border-slate-600">
+                <Card
+                  className="border-2"
+                  style={{
+                    background: darkMode ? 'linear-gradient(to bottom right, #1e293b, #334155)' : 'linear-gradient(to bottom right, #f8fafc, #ffffff)',
+                    borderColor: darkMode ? '#475569' : '#cbd5e1',
+                  }}
+                >
                   <CardContent className="pt-4 pb-4 text-center">
-                    <p className="text-xs text-gray-600 dark:text-gray-300 mb-1">{t.timeUsed}</p>
-                    <p className="text-xl font-bold text-gray-700 dark:text-gray-200">{formatTime(60 * 60 - timeRemaining)}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t.of} 60:00</p>
+                    <p className="text-xs mb-1" style={{ color: darkMode ? '#94a3b8' : '#4b5563' }}>{t.timeUsed}</p>
+                    <p className="text-xl font-bold" style={{ color: darkMode ? '#e2e8f0' : '#374151' }}>{formatTime(60 * 60 - timeRemaining)}</p>
+                    <p className="text-xs mt-1" style={{ color: darkMode ? '#64748b' : '#6b7280' }}>{t.of} 60:00</p>
                   </CardContent>
                 </Card>
               )}
@@ -627,14 +646,21 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
               </div>
 
               {tier === 'mock' && onNeedPayment && (
-                <Alert className="border-sky-500 bg-sky-50">
-                  <AlertCircle className="text-sky-600" />
-                  <AlertDescription className="text-sky-800">
-                    {t.wantToUpgrade} {t.upgradeMessage}
-                    <Button 
-                      onClick={onNeedPayment} 
-                      variant="link" 
-                      className="text-sky-700 font-bold pl-2"
+                <Alert
+                  className="border-sky-500"
+                  style={{
+                    backgroundColor: darkMode ? 'rgba(14, 116, 144, 0.15)' : '#f0f9ff',
+                    borderColor: darkMode ? '#0e7490' : '#38bdf8',
+                  }}
+                >
+                  <AlertCircle style={{ color: darkMode ? '#38bdf8' : '#0284c7' }} />
+                  <AlertDescription style={{ color: darkMode ? '#7dd3fc' : '#075985' }}>
+                    {t.wantToUpgrade} Practice more questions for just a small fee per category.
+                    <Button
+                      onClick={onNeedPayment}
+                      variant="link"
+                      className="font-bold pl-2"
+                      style={{ color: darkMode ? '#38bdf8' : '#0369a1' }}
                     >
                       {t.upgradeNowLink}
                     </Button>
@@ -651,7 +677,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
   }
   
   if (showReview) {
-    const { totalPointsLost, correctCount } = calculateResults();
+    const { wrongCount, correctCount } = calculateResults();
     
     return (
       <>
@@ -712,9 +738,9 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                     <p className="text-2xl font-bold" style={{ color: darkMode ? '#4ade80' : '#16a34a' }}>{correctCount}/{totalQuestions}</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-sm mb-1" style={{ color: darkMode ? '#94a3b8' : '#6b7280' }}>{t.pointsLost}</p>
-                    <p className={`text-2xl font-bold`} style={{ color: totalPointsLost <= MAX_POINTS_LOSS ? (darkMode ? '#4ade80' : '#16a34a') : (darkMode ? '#f87171' : '#dc2626') }}>
-                      {totalPointsLost}/{MAX_POINTS_LOSS}
+                    <p className="text-sm mb-1" style={{ color: darkMode ? '#94a3b8' : '#6b7280' }}>{t.questionsWrong}</p>
+                    <p className={`text-2xl font-bold`} style={{ color: wrongCount < MAX_WRONG_ANSWERS ? (darkMode ? '#4ade80' : '#16a34a') : (darkMode ? '#f87171' : '#dc2626') }}>
+                      {wrongCount}/{MAX_WRONG_ANSWERS}
                     </p>
                   </div>
                 </div>
@@ -757,19 +783,8 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                           >
                             {t.question} {index + 1}
                           </Badge>
-                          <Badge 
-                            variant="outline" 
-                            className="text-xs transition-all duration-300"
-                            style={{
-                              backgroundColor: darkMode ? '#334155' : '#ffffff',
-                              borderColor: darkMode ? '#64748b' : '#cbd5e1',
-                              color: darkMode ? '#e2e8f0' : '#1e293b'
-                            }}
-                          >
-                            {question.points} {question.points === 1 ? t.point : t.points}
-                          </Badge>
-                          <Badge 
-                            variant="secondary" 
+                          <Badge
+                            variant="secondary"
                             className="text-xs transition-all duration-300"
                             style={{
                               backgroundColor: darkMode ? '#1e3a8a' : '#dbeafe',
@@ -870,7 +885,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                       <Alert className="border-red-200 bg-red-50 mt-3">
                         <AlertCircle className="text-red-600" />
                         <AlertDescription className="text-red-800 text-sm">
-                          <strong>{t.incorrect}</strong> -{answer?.pointsLost || question.points} {t.points.toLowerCase()}
+                          <strong>{t.incorrect}</strong>
                         </AlertDescription>
                       </Alert>
                     )}
@@ -1223,9 +1238,6 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
             <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 md:gap-4">
               <CardTitle className="flex-1 text-base md:text-lg max-h-[120px] overflow-y-auto transition-colors duration-[400ms]" style={{ color: darkMode ? '#e2e8f0' : '#1e293b' }}>{currentQuestion.question}</CardTitle>
               <div className="flex flex-row md:flex-col gap-2 md:gap-1.5 md:items-end flex-shrink-0">
-                <Badge variant="outline" className="shadow-sm text-xs transition-all duration-[400ms]" style={{ borderColor: darkMode ? '#64748b' : '#cbd5e1', color: darkMode ? '#cbd5e1' : '#1e293b', backgroundColor: darkMode ? '#334155' : 'transparent' }}>
-                  {currentQuestion.points} {currentQuestion.points === 1 ? t.point : t.points}
-                </Badge>
                 <Badge className="shadow-md text-xs whitespace-nowrap transition-all duration-[400ms]" style={{ backgroundColor: darkMode ? '#1e40af' : '#2563eb', color: '#ffffff', borderColor: darkMode ? '#1e3a8a' : '#1d4ed8' }}>
                   {t.selectMultipleAnswers.replace('{count}', (currentQuestion.correctAnswers?.length || 1).toString())}
                 </Badge>
@@ -1334,9 +1346,9 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                 <AlertCircle className={answeredData?.isCorrect ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'} />
                 <AlertDescription className={answeredData?.isCorrect ? 'text-green-800 dark:text-green-200' : 'text-red-800 dark:text-red-200'}>
                   {answeredData?.isCorrect ? (
-                    <span><strong>{t.correct}</strong> {t.noPointsLost}</span>
+                    <span><strong>{t.correct}</strong></span>
                   ) : (
-                    <span><strong>{t.incorrect}</strong> -{answeredData?.pointsLost} {t.pointsLostMessage}</span>
+                    <span><strong>{t.incorrect}</strong></span>
                   )}
                 </AlertDescription>
               </Alert>
@@ -1431,18 +1443,22 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                               style={{
                                 backgroundColor: isCurrentQuestion
                                   ? '#3b82f6'
-                                  : answer?.isCorrect
+                                  : answer && mode === 'study' && answer.isCorrect
                                   ? '#22c55e'
-                                  : answer
+                                  : answer && mode === 'study'
                                   ? '#ef4444'
-                                  : (darkMode ? '#475569' : '#ffffff'),
+                                  : answer
+                                  ? (darkMode ? '#475569' : '#94a3b8')
+                                  : (darkMode ? '#334155' : '#ffffff'),
                                 borderColor: isCurrentQuestion
                                   ? '#3b82f6'
-                                  : answer?.isCorrect
+                                  : answer && mode === 'study' && answer.isCorrect
                                   ? '#16a34a'
-                                  : answer
+                                  : answer && mode === 'study'
                                   ? '#dc2626'
-                                  : (darkMode ? '#64748b' : '#9ca3af'),
+                                  : answer
+                                  ? (darkMode ? '#64748b' : '#64748b')
+                                  : (darkMode ? '#475569' : '#9ca3af'),
                                 color: isCurrentQuestion || answer ? '#ffffff' : (darkMode ? '#e2e8f0' : '#334155'),
                                 boxShadow: isCurrentQuestion ? '0 4px 6px -1px rgba(59, 130, 246, 0.3), 0 0 0 3px rgba(59, 130, 246, 0.2)' : 'none'
                               }}
@@ -1470,7 +1486,6 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                         </TooltipTrigger>
                         <TooltipContent side="top" className="max-w-xs">
                           <p className="text-xs font-medium">Q{index + 1}: {q.question.substring(0, 60)}{q.question.length > 60 ? '...' : ''}</p>
-                          <p className="text-xs text-gray-500 mt-1">{q.points} {q.points === 1 ? t.point : t.points}</p>
                           {answer && (
                             <p className={`text-xs mt-1 font-medium ${answer.isCorrect ? 'text-green-600' : 'text-red-600'}`}>
                               {answer.isCorrect ? `✓ ${t.correct}` : `✗ ${t.incorrect}`}

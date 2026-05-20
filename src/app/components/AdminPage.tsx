@@ -27,9 +27,10 @@ import { Language, getTranslation } from '../data/translations';
 
 interface AdminPageProps {
   onBack: () => void;
+  onNavigate?: (path: string) => void;
 }
 
-export function AdminPage({ onBack }: AdminPageProps) {
+export function AdminPage({ onBack, onNavigate }: AdminPageProps) {
   const { user, signUp, accessToken } = useAuth();
   const { darkMode, toggleDarkMode } = useDarkMode();
   const [language, setLanguage] = useState<Language>('English');
@@ -316,14 +317,10 @@ export function AdminPage({ onBack }: AdminPageProps) {
       onBack();
     } else if (page === 'login') {
       onBack();
-    } else if (page === 'account') {
-      window.location.href = '/account';
-    } else if (page === 'contact') {
-      window.location.href = '/contact';
-    } else if (page === 'partners') {
-      window.location.href = '/partners';
-    } else if (page === 'pricing') {
-      window.location.href = '/pricing';
+    } else if (onNavigate) {
+      onNavigate(`/${page}`);
+    } else {
+      window.location.href = `/${page}`;
     }
   };
 
@@ -525,7 +522,7 @@ export function AdminPage({ onBack }: AdminPageProps) {
               <>
                 <TabsTrigger
                   value="diagnostics"
-                  className="flex flex-col items-center justify-center gap-2 py-4 px-3 rounded-md text-sm font-medium transition-all data-[state=active]:bg-slate-700 data-[state=active]:text-white data-[state=active]:shadow-md dark:data-[state=active]:bg-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700/50"
+                  className={`flex flex-col items-center justify-center gap-2 py-4 px-3 rounded-md text-sm font-medium transition-all data-[state=active]:bg-slate-700 data-[state=active]:text-white data-[state=active]:shadow-md ${darkMode ? 'text-slate-200 hover:bg-slate-700/40' : 'text-slate-700 hover:bg-slate-100'}`}
                 >
                   <AlertCircle className="w-5 h-5" />
                   <span className="hidden sm:inline text-xs">Diagnostics</span>
@@ -533,7 +530,7 @@ export function AdminPage({ onBack }: AdminPageProps) {
                 </TabsTrigger>
                 <TabsTrigger
                   value="subdebug"
-                  className="flex flex-col items-center justify-center gap-2 py-4 px-3 rounded-md text-sm font-medium transition-all data-[state=active]:bg-slate-700 data-[state=active]:text-white data-[state=active]:shadow-md dark:data-[state=active]:bg-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700/50"
+                  className={`flex flex-col items-center justify-center gap-2 py-4 px-3 rounded-md text-sm font-medium transition-all data-[state=active]:bg-slate-700 data-[state=active]:text-white data-[state=active]:shadow-md ${darkMode ? 'text-slate-200 hover:bg-slate-700/40' : 'text-slate-700 hover:bg-slate-100'}`}
                 >
                   <Search className="w-5 h-5" />
                   <span className="hidden sm:inline text-xs">Sub Debug</span>
@@ -541,7 +538,7 @@ export function AdminPage({ onBack }: AdminPageProps) {
                 </TabsTrigger>
                 <TabsTrigger 
                   value="categories" 
-                  className="flex flex-col items-center justify-center gap-2 py-4 px-3 rounded-md text-sm font-medium transition-all data-[state=active]:bg-slate-700 data-[state=active]:text-white data-[state=active]:shadow-md dark:data-[state=active]:bg-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700/50"
+                  className={`flex flex-col items-center justify-center gap-2 py-4 px-3 rounded-md text-sm font-medium transition-all data-[state=active]:bg-slate-700 data-[state=active]:text-white data-[state=active]:shadow-md ${darkMode ? 'text-slate-200 hover:bg-slate-700/40' : 'text-slate-700 hover:bg-slate-100'}`}
                 >
                   <Ship className="w-5 h-5" />
                   <span className="hidden sm:inline text-xs">Categories</span>
@@ -549,7 +546,7 @@ export function AdminPage({ onBack }: AdminPageProps) {
                 </TabsTrigger>
                 <TabsTrigger 
                   value="import" 
-                  className="flex flex-col items-center justify-center gap-2 py-4 px-3 rounded-md text-sm font-medium transition-all data-[state=active]:bg-slate-700 data-[state=active]:text-white data-[state=active]:shadow-md dark:data-[state=active]:bg-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700/50"
+                  className={`flex flex-col items-center justify-center gap-2 py-4 px-3 rounded-md text-sm font-medium transition-all data-[state=active]:bg-slate-700 data-[state=active]:text-white data-[state=active]:shadow-md ${darkMode ? 'text-slate-200 hover:bg-slate-700/40' : 'text-slate-700 hover:bg-slate-100'}`}
                 >
                   <Database className="w-5 h-5" />
                   <span className="hidden sm:inline text-xs">Import Questions</span>
@@ -557,7 +554,7 @@ export function AdminPage({ onBack }: AdminPageProps) {
                 </TabsTrigger>
                 <TabsTrigger 
                   value="users" 
-                  className="flex flex-col items-center justify-center gap-2 py-4 px-3 rounded-md text-sm font-medium transition-all data-[state=active]:bg-slate-700 data-[state=active]:text-white data-[state=active]:shadow-md dark:data-[state=active]:bg-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700/50"
+                  className={`flex flex-col items-center justify-center gap-2 py-4 px-3 rounded-md text-sm font-medium transition-all data-[state=active]:bg-slate-700 data-[state=active]:text-white data-[state=active]:shadow-md ${darkMode ? 'text-slate-200 hover:bg-slate-700/40' : 'text-slate-700 hover:bg-slate-100'}`}
                 >
                   <Users className="w-5 h-5" />
                   <span className="hidden sm:inline text-xs">Manage Users</span>
@@ -565,7 +562,7 @@ export function AdminPage({ onBack }: AdminPageProps) {
                 </TabsTrigger>
                 <TabsTrigger 
                   value="partners" 
-                  className="flex flex-col items-center justify-center gap-2 py-4 px-3 rounded-md text-sm font-medium transition-all data-[state=active]:bg-slate-700 data-[state=active]:text-white data-[state=active]:shadow-md dark:data-[state=active]:bg-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700/50"
+                  className={`flex flex-col items-center justify-center gap-2 py-4 px-3 rounded-md text-sm font-medium transition-all data-[state=active]:bg-slate-700 data-[state=active]:text-white data-[state=active]:shadow-md ${darkMode ? 'text-slate-200 hover:bg-slate-700/40' : 'text-slate-700 hover:bg-slate-100'}`}
                 >
                   <Users className="w-5 h-5" />
                   <span className="hidden sm:inline text-xs">Partners</span>
@@ -573,7 +570,7 @@ export function AdminPage({ onBack }: AdminPageProps) {
                 </TabsTrigger>
                 <TabsTrigger 
                   value="analytics" 
-                  className="flex flex-col items-center justify-center gap-2 py-4 px-3 rounded-md text-sm font-medium transition-all data-[state=active]:bg-slate-700 data-[state=active]:text-white data-[state=active]:shadow-md dark:data-[state=active]:bg-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700/50"
+                  className={`flex flex-col items-center justify-center gap-2 py-4 px-3 rounded-md text-sm font-medium transition-all data-[state=active]:bg-slate-700 data-[state=active]:text-white data-[state=active]:shadow-md ${darkMode ? 'text-slate-200 hover:bg-slate-700/40' : 'text-slate-700 hover:bg-slate-100'}`}
                 >
                   <Database className="w-5 h-5" />
                   <span className="hidden sm:inline text-xs">Analytics</span>
@@ -610,32 +607,6 @@ export function AdminPage({ onBack }: AdminPageProps) {
               <TabsContent value="diagnostics">
                 <div className="space-y-6">
                   <DatabaseDiagnostics />
-                  
-                  {/* Quick Link to Image Diagnostics */}
-                  <Card className="border-2 border-indigo-200 dark:border-indigo-800 bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-950/30 dark:to-blue-950/20 shadow-lg hover:shadow-xl transition-all">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-3 text-indigo-900 dark:text-indigo-100">
-                        <div className="p-3 bg-indigo-500 rounded-lg shadow-md">
-                          <ImageIcon className="w-6 h-6 text-white" />
-                        </div>
-                        <span className="text-xl">Image Diagnostics</span>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <p className="text-sm text-indigo-700 dark:text-indigo-300">
-                        Check if images are properly saved and displaying in questions across all exam categories.
-                      </p>
-                      <Button
-                        onClick={() => window.open('/image-diagnostics', '_blank')}
-                        className="w-full bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 text-white font-semibold py-3 shadow-md"
-                      >
-                        Open Image Diagnostics Page
-                      </Button>
-                      <p className="text-xs text-indigo-600 dark:text-indigo-400 bg-white dark:bg-indigo-950/30 p-2 rounded border border-indigo-200 dark:border-indigo-700">
-                        💡 Or manually visit: <code className="bg-indigo-100 dark:bg-indigo-900/50 px-2 py-0.5 rounded font-mono">/image-diagnostics</code>
-                      </p>
-                    </CardContent>
-                  </Card>
                 </div>
               </TabsContent>
 

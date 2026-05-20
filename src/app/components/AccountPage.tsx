@@ -485,7 +485,15 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
                         );
                       })}
 
-                      <Card className="border-2 border-blue-200 dark:border-blue-800 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30">
+                      <Card
+                        className="border-2"
+                        style={{
+                          background: darkMode
+                            ? 'linear-gradient(to right, #1e3a5f, #1e2d5a)'
+                            : 'linear-gradient(to right, #eff6ff, #eef2ff)',
+                          borderColor: darkMode ? '#2563eb' : '#bfdbfe',
+                        }}
+                      >
                         <CardContent className="pt-6">
                           <div className="flex items-center justify-between">
                             <div>
@@ -506,31 +514,6 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
                 </CardContent>
               </Card>
 
-              {/* Usage Statistics (Optional) */}
-              {paidExams.length > 0 && (
-                <Card className="border-2 border-gray-200 dark:border-slate-600 shadow-xl mt-6 dark:bg-slate-700">
-                  <CardHeader>
-                    <CardTitle className="dark:text-gray-100">{t.yourProgress}</CardTitle>
-                    <CardDescription className="dark:text-gray-300">{t.trackPerformance}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/30 rounded-xl">
-                        <div className="text-3xl font-bold text-blue-700 dark:text-blue-400 mb-1">{paidExams.length}</div>
-                        <div className="text-sm text-gray-600 dark:text-gray-300">{t.activeExams}</div>
-                      </div>
-                      <div className="text-center p-4 bg-green-50 dark:bg-green-900/30 rounded-xl">
-                        <div className="text-3xl font-bold text-green-700 dark:text-green-400 mb-1">-</div>
-                        <div className="text-sm text-gray-600 dark:text-gray-300">{t.examsCompleted}</div>
-                      </div>
-                      <div className="text-center p-4 bg-purple-50 dark:bg-purple-900/30 rounded-xl">
-                        <div className="text-3xl font-bold text-purple-700 dark:text-purple-400 mb-1">-</div>
-                        <div className="text-sm text-gray-600 dark:text-gray-300">{t.averageScore}</div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
             </div>
           </div>
         </div>

@@ -337,21 +337,30 @@ export function PricingPage({ onNavigate, isLoggedIn, paidExams = [] }: PricingP
                 }}
               >{t.fullAccessDesc}</CardDescription>
               <div className="mt-3">
+                <p
+                  className="text-sm font-medium transition-colors duration-[400ms]"
+                  style={{
+                    color: darkMode ? '#9ca3af' : '#64748b',
+                    transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
+                  }}
+                >
+                  for prices close to
+                </p>
                 <div className="flex items-baseline gap-1.5">
-                  <span 
+                  <span
                     className="text-3xl font-bold transition-colors duration-[400ms]"
-                    style={{ 
+                    style={{
                       color: darkMode ? '#f3f4f6' : '#1e293b',
-                      transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+                      transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
                     }}
                   >€{overallPrice}</span>
-                  <span 
+                  <span
                     className="text-xs transition-colors duration-[400ms]"
-                    style={{ 
+                    style={{
                       color: darkMode ? '#9ca3af' : '#64748b',
-                      transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+                      transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
                     }}
-                  >{t.perMonthPerCategory}</span>
+                  >a month</span>
                 </div>
               </div>
             </CardHeader>
