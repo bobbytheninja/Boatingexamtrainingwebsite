@@ -10,7 +10,9 @@ import { Footer } from './Footer';
 import { useDarkMode } from '../contexts/DarkModeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { projectId, publicAnonKey } from '../utils/supabase/info';
-import { LoadingSpinner } from './LoadingSpinner';
+
+const CACHE_KEY = 'bsb_partners_cache';
+const CACHE_TTL = 10 * 60 * 1000; // 10 minutes
 
 interface PartnersPageProps {
   onNavigate: (page: string) => void;
@@ -31,6 +33,47 @@ interface Partner {
   updatedAt: number;
 }
 
+function getDefaultPartners(): Partner[] {
+  return [
+    {
+      id: 'default_1',
+      name: 'Maritime Academy Bulgaria',
+      description: 'Leading maritime training institution offering comprehensive sailing courses, yacht certifications, and professional skipper training. With over 15 years of experience and certified instructors, we provide hands-on training in modern vessels and state-of-the-art facilities.',
+      specializations: ['RYA Certified Courses', 'Yacht Charter Qualifications', 'Advanced Navigation', 'Safety at Sea Training', 'VHF Radio Operator License'],
+      website: 'https://www.naval-acad.bg/en',
+      classesLink: 'https://www.naval-acad.bg/en',
+      image: 'https://images.unsplash.com/photo-1599444941426-db010d9b5ef7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzYWlsaW5nJTIwc2Nob29sJTIwdHJhaW5pbmclMjBpbnN0cnVjdG9yfGVufDF8fHx8MTc2MjQzNzU1NHww&ixlib=rb-4.1.0&q=80&w=800',
+      order: 0,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    },
+    {
+      id: 'default_2',
+      name: 'Black Sea Yacht Charters',
+      description: 'Premium yacht charter service with a fleet of modern sailing and motor yachts. We offer bareboat and skippered charters along the Bulgarian and Greek coastlines. Perfect for practicing your newly acquired skills in real-world conditions.',
+      specializations: ['Bareboat Charter', 'Skippered Charter', 'Sailing Holidays', 'Team Building Events', 'Corporate Charters'],
+      website: 'https://bmtc.bg/en/index.html',
+      classesLink: 'https://bmtc.bg/en/STCW-courses/c2.html',
+      image: 'https://images.unsplash.com/photo-1630840754024-8e3817c5e623?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx5YWNodCUyMGNoYXJ0ZXIlMjBib2F0JTIwcmVudGFsfGVufDF8fHx8MTc2MjQzODE3MXww&ixlib=rb-4.1.0&q=80&w=800',
+      order: 1,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    },
+    {
+      id: 'default_3',
+      name: 'Neptune Marine Equipment',
+      description: 'Your one-stop shop for all maritime safety and navigation equipment. We supply professional-grade gear for exam preparation including safety equipment, navigation tools, and communication devices. Special discounts for our partner exam students.',
+      specializations: ['Safety Equipment', 'Navigation Instruments', 'VHF Radios', 'Life Jackets & Safety Gear', 'Electronic Charts'],
+      website: 'https://neptune-marine.bg',
+      classesLink: 'https://neptune-marine.bg/shop',
+      image: 'https://images.unsplash.com/photo-1601534961131-1526b4741505?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtYXJpbmUlMjBlcXVpcG1lbnQlMjBzaG9wfGVufDF8fHx8MTc2MjQzODE3NXww&ixlib=rb-4.1.0&q=80&w=800',
+      order: 2,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    },
+  ];
+}
+
 export function PartnersPage({ onNavigate, selectedPartnerIndex = 0, isLoggedIn = false }: PartnersPageProps) {
   usePageTitle('Partners | Black Sea Bulgaria');
   const { language } = useLanguage();
@@ -38,7 +81,7 @@ export function PartnersPage({ onNavigate, selectedPartnerIndex = 0, isLoggedIn 
   const { darkMode } = useDarkMode();
   const partnerRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [partners, setPartners] = useState<Partner[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
 
   const handleNavigate = (page: string) => {
     if (page === 'partners') return;
@@ -53,95 +96,59 @@ export function PartnersPage({ onNavigate, selectedPartnerIndex = 0, isLoggedIn 
     }
   };
 
-  // Fetch partners from backend
   useEffect(() => {
-    const fetchPartners = async () => {
-      setLoading(true);
-      try {
-        const response = await fetch(
-          `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/partners`,
-          {
-            headers: {
-              'Authorization': `Bearer ${publicAnonKey}`,
-            },
-          }
-        );
-
-        if (response.ok) {
-          const data = await response.json();
-          setPartners(data.partners || []);
-        } else {
-          console.error('Failed to fetch partners:', response.status);
-          // Fall back to default partners if fetch fails
-          setPartners(getDefaultPartners());
+    // Check localStorage cache first for instant display
+    try {
+      const raw = localStorage.getItem(CACHE_KEY);
+      if (raw) {
+        const { partners: cached, cachedAt } = JSON.parse(raw);
+        if (Array.isArray(cached) && cached.length > 0) {
+          setPartners(cached);
+          setInitialLoading(false);
+          // If cache is still fresh, skip the network request
+          if (Date.now() - cachedAt < CACHE_TTL) return;
+          // Otherwise fall through to refresh in background
         }
-      } catch (error) {
-        console.error('Error fetching partners:', error);
-        // Fall back to default partners if fetch fails
-        setPartners(getDefaultPartners());
-      } finally {
-        setLoading(false);
       }
-    };
+    } catch {
+      // corrupted cache — ignore and fetch fresh
+    }
 
-    fetchPartners();
+    // Fetch from API (first visit or stale cache — runs silently if we already showed cached data)
+    fetch(
+      `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/partners`,
+      { headers: { 'Authorization': `Bearer ${publicAnonKey}` } }
+    )
+      .then(res => (res.ok ? res.json() : null))
+      .then(data => {
+        const fetched: Partner[] = data?.partners?.length ? data.partners : getDefaultPartners();
+        setPartners(fetched);
+        setInitialLoading(false);
+        try {
+          localStorage.setItem(CACHE_KEY, JSON.stringify({ partners: fetched, cachedAt: Date.now() }));
+        } catch {
+          // storage full — ignore
+        }
+      })
+      .catch(() => {
+        setPartners(prev => prev.length ? prev : getDefaultPartners());
+        setInitialLoading(false);
+      });
   }, []);
 
-  // Default fallback partners
-  const getDefaultPartners = (): Partner[] => {
-    return [
-      {
-        id: 'default_1',
-        name: 'Maritime Academy Bulgaria',
-        description: 'Leading maritime training institution offering comprehensive sailing courses, yacht certifications, and professional skipper training. With over 15 years of experience and certified instructors, we provide hands-on training in modern vessels and state-of-the-art facilities.',
-        specializations: ['RYA Certified Courses', 'Yacht Charter Qualifications', 'Advanced Navigation', 'Safety at Sea Training', 'VHF Radio Operator License'],
-        website: 'https://www.naval-acad.bg/en',
-        classesLink: 'https://www.naval-acad.bg/en',
-        image: 'https://images.unsplash.com/photo-1599444941426-db010d9b5ef7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzYWlsaW5nJTIwc2Nob29sJTIwdHJhaW5pbmclMjBpbnN0cnVjdG9yfGVufDF8fHx8MTc2MjQzNzU1NHww&ixlib=rb-4.1.0&q=80&w=1080',
-        order: 0,
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-      },
-      {
-        id: 'default_2',
-        name: 'Black Sea Yacht Charters',
-        description: 'Premium yacht charter service with a fleet of modern sailing and motor yachts. We offer bareboat and skippered charters along the Bulgarian and Greek coastlines. Perfect for practicing your newly acquired skills in real-world conditions.',
-        specializations: ['Bareboat Charter', 'Skippered Charter', 'Sailing Holidays', 'Team Building Events', 'Corporate Charters'],
-        website: 'https://bmtc.bg/en/index.html',
-        classesLink: 'https://bmtc.bg/en/STCW-courses/c2.html',
-        image: 'https://images.unsplash.com/photo-1630840754024-8e3817c5e623?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx5YWNodCUyMGNoYXJ0ZXIlMjBib2F0JTIwcmVudGFsfGVufDF8fHx8MTc2MjQzODE3MXww&ixlib=rb-4.1.0&q=80&w=1080',
-        order: 1,
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-      },
-      {
-        id: 'default_3',
-        name: 'Neptune Marine Equipment',
-        description: 'Your one-stop shop for all maritime safety and navigation equipment. We supply professional-grade gear for exam preparation including safety equipment, navigation tools, and communication devices. Special discounts for our partner exam students.',
-        specializations: ['Safety Equipment', 'Navigation Instruments', 'VHF Radios', 'Life Jackets & Safety Gear', 'Electronic Charts'],
-        website: 'https://neptune-marine.bg',
-        classesLink: 'https://neptune-marine.bg/shop',
-        image: 'https://images.unsplash.com/photo-1601534961131-1526b4741505?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtYXJpbmUlMjBlcXVpcG1lbnQlMjBzaG9wfGVufDF8fHx8MTc2MjQzODE3NXww&ixlib=rb-4.1.0&q=80&w=1080',
-        order: 2,
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-      },
-    ];
-  };
-
-  // Scroll to selected partner on mount
+  // Scroll to selected partner once content is ready
   useEffect(() => {
-    if (partnerRefs.current[selectedPartnerIndex] && !loading) {
+    if (partnerRefs.current[selectedPartnerIndex] && !initialLoading) {
       setTimeout(() => {
         const element = partnerRefs.current[selectedPartnerIndex];
         if (element) {
-          const yOffset = -150; // Offset for navbar + banner + some spacing
+          const yOffset = -150;
           const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
           window.scrollTo({ top: y, behavior: 'smooth' });
         }
       }, 100);
     }
-  }, [selectedPartnerIndex, loading]);
+  }, [selectedPartnerIndex, initialLoading]);
 
   return (
     <div className={darkMode ? 'dark' : ''}>
@@ -151,11 +158,11 @@ export function PartnersPage({ onNavigate, selectedPartnerIndex = 0, isLoggedIn 
         isLoggedIn={isLoggedIn}
         transparent={false}
       />
-      
-      <div 
+
+      <div
         className="min-h-screen pt-32 pb-20 transition-all duration-[400ms]"
-        style={{ 
-          background: darkMode 
+        style={{
+          background: darkMode
             ? 'linear-gradient(to bottom right, #0f172a, #1e293b, #0f172a)'
             : 'linear-gradient(to bottom right, #ffffff, #f0f9ff, #ffffff)',
           transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
@@ -164,21 +171,21 @@ export function PartnersPage({ onNavigate, selectedPartnerIndex = 0, isLoggedIn 
         <div className="container mx-auto px-4 md:px-6 lg:px-8 max-w-6xl">
           {/* Header */}
           <div className="text-center mb-12 animate-fadeIn">
-            <h2 
-              className="gradient-ocean mb-4 tracking-tight transition-colors duration-[400ms]" 
-              style={{ 
-                fontSize: 'clamp(1.5rem, 4vw, 2rem)', 
+            <h2
+              className="gradient-ocean mb-4 tracking-tight transition-colors duration-[400ms]"
+              style={{
+                fontSize: 'clamp(1.5rem, 4vw, 2rem)',
                 fontWeight: '800',
                 transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
               }}
             >
               {t.partnersTitle}
             </h2>
-            <p 
+            <p
               className="max-w-2xl mx-auto text-sm md:text-base font-light leading-relaxed transition-colors duration-[400ms]"
-              style={{ 
+              style={{
                 color: darkMode ? '#d1d5db' : '#475569',
-                transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+                transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
               }}
             >
               {t.partnersSubtitle}
@@ -187,19 +194,24 @@ export function PartnersPage({ onNavigate, selectedPartnerIndex = 0, isLoggedIn 
 
           {/* Partners List */}
           <div className="space-y-8">
-            {loading ? (
-              <div className="flex justify-center">
-                <LoadingSpinner />
-              </div>
+            {initialLoading ? (
+              // Skeleton cards — shown only on true first visit (no cache)
+              [0, 1, 2].map(i => (
+                <div
+                  key={i}
+                  className="rounded-xl h-64 animate-pulse"
+                  style={{ background: darkMode ? '#334155' : '#e2e8f0' }}
+                />
+              ))
             ) : (
               partners.map((partner, index) => (
-                <div key={index} ref={(el) => partnerRefs.current[index] = el}>
-                  <Card 
+                <div key={index} ref={(el) => { partnerRefs.current[index] = el; }}>
+                  <Card
                     className="group border-2 shadow-lg overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all duration-[400ms]"
-                    style={{ 
+                    style={{
                       backgroundColor: darkMode ? '#334155' : '#ffffff',
                       borderColor: darkMode ? '#475569' : '#e2e8f0',
-                      transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+                      transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
                     }}
                   >
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -208,6 +220,7 @@ export function PartnersPage({ onNavigate, selectedPartnerIndex = 0, isLoggedIn 
                         <ImageWithFallback
                           src={partner.image}
                           alt={partner.name}
+                          loading="lazy"
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent lg:bg-gradient-to-r" />
@@ -220,30 +233,30 @@ export function PartnersPage({ onNavigate, selectedPartnerIndex = 0, isLoggedIn 
                       {/* Partner Info */}
                       <div className="p-6 lg:py-8">
                         <CardHeader className="p-0 mb-4 hidden lg:block">
-                          <CardTitle 
+                          <CardTitle
                             className="text-2xl mb-2 transition-colors duration-[400ms]"
-                            style={{ 
+                            style={{
                               color: darkMode ? '#f3f4f6' : '#1e293b',
-                              transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+                              transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
                             }}
                           >{partner.name}</CardTitle>
-                          <CardDescription 
+                          <CardDescription
                             className="text-sm transition-colors duration-[400ms]"
-                            style={{ 
+                            style={{
                               color: darkMode ? '#d1d5db' : '#64748b',
-                              transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+                              transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
                             }}
                           ></CardDescription>
                         </CardHeader>
-                        
+
                         <CardContent className="p-0 space-y-6">
                           {/* Description */}
                           <div>
-                            <p 
+                            <p
                               className="text-sm leading-relaxed transition-colors duration-[400ms]"
-                              style={{ 
+                              style={{
                                 color: darkMode ? '#e5e7eb' : '#334155',
-                                transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+                                transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
                               }}
                             >
                               {partner.description}
@@ -252,11 +265,11 @@ export function PartnersPage({ onNavigate, selectedPartnerIndex = 0, isLoggedIn 
 
                           {/* Specializations */}
                           <div>
-                            <h4 
+                            <h4
                               className="flex items-center gap-2 mb-3 transition-colors duration-[400ms]"
-                              style={{ 
+                              style={{
                                 color: darkMode ? '#22d3ee' : '#0e7490',
-                                transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+                                transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
                               }}
                             >
                               <GraduationCap className="w-4 h-4" />
@@ -266,12 +279,12 @@ export function PartnersPage({ onNavigate, selectedPartnerIndex = 0, isLoggedIn 
                             </h4>
                             <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
                               {partner.specializations.map((spec, idx) => (
-                                <li 
-                                  key={idx} 
+                                <li
+                                  key={idx}
                                   className="flex items-center gap-2 text-xs transition-colors duration-[400ms]"
-                                  style={{ 
+                                  style={{
                                     color: darkMode ? '#d1d5db' : '#475569',
-                                    transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+                                    transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
                                   }}
                                 >
                                   <span className="w-1.5 h-1.5 rounded-full bg-cyan-500" />
@@ -309,35 +322,35 @@ export function PartnersPage({ onNavigate, selectedPartnerIndex = 0, isLoggedIn 
           </div>
 
           {/* Call to Action */}
-          <Card 
+          <Card
             className="mt-12 border-2 shadow-md transition-all duration-[400ms]"
-            style={{ 
-              background: darkMode 
+            style={{
+              background: darkMode
                 ? 'linear-gradient(to bottom right, #334155, #1e293b)'
                 : 'linear-gradient(to bottom right, #fff7ed, #ffffff)',
               borderColor: darkMode ? '#ea580c' : '#fed7aa',
-              transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+              transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
             }}
           >
             <CardContent className="p-8 text-center">
               <div className="text-4xl mb-3">🤝</div>
-              <h3 
+              <h3
                 className="text-xl font-bold mb-2 transition-colors duration-[400ms]"
-                style={{ 
+                style={{
                   color: darkMode ? '#f3f4f6' : '#1e293b',
-                  transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+                  transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
                 }}
               >
                 {language === 'English' ? 'Interested in Partnering?' : 'Интересувате ли се от партньорство?'}
               </h3>
-              <p 
+              <p
                 className="text-sm mb-4 max-w-2xl mx-auto transition-colors duration-[400ms]"
-                style={{ 
+                style={{
                   color: darkMode ? '#d1d5db' : '#475569',
-                  transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+                  transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
                 }}
               >
-                {language === 'English' 
+                {language === 'English'
                   ? 'We\'re always looking to collaborate with quality maritime training providers. Contact us to discuss partnership opportunities.'
                   : 'Винаги търсим да сътрудничим с качествени доставчици на морско оучение. Свържете се с нас, за да обсъдим възможности за партньорство.'}
               </p>
@@ -351,7 +364,7 @@ export function PartnersPage({ onNavigate, selectedPartnerIndex = 0, isLoggedIn 
           </Card>
         </div>
       </div>
-      
+
       <Footer />
     </div>
   );

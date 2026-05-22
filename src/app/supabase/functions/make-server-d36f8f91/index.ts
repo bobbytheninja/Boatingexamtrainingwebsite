@@ -2238,7 +2238,9 @@ app.get("/make-server-d36f8f91/partners", async (c) => {
       return (a.createdAt || 0) - (b.createdAt || 0);
     });
     
-    return c.json({ partners: sortedPartners });
+    return c.json({ partners: sortedPartners }, 200, {
+      'Cache-Control': 'public, max-age=300',
+    });
   } catch (error: any) {
     console.error('Error fetching partners:', error);
     return c.json({ message: 'Error fetching partners' }, 500);

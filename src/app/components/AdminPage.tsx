@@ -53,6 +53,8 @@ export function AdminPage({ onBack, onNavigate }: AdminPageProps) {
 
   // Check admin status on mount
   useEffect(() => {
+    const controller = new AbortController();
+
     const checkAdminStatus = async () => {
       if (!user || !accessToken) {
         setIsAlreadyAdmin(false);
@@ -60,17 +62,16 @@ export function AdminPage({ onBack, onNavigate }: AdminPageProps) {
         setBackendError(null);
         return;
       }
-      
+
       setCheckingAdminStatus(true);
       setBackendError(null);
-      
+
       try {
         const response = await fetch(
           `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/check-admin`,
           {
-            headers: {
-              'Authorization': `Bearer ${accessToken}`,
-            },
+            headers: { 'Authorization': `Bearer ${accessToken}` },
+            signal: controller.signal,
           }
         );
 
@@ -80,15 +81,14 @@ export function AdminPage({ onBack, onNavigate }: AdminPageProps) {
           setBackendError(null);
         } else {
           setIsAlreadyAdmin(false);
-          // Don't set error for 404 or unauthorized - just means not admin
           if (response.status !== 404 && response.status !== 401 && response.status !== 403) {
             setBackendError(`Backend returned status ${response.status}`);
           }
         }
       } catch (error: any) {
+        if (error.name === 'AbortError') return;
         console.error('Error checking admin status:', error);
         setIsAlreadyAdmin(false);
-        // Network error - backend probably not deployed
         setBackendError(error.message || 'Backend connection failed');
       } finally {
         setCheckingAdminStatus(false);
@@ -96,74 +96,53 @@ export function AdminPage({ onBack, onNavigate }: AdminPageProps) {
     };
 
     checkAdminStatus();
+    return () => controller.abort();
   }, [user, accessToken]);
 
   const handleTestConnection = async () => {
     setTestingConnection(true);
     try {
-      // Test 1: Health check
-      console.log('[Admin] Testing health endpoint...');
-      const healthResponse = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/health`,
-        {
+      // Run health check and mock questions in parallel
+      const [healthResponse, mockResponse] = await Promise.all([
+        fetch(`https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/health`, {
           method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-      
+          headers: { 'Content-Type': 'application/json' },
+        }),
+        fetch(`https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/questions/jet/mock`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      ]);
+
       if (!healthResponse.ok) {
         const errorText = await healthResponse.text().catch(() => 'No error details');
-        console.error('Server test failed:', healthResponse.status, errorText);
+        console.error('Health check failed:', healthResponse.status, errorText);
         toast.error(`❌ Health check failed with status ${healthResponse.status}`);
         return;
       }
-      
+
       const healthData = await healthResponse.json();
-      console.log('[Admin] Health check passed:', healthData);
-      
-      // Test 2: Mock questions endpoint
-      console.log('[Admin] Testing mock questions endpoint...');
-      const mockResponse = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/questions/jet/mock`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-      
+
       let mockStatus = 'Unknown';
       if (mockResponse.ok) {
         const mockData = await mockResponse.json();
         mockStatus = `Found ${mockData.questions?.length || 0} questions`;
-        console.log('[Admin] Mock questions test:', mockStatus);
       } else if (mockResponse.status === 404) {
         mockStatus = 'No questions imported yet';
-        console.log('[Admin] Mock questions test: No questions found (expected if not imported)');
       } else {
         mockStatus = `Error: ${mockResponse.status}`;
-        console.error('[Admin] Mock questions test failed:', mockResponse.status);
       }
-      
-      // Success message with details
+
       toast.success(`✅ Server is running!\n\nHealth: ${healthData.status}\nMock Questions: ${mockStatus}`, {
         duration: 5000,
       });
-      
     } catch (error: any) {
       console.error('Connection test error:', error);
-      
       let errorMessage = error.message || 'Unknown error';
       if (errorMessage.includes('Failed to fetch') || errorMessage.includes('NetworkError')) {
         errorMessage = 'Cannot connect to backend. Is it deployed? Run: ./deploy-backend.sh';
       }
-      
-      toast.error(`❌ Cannot reach server\n\n${errorMessage}`, {
-        duration: 7000,
-      });
+      toast.error(`❌ Cannot reach server\n\n${errorMessage}`, { duration: 7000 });
     } finally {
       setTestingConnection(false);
     }
@@ -203,16 +182,9 @@ export function AdminPage({ onBack, onNavigate }: AdminPageProps) {
 
     setMakingAdmin(true);
     try {
-      console.log('Making user admin:', {
-        userId: user.id,
-        email: user.email,
-        hasAdminKey: !!adminKeyInput,
-      });
-
-      const url = `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/admin/make-admin`;
-      console.log('Request URL:', url);
-
-      const response = await fetch(url, {
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/admin/make-admin`,
+        {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -224,11 +196,7 @@ export function AdminPage({ onBack, onNavigate }: AdminPageProps) {
         }),
       });
 
-      console.log('Response status:', response.status);
-      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
-
       const responseText = await response.text();
-      console.log('Response text:', responseText);
 
       if (!response.ok) {
         let errorData;
@@ -240,10 +208,6 @@ export function AdminPage({ onBack, onNavigate }: AdminPageProps) {
         throw new Error(errorData.message || `Server error: ${response.status}`);
       }
 
-      const result = JSON.parse(responseText);
-      console.log('Admin access granted:', result);
-      
-      // Update the local admin status
       setIsAlreadyAdmin(true);
       
       toast.success(`🎉 Admin access granted! Refreshing page...`);
