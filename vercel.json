@@ -1,12 +1,4 @@
 {
-  "redirects": [
-    {
-      "source": "/(.*)",
-      "has": [{ "type": "host", "value": "www.blackseabulgaria.com" }],
-      "destination": "https://blackseabulgaria.com/$1",
-      "permanent": true
-    }
-  ],
   "rewrites": [
     { "source": "/((?!_next|api/).*)", "destination": "/index.html" }
   ],
