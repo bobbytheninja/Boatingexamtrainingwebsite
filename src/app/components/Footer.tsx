@@ -52,7 +52,7 @@ export function Footer() {
                 transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
               }}
             >
-              © {currentYear} Yacht Exam Trainer. All rights reserved.
+              © {currentYear} Black Sea Bulgaria / Yacht Exam Trainer™. All rights reserved.
             </div>
 
             {/* Contact Info */}

@@ -231,16 +231,29 @@ export function PrivacyPolicyModal({ isOpen, onClose }: PrivacyPolicyModalProps)
           </section>
 
           <section className="space-y-3">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">13. Cookie Policy</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">13. Cookie &amp; Local Storage Policy</h3>
             <p className="text-gray-700 dark:text-gray-300">
-              We use the following types of cookies:
+              We use the following browser storage mechanisms:
             </p>
+            <h4 className="font-semibold text-gray-800 dark:text-gray-200 mt-2">Cookies</h4>
             <ul className="list-disc pl-6 space-y-1 text-gray-700 dark:text-gray-300">
-              <li><strong>Strictly Necessary Cookies:</strong> Essential for authentication and security (cannot be disabled)</li>
-              <li><strong>Functional Cookies:</strong> Remember your preferences (dark mode, language selection)</li>
+              <li><strong>Strictly Necessary:</strong> Authentication session tokens (cannot be disabled)</li>
+              <li><code className="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded">sidebar_state</code> — remembers whether the sidebar is collapsed (7-day cookie)</li>
+            </ul>
+            <h4 className="font-semibold text-gray-800 dark:text-gray-200 mt-2">localStorage (cleared when you clear browser data)</h4>
+            <ul className="list-disc pl-6 space-y-1 text-gray-700 dark:text-gray-300">
+              <li><code className="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded">darkMode</code> — your light/dark theme preference</li>
+              <li><code className="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded">yacht-exam-language</code> — your selected interface language</li>
+              <li><code className="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded">yacht-exam-region</code> — your selected region</li>
+              <li><code className="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded">exam_progress_&#123;type&#125;_&#123;tier&#125;</code> — your in-progress exam answers for session continuity</li>
+              <li><code className="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded">partnerBannerDismissed_v2</code> — whether you have dismissed the partner banner</li>
+            </ul>
+            <h4 className="font-semibold text-gray-800 dark:text-gray-200 mt-2">sessionStorage (cleared when you close the tab)</h4>
+            <ul className="list-disc pl-6 space-y-1 text-gray-700 dark:text-gray-300">
+              <li><code className="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded">exam_session_&#123;type&#125;</code> — exam mode and tier, used to recover your exam state after a page refresh</li>
             </ul>
             <p className="text-gray-700 dark:text-gray-300 mt-3">
-              You can control cookies through your browser settings, but disabling essential cookies may prevent access to the Service.
+              No third-party advertising or tracking cookies are used. You can clear all stored data via your browser settings.
             </p>
           </section>
         </div>

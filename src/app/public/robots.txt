@@ -5,14 +5,15 @@
 User-agent: *
 Allow: /
 
-# Disallow admin and private areas
+# Disallow private and auth-only pages
 Disallow: /admin
 Disallow: /account
 Disallow: /payment
 Disallow: /payment-success
+Disallow: /login
+Disallow: /reset-password
+Disallow: /exam/
+Disallow: /exam-review
 
 # Sitemap location
 Sitemap: https://blackseabulgaria.com/sitemap.xml
-
-# Crawl delay (be nice to the server)
-Crawl-delay: 1

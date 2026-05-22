@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { usePageTitle } from '../hooks/usePageTitle';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -21,6 +22,7 @@ interface LoginPageProps {
 }
 
 export function LoginPage({ onLogin, onNavigate }: LoginPageProps) {
+  usePageTitle('Sign In | Black Sea Bulgaria');
   const { language } = useLanguage();
   const { darkMode } = useDarkMode();
   const t = getTranslation(language);

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { usePageTitle } from '../hooks/usePageTitle';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -32,6 +33,7 @@ interface PricingPageProps {
 }
 
 export function PricingPage({ onNavigate, isLoggedIn, paidExams = [] }: PricingPageProps) {
+  usePageTitle('Pricing — Yacht & Boat Exam Practice | Black Sea Bulgaria');
   const { language } = useLanguage();
   const t = getTranslation(language);
   const { darkMode } = useDarkMode();

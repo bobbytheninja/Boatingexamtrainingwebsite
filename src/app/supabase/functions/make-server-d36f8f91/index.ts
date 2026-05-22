@@ -62,7 +62,7 @@ app.use('*', logger(console.log));
 app.use(
   "/*",
   cors({
-    origin: "*",
+    origin: ["https://blackseabulgaria.com", "https://www.blackseabulgaria.com"],
     allowHeaders: ["Content-Type", "Authorization"],
     allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     exposeHeaders: ["Content-Length"],
@@ -93,8 +93,7 @@ async function verifyUser(authHeader: string | null) {
     return { error: 'No token provided', user: null };
   }
 
-  const tokenSegments = token.split('.').length;
-  console.log('[VerifyUser] Token verification attempt - Segments:', tokenSegments, 'Length:', token.length, 'First 30 chars:', token.substring(0, 30) + '...');
+  console.log('[VerifyUser] Token verification attempt - Length:', token.length);
 
   try {
     console.log('[VerifyUser] 🔍 About to call supabase.auth.getUser() with token...');
@@ -294,7 +293,8 @@ app.post("/make-server-d36f8f91/public/grant-admin", async (c) => {
     console.log('[grant-admin] Email:', email);
 
     // Require admin key for this sensitive operation (NO user auth needed)
-    const ADMIN_KEY = Deno.env.get('ADMIN_IMPORT_KEY') || 'change-this-key';
+    const ADMIN_KEY = Deno.env.get('ADMIN_IMPORT_KEY');
+    if (!ADMIN_KEY) return c.json({ error: 'Server misconfiguration' }, 500);
 
     if (!adminKey) {
       console.error('[grant-admin] ❌ No admin key provided');
@@ -471,6 +471,11 @@ Crawl-delay: 1
 
 // Sign up endpoint
 app.post("/make-server-d36f8f91/signup", async (c) => {
+  const clientIp = c.req.header('x-forwarded-for') || 'unknown';
+  if (!checkRateLimit(clientIp, 'signup', 5, 60_000)) {
+    return c.json({ message: 'Too many signup attempts. Please try again in a minute.' }, 429);
+  }
+
   try {
     if (!supabase) {
       return c.json({ message: 'Service unavailable - Authentication system not initialized' }, 503);
@@ -481,6 +486,15 @@ app.post("/make-server-d36f8f91/signup", async (c) => {
 
     if (!email || !password) {
       return c.json({ message: 'Email and password are required' }, 400);
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return c.json({ message: 'Invalid email format' }, 400);
+    }
+
+    if (password.length < 8) {
+      return c.json({ message: 'Password must be at least 8 characters' }, 400);
     }
 
     // Create user with admin API
@@ -617,10 +631,31 @@ app.post("/make-server-d36f8f91/logout", async (c) => {
   }
 });
 
+// Simple in-memory rate limiter (resets on function cold-start, good enough for edge functions)
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+
+function checkRateLimit(ip: string, key: string, maxRequests = 5, windowMs = 60_000): boolean {
+  const mapKey = `${key}:${ip}`;
+  const now = Date.now();
+  const entry = rateLimitMap.get(mapKey);
+  if (!entry || entry.resetAt < now) {
+    rateLimitMap.set(mapKey, { count: 1, resetAt: now + windowMs });
+    return true;
+  }
+  if (entry.count >= maxRequests) return false;
+  entry.count++;
+  return true;
+}
+
 // Contact form submission - send email
 app.post("/make-server-d36f8f91/contact", async (c) => {
   console.log('[Contact] ===== NEW CONTACT FORM SUBMISSION =====');
-  
+
+  const clientIp = c.req.header('x-forwarded-for') || 'unknown';
+  if (!checkRateLimit(clientIp, 'contact')) {
+    return c.json({ message: 'Too many requests. Please try again in a minute.' }, 429);
+  }
+
   try {
     const resendApiKey = getEnv('RESEND_API_KEY');
     
@@ -1486,7 +1521,8 @@ app.post("/make-server-d36f8f91/admin/make-admin-by-email", async (c) => {
     console.log('[make-admin-by-email] Admin key provided:', !!adminKey);
 
     // Require admin key for this sensitive operation (NO user auth needed)
-    const ADMIN_KEY = Deno.env.get('ADMIN_IMPORT_KEY') || 'change-this-key';
+    const ADMIN_KEY = Deno.env.get('ADMIN_IMPORT_KEY');
+    if (!ADMIN_KEY) return c.json({ error: 'Server misconfiguration' }, 500);
     console.log('[make-admin-by-email] Expected admin key starts with:', ADMIN_KEY.substring(0, 5) + '...');
 
     if (!adminKey) {
@@ -1666,7 +1702,8 @@ app.post("/make-server-d36f8f91/admin/make-admin", async (c) => {
     const { userId, adminKey } = body;
 
     // Require admin key for this sensitive operation
-    const ADMIN_KEY = Deno.env.get('ADMIN_IMPORT_KEY') || 'change-this-key';
+    const ADMIN_KEY = Deno.env.get('ADMIN_IMPORT_KEY');
+    if (!ADMIN_KEY) return c.json({ error: 'Server misconfiguration' }, 500);
 
     if (adminKey !== ADMIN_KEY) {
       return c.json({ message: 'Unauthorized - Invalid admin key' }, 401);
@@ -1813,7 +1850,8 @@ app.post("/make-server-d36f8f91/questions/import", async (c) => {
     const { questions: questionsToImport, adminKey } = body;
 
     // Simple admin key check (you should change this to a secure key)
-    const ADMIN_KEY = Deno.env.get('ADMIN_IMPORT_KEY') || 'change-this-key';
+    const ADMIN_KEY = Deno.env.get('ADMIN_IMPORT_KEY');
+    if (!ADMIN_KEY) return c.json({ error: 'Server misconfiguration' }, 500);
     
     if (adminKey !== ADMIN_KEY) {
       return c.json({ message: 'Unauthorized - Invalid admin key' }, 401);
@@ -1858,7 +1896,8 @@ app.post("/make-server-d36f8f91/questions/update-images", async (c) => {
     const { examType, imageLinks, adminKey } = body;
 
     // Simple admin key check
-    const ADMIN_KEY = Deno.env.get('ADMIN_IMPORT_KEY') || 'change-this-key';
+    const ADMIN_KEY = Deno.env.get('ADMIN_IMPORT_KEY');
+    if (!ADMIN_KEY) return c.json({ error: 'Server misconfiguration' }, 500);
     
     if (adminKey !== ADMIN_KEY) {
       return c.json({ message: 'Unauthorized - Invalid admin key' }, 401);
@@ -1913,7 +1952,8 @@ app.post("/make-server-d36f8f91/images/upload", async (c) => {
     const { examType, questionNumber, base64Data, fileExt, mimeType, adminKey } = body;
 
     // Simple admin key check
-    const ADMIN_KEY = Deno.env.get('ADMIN_IMPORT_KEY') || 'change-this-key';
+    const ADMIN_KEY = Deno.env.get('ADMIN_IMPORT_KEY');
+    if (!ADMIN_KEY) return c.json({ error: 'Server misconfiguration' }, 500);
     
     if (adminKey !== ADMIN_KEY) {
       return c.json({ message: 'Unauthorized - Invalid admin key' }, 401);
@@ -2147,7 +2187,8 @@ app.post("/make-server-d36f8f91/admin/delete-all-questions", async (c) => {
     const { adminKey } = body;
 
     // Require admin key
-    const ADMIN_KEY = Deno.env.get('ADMIN_IMPORT_KEY') || 'change-this-key';
+    const ADMIN_KEY = Deno.env.get('ADMIN_IMPORT_KEY');
+    if (!ADMIN_KEY) return c.json({ error: 'Server misconfiguration' }, 500);
     
     if (adminKey !== ADMIN_KEY) {
       return c.json({ message: 'Unauthorized - Invalid admin key' }, 401);

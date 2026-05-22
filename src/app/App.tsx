@@ -393,8 +393,8 @@ function AppContent() {
         <Route path="/pricing" element={<PricingPageWrapper />} />
         <Route path="/partners" element={<PartnersPageWrapper />} />
         <Route path="/contact" element={<ContactPageWrapper />} />
-        <Route path="/api-test" element={<ApiTest />} />
-        <Route path="/image-diagnostics" element={<ImageDiagnostics />} />
+        {import.meta.env.DEV && <Route path="/api-test" element={<ApiTest />} />}
+        {import.meta.env.DEV && <Route path="/image-diagnostics" element={<ImageDiagnostics />} />}
         
         {/* Redirect /home to root */}
         <Route path="/home" element={<Navigate to="/" replace />} />

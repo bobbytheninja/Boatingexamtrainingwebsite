@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { usePageTitle } from '../hooks/usePageTitle';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -19,6 +20,7 @@ interface ContactPageProps {
 }
 
 export function ContactPage({ onNavigate, isLoggedIn = false }: ContactPageProps) {
+  usePageTitle('Contact Us | Black Sea Bulgaria');
   const { language } = useLanguage();
   const t = getTranslation(language);
   const { darkMode } = useDarkMode();

@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { usePageTitle } from '../hooks/usePageTitle';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { ExternalLink, GraduationCap } from 'lucide-react';
@@ -31,6 +32,7 @@ interface Partner {
 }
 
 export function PartnersPage({ onNavigate, selectedPartnerIndex = 0, isLoggedIn = false }: PartnersPageProps) {
+  usePageTitle('Partners | Black Sea Bulgaria');
   const { language } = useLanguage();
   const t = getTranslation(language);
   const { darkMode } = useDarkMode();

@@ -303,8 +303,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const token = session.access_token;
       
       console.log('🔐 [Login] ✅ Session established successfully');
-      console.log('🔐 [Login] Token (first 30 chars):', token.substring(0, 30) + '...');
-      console.log('🔐 [Login] Token segments:', token.split('.').length, '(should be 3 for valid JWT)');
       
       // ✅ Step 3: NOW invalidate all other sessions (prevents account sharing)
       console.log('🔒 [Login] Calling backend to invalidate all other sessions...');

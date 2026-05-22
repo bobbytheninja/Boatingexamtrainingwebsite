@@ -5,80 +5,64 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <!-- Favicons for all devices and browsers -->
-    <!-- PNG fallback first so Safari picks it up (Safari does not support SVG favicons) -->
     <link rel="icon" type="image/png" href="/logo.png" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-
-    <!-- Apple Touch Icon (iOS/Safari) -->
     <link rel="apple-touch-icon" sizes="180x180" href="/logo.png" />
-
-    <!-- Android/Chrome -->
     <link rel="icon" type="image/svg+xml" sizes="192x192" href="/icon-192.svg" />
     <link rel="icon" type="image/svg+xml" sizes="512x512" href="/icon-512.svg" />
-    
+
     <!-- PWA Manifest -->
     <link rel="manifest" href="/manifest.json" />
-    
+
     <!-- Theme color for browsers -->
     <meta name="theme-color" content="#0ea5e9" />
     <meta name="msapplication-TileColor" content="#0ea5e9" />
-    
+
     <!-- Primary Meta Tags -->
     <title>Black Sea Bulgaria - Yacht & Boat Exam Training | Practice Tests Online</title>
     <meta name="title" content="Black Sea Bulgaria - Yacht & Boat Exam Training | Practice Tests Online" />
-    <meta name="description" content="Professional yacht and boating exam preparation for Bulgaria. Practice tests for jet ski, small boat, big boat, yacht (up to 50 tons), and navigation device certifications. 40 questions per exam with 60-minute timer." />
-    <meta name="keywords" content="yacht exam, boat exam, jet ski license, Bulgarian boating license, maritime exam, navigation exam, boat certification Bulgaria, yacht training, Black Sea boating" />
+    <meta name="description" content="Practice official Bulgarian boating exams online. Jet ski, small boat, yacht & navigation — 40 questions, 60-min timer. Study mode + instant feedback. From €5." />
+    <meta name="keywords" content="yacht exam, boat exam, jet ski license, Bulgarian boating license, maritime exam, navigation exam, boat certification Bulgaria, yacht training, Black Sea boating, MARAD exam Bulgaria" />
     <meta name="author" content="Black Sea Bulgaria" />
     <meta name="robots" content="index, follow" />
     <meta name="language" content="English, Bulgarian" />
     <meta name="revisit-after" content="7 days" />
-    
+
+    <!-- hreflang for multilingual SEO -->
+    <link rel="alternate" hreflang="en" href="https://blackseabulgaria.com/" />
+    <link rel="alternate" hreflang="bg" href="https://blackseabulgaria.com/" />
+    <link rel="alternate" hreflang="es" href="https://blackseabulgaria.com/" />
+    <link rel="alternate" hreflang="el" href="https://blackseabulgaria.com/" />
+    <link rel="alternate" hreflang="it" href="https://blackseabulgaria.com/" />
+    <link rel="alternate" hreflang="x-default" href="https://blackseabulgaria.com/" />
+
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://blackseabulgaria.com/" />
     <meta property="og:title" content="Black Sea Bulgaria - Yacht & Boat Exam Training" />
-    <meta property="og:description" content="Professional yacht and boating exam preparation for Bulgaria. Practice tests for jet ski, small boat, big boat, yacht (up to 50 tons), and navigation device certifications." />
+    <meta property="og:description" content="Practice official Bulgarian boating exams online. Jet ski, small boat, yacht & navigation — 40 questions, 60-min timer. Study mode + instant feedback. From €5." />
     <meta property="og:image" content="https://blackseabulgaria.com/logo.png" />
     <meta property="og:image:type" content="image/png" />
     <meta property="og:image:width" content="512" />
     <meta property="og:image:height" content="512" />
     <meta property="og:locale" content="en_US" />
     <meta property="og:locale:alternate" content="bg_BG" />
-    
+
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
     <meta property="twitter:url" content="https://blackseabulgaria.com/" />
     <meta property="twitter:title" content="Black Sea Bulgaria - Yacht & Boat Exam Training" />
-    <meta property="twitter:description" content="Professional yacht and boating exam preparation for Bulgaria. Practice for jet ski, boat, and yacht exams online." />
+    <meta property="twitter:description" content="Practice official Bulgarian boating exams online. Jet ski, small boat, yacht & navigation — 40 questions, 60-min timer. From €5." />
     <meta property="twitter:image" content="https://blackseabulgaria.com/logo.png" />
-    
+
     <!-- Canonical URL -->
     <link rel="canonical" href="https://blackseabulgaria.com/" />
-    
+
     <!-- Geo Tags for Bulgaria/Black Sea -->
     <meta name="geo.region" content="BG" />
     <meta name="geo.placename" content="Bulgaria" />
-    
-    <!-- Prerender for better SEO -->
-    <meta name="fragment" content="!" />
 
-    <!-- Google Analytics (GA4) - Replace G-XXXXXXXXXX with your actual Measurement ID -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-XXXXXXXXXX', {
-        'page_title': document.title,
-        'page_location': window.location.href,
-        'send_page_view': true
-      });
-    </script>
-
-
-
-    
-    <!-- Structured Data for Google -->
+    <!-- Structured Data: Educational Organization -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -88,8 +72,19 @@
       "url": "https://blackseabulgaria.com",
       "logo": "https://blackseabulgaria.com/logo.png",
       "image": "https://blackseabulgaria.com/logo.png",
+      "telephone": "+35987661015",
+      "email": "gramatikovbobby@gmail.com",
+      "foundingDate": "2024",
       "areaServed": "Bulgaria",
       "educationalCredentialAwarded": "Maritime Exam Preparation",
+      "availableLanguage": ["English", "Bulgarian", "Spanish", "Greek", "Italian"],
+      "inLanguage": "bg",
+      "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "BG",
+        "addressRegion": "Bulgaria"
+      },
+      "sameAs": ["https://www.blackseabulgaria.com"],
       "offers": {
         "@type": "Offer",
         "category": "Maritime Training",
@@ -99,8 +94,8 @@
       }
     }
     </script>
-    
-    <!-- Additional Structured Data - Course -->
+
+    <!-- Structured Data: Course -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -121,30 +116,52 @@
         "availability": "https://schema.org/InStock"
       },
       "hasCourseInstance": [
+        { "@type": "CourseInstance", "name": "Jet Ski License Exam", "courseMode": "Online" },
+        { "@type": "CourseInstance", "name": "Small Boat License Exam", "courseMode": "Online" },
+        { "@type": "CourseInstance", "name": "Big Boat License Exam", "courseMode": "Online" },
+        { "@type": "CourseInstance", "name": "Yacht License Exam (Up to 50 Tons)", "courseMode": "Online" },
+        { "@type": "CourseInstance", "name": "Navigation Device Exam", "courseMode": "Online" }
+      ]
+    }
+    </script>
+
+    <!-- Structured Data: FAQ -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
         {
-          "@type": "CourseInstance",
-          "name": "Jet Ski License Exam",
-          "courseMode": "Online"
+          "@type": "Question",
+          "name": "What boating licences can I prepare for with Black Sea Bulgaria?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "You can prepare for 5 Bulgarian maritime exams: Jet Ski, Small Boat, Big Boat, Yacht (up to 50 tons), and Navigation Device certification."
+          }
         },
         {
-          "@type": "CourseInstance",
-          "name": "Small Boat License Exam",
-          "courseMode": "Online"
+          "@type": "Question",
+          "name": "Are the practice questions official Bulgarian Maritime Administration (MARAD) questions?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Our practice questions are sourced from the official MARAD examination bank. We provide the interactive platform, study tools, and multilingual interface."
+          }
         },
         {
-          "@type": "CourseInstance",
-          "name": "Big Boat License Exam",
-          "courseMode": "Online"
+          "@type": "Question",
+          "name": "How much does it cost?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Access starts at €5 per month per exam category. You can try free practice with 10 questions per category before purchasing."
+          }
         },
         {
-          "@type": "CourseInstance",
-          "name": "Yacht License Exam (Up to 50 Tons)",
-          "courseMode": "Online"
-        },
-        {
-          "@type": "CourseInstance",
-          "name": "Navigation Device Exam",
-          "courseMode": "Online"
+          "@type": "Question",
+          "name": "Do I get an official licence after passing on your platform?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. Our platform is a training tool only. To obtain an official Bulgarian boating licence, you must pass the official examination administered by MARAD."
+          }
         }
       ]
     }
@@ -155,8 +172,8 @@
     <noscript>
       <div style="padding: 20px; font-family: Arial, sans-serif; max-width: 1200px; margin: 0 auto;">
         <h1>Black Sea Bulgaria - Yacht & Boat Exam Training</h1>
-        <p>Professional yacht and boating exam preparation for Bulgaria. Practice tests for maritime certifications.</p>
-        
+        <p>Practice official Bulgarian boating exams online. Jet ski, small boat, yacht &amp; navigation — 40 questions, 60-min timer. Study mode + instant feedback. From €5.</p>
+
         <h2>Available Exam Categories</h2>
         <ul>
           <li><strong>Jet Ski License</strong> - Practice exam with 40 questions, 60-minute timer</li>
@@ -165,7 +182,7 @@
           <li><strong>Yacht License (Up to 50 Tons)</strong> - Advanced maritime certification</li>
           <li><strong>Navigation Device Exam</strong> - Navigation equipment certification</li>
         </ul>
-        
+
         <h2>Features</h2>
         <ul>
           <li>40 questions per exam with difficulty-based scoring (1, 2, or 3 points)</li>
@@ -173,18 +190,19 @@
           <li>Study mode and exam mode options</li>
           <li>Mock exams and paid practice exams (€5 per month per category)</li>
           <li>Detailed exam review and explanations</li>
+          <li>Available in English, Bulgarian, Spanish, Greek, and Italian</li>
         </ul>
-        
+
         <h2>Pricing</h2>
         <p>€5 per month per exam category. Try our free mock exams before subscribing!</p>
-        
+
         <p><strong>Note:</strong> This platform provides exam training only. No official certification is awarded.</p>
-        
+
         <hr />
         <p><em>JavaScript is required to use the full interactive exam platform. Please enable JavaScript in your browser.</em></p>
       </div>
     </noscript>
-    
+
     <!-- Main React App Container -->
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>

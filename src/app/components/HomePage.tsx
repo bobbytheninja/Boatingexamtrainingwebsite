@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { usePageTitle } from '../hooks/usePageTitle';
 import { useNavigate } from 'react-router-dom';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { Button } from './ui/button';
@@ -35,6 +36,7 @@ interface ExamCategory {
 }
 
 export function HomePage() {
+  usePageTitle('Black Sea Bulgaria — Maritime Exam Training Online');
   const navigate = useNavigate();
   const { user } = useAuth();
   const { darkMode } = useDarkMode();
@@ -135,15 +137,27 @@ export function HomePage() {
             className="w-full h-full object-cover"
             style={{ objectPosition: 'center 70%' }}
           />
-          <div 
+          <div
             className="absolute bottom-0 left-0 right-0 h-[20%] duration-[400ms]"
-            style={{ 
-              background: darkMode 
-                ? 'linear-gradient(to bottom, transparent, #1e293b)' 
+            style={{
+              background: darkMode
+                ? 'linear-gradient(to bottom, transparent, #1e293b)'
                 : 'linear-gradient(to bottom, transparent, #ffffff)',
               transition: 'background 400ms cubic-bezier(0.65, 0, 0.35, 1)'
             }}
           ></div>
+          <p className="absolute bottom-2 right-3 text-xs" style={{ color: '#94a3b8' }}>
+            Photo:{' '}
+            <a
+              href="https://commons.wikimedia.org/wiki/File:Bavaria_Cruiser_45.jpg"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:opacity-80"
+            >
+              Justin Leighton
+            </a>
+            , CC BY-SA 3.0
+          </p>
         </div>
 
         {/* Exam Types Section */}

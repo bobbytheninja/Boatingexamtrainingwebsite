@@ -99,11 +99,14 @@ export function TermsOfServiceModal({ isOpen, onClose }: TermsOfServiceModalProp
               ...are the exclusive property of Yacht Exam Trainer and protected by:
             </p>
             <ul className="list-disc pl-6 space-y-1 text-gray-700 dark:text-gray-300">
-              <li>Bulgarian Copyright and Related Rights Act</li>
-              <li>EU Directive 2001/29/EC (Copyright Directive)</li>
+              <li>Bulgarian Law on Copyright and Related Rights (ZAPSP)</li>
+              <li>EU Directive 2001/29/EC and EU Directive 2019/790 on Copyright in the Digital Single Market</li>
               <li>International copyright treaties (Berne Convention, WIPO)</li>
               <li>Trade secret and confidential information laws</li>
             </ul>
+            <p className="text-gray-700 dark:text-gray-300 mt-3">
+              The software, user interface design, testing engine, algorithms, user experience flows, database architecture, and all original content created by Black Sea Bulgaria are protected by copyright under Bulgarian law (ZAPSP) and EU Directive 2019/790. All rights are reserved. You may not reproduce, distribute, modify, reverse-engineer, or create derivative works of any proprietary elements of the platform without express written consent.
+            </p>
 
             <h4 className="font-semibold text-gray-800 dark:text-gray-200 mt-4">3.2 License to Use</h4>
             <p className="text-gray-700 dark:text-gray-300">
@@ -301,6 +304,20 @@ export function TermsOfServiceModal({ isOpen, onClose }: TermsOfServiceModalProp
           </section>
 
           <section className="space-y-3">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">9a. Exam Question Sources</h3>
+            <p className="text-gray-700 dark:text-gray-300">
+              Practice exam questions used on this platform are sourced from official examination materials published by the Bulgarian Maritime Administration (Изпълнителна агенция "Морска администрация" — MARAD), a state executive agency of the Republic of Bulgaria. These materials are reused in accordance with:
+            </p>
+            <ul className="list-disc pl-6 space-y-1 text-gray-700 dark:text-gray-300">
+              <li><strong>Article 4 of the Bulgarian Law on Copyright and Related Rights (ZAPSP)</strong>, which exempts official acts and documents of state administrative bodies from copyright protection</li>
+              <li><strong>EU Open Data and Public Sector Information Directive (2019/1024)</strong>, as transposed into Bulgarian law, which mandates that public sector information be available for commercial and non-commercial reuse</li>
+            </ul>
+            <p className="text-gray-700 dark:text-gray-300 mt-3">
+              We do not claim ownership of exam question content. Our platform provides the interactive testing engine, study tools, multilingual interface, progress tracking, and educational framework — this is what your subscription covers. <strong>MARAD does not endorse, sponsor, or approve this platform.</strong>
+            </p>
+          </section>
+
+          <section className="space-y-3">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">10. Governing Law and Dispute Resolution</h3>
             
             <h4 className="font-semibold text-gray-800 dark:text-gray-200">10.1 Applicable Law</h4>
@@ -346,11 +363,26 @@ export function TermsOfServiceModal({ isOpen, onClose }: TermsOfServiceModalProp
             <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
               <p className="text-gray-800 dark:text-gray-200">
                 <strong>Yacht Exam Trainer</strong><br />
-                Email: <a href="mailto:bobby_rocks@me.com" className="text-cyan-600 dark:text-cyan-400 hover:underline">bobby_rocks@me.com</a><br />
-                Phone: <a href="tel:+35087661018" className="text-cyan-600 dark:text-cyan-400 hover:underline">+350 87 66 101 85</a><br />
+                Email: <a href="mailto:gramatikovbobby@gmail.com" className="text-cyan-600 dark:text-cyan-400 hover:underline">gramatikovbobby@gmail.com</a><br />
+                Phone: <a href="tel:+359876610185" className="text-cyan-600 dark:text-cyan-400 hover:underline">+359 87 66 101 85</a><br />
                 Website: <a href="https://blackseabulgaria.com" target="_blank" rel="noopener noreferrer" className="text-cyan-600 dark:text-cyan-400 hover:underline">blackseabulgaria.com</a>
               </p>
             </div>
+          </section>
+
+          <section className="space-y-3">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">15. Image Credits &amp; Third-Party Licences</h3>
+            <p className="text-gray-700 dark:text-gray-300">
+              The hero photograph displayed on our homepage depicts a Bavaria Cruiser 45 sailing yacht and is used under the Creative Commons Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0) licence.
+            </p>
+            <ul className="list-none pl-0 space-y-1 text-gray-700 dark:text-gray-300">
+              <li><strong>Photographer:</strong> Justin Leighton</li>
+              <li><strong>Original file:</strong> <a href="https://commons.wikimedia.org/wiki/File:Bavaria_Cruiser_45.jpg" target="_blank" rel="noopener noreferrer" className="text-cyan-600 dark:text-cyan-400 hover:underline">commons.wikimedia.org/wiki/File:Bavaria_Cruiser_45.jpg</a></li>
+              <li><strong>Licence:</strong> <a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noopener noreferrer" className="text-cyan-600 dark:text-cyan-400 hover:underline">Creative Commons Attribution-ShareAlike 3.0 Unported</a></li>
+            </ul>
+            <p className="text-gray-700 dark:text-gray-300">
+              No modification has been made to the original photograph. The CC BY-SA 3.0 licence permits commercial use with attribution. This platform's software, code, and original content remain under separate proprietary copyright (see Section 3).
+            </p>
           </section>
 
           <section className="space-y-3">
