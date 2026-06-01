@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { usePageTitle } from '../hooks/usePageTitle';
 import { useNavigate } from 'react-router-dom';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { Button } from './ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Waves, Ship, Sailboat, Anchor as AnchorIcon, Compass, Users, BookOpen, Award, LucideIcon } from 'lucide-react';
 import { ExamType } from '../data/examQuestions';
 import { getTranslation } from '../data/translations';
@@ -43,7 +43,9 @@ const CATEGORY_TRANSLATION_KEYS: Record<string, { title: string; desc: string }>
 interface ExamCategory {
   type: string;
   title: string;
+  titleBg?: string;
   description: string;
+  descriptionBg?: string;
   icon: string;
   color: string;
   image: string;
@@ -64,6 +66,8 @@ export function HomePage() {
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [fetchError, setFetchError] = useState(false);
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
+  const descRefs = useRef<Record<string, HTMLElement | null>>({});
+  const [isOverflowing, setIsOverflowing] = useState<Record<string, boolean>>({});
 
   const toggleExpand = (type: string) => {
     setExpandedCards(prev => {
@@ -72,6 +76,22 @@ export function HomePage() {
       return next;
     });
   };
+
+  // Collapse all cards when language changes so overflow can be remeasured
+  useEffect(() => { setExpandedCards(new Set()); }, [language]);
+
+  // Measure actual DOM overflow instead of using a character-count heuristic
+  useLayoutEffect(() => {
+    setIsOverflowing(prev => {
+      const next: Record<string, boolean> = {};
+      for (const [type, el] of Object.entries(descRefs.current)) {
+        next[type] = expandedCards.has(type) ? true : (el ? el.scrollHeight > el.clientHeight : false);
+      }
+      const keys = Object.keys(next);
+      const same = keys.length === Object.keys(prev).length && keys.every(k => prev[k] === next[k]);
+      return same ? prev : next;
+    });
+  }, [categories, region, language, expandedCards]);
 
   const loadCategories = async () => {
     setFetchError(false);
@@ -102,7 +122,9 @@ export function HomePage() {
     .map((cat) => ({
       type: cat.type as ExamType,
       title: cat.title,
+      titleBg: cat.titleBg,
       description: cat.description,
+      descriptionBg: cat.descriptionBg,
       icon: ICON_MAP[cat.icon] || Waves,
       color: cat.color,
       image: cat.image,
@@ -227,11 +249,22 @@ export function HomePage() {
                 </div>
               ) : examTypes.map((exam, index) => {
                 const Icon = exam.icon;
-                const keys = CATEGORY_TRANSLATION_KEYS[exam.type];
-                const displayTitle = keys ? (t as any)[keys.title] ?? exam.title : exam.title;
-                const displayDesc  = keys ? (t as any)[keys.desc]  ?? exam.description : exam.description;
+                // Bulgarian: use titleBg/descriptionBg from DB; English: use title/description from DB;
+                // other languages: use translations.ts stubs with DB fallback
+                const displayTitle = (() => {
+                  if (language === 'Bulgarian' && exam.titleBg) return exam.titleBg;
+                  if (language === 'English') return exam.title;
+                  const keys = CATEGORY_TRANSLATION_KEYS[exam.type];
+                  return keys ? ((t as any)[keys.title] ?? exam.title) : exam.title;
+                })();
+                const displayDesc = (() => {
+                  if (language === 'Bulgarian' && exam.descriptionBg) return exam.descriptionBg;
+                  if (language === 'English') return exam.description;
+                  const keys = CATEGORY_TRANSLATION_KEYS[exam.type];
+                  return keys ? ((t as any)[keys.desc] ?? exam.description) : exam.description;
+                })();
                 const isExpanded = expandedCards.has(exam.type);
-                const isLong = displayDesc.length > 120;
+                const isClipped = isOverflowing[exam.type] ?? false;
                 return (
                   <Card
                     key={exam.type}
@@ -268,16 +301,17 @@ export function HomePage() {
                         {displayTitle}
                       </CardTitle>
                       <div>
-                        <CardDescription
-                          className={`text-xs md:text-sm text-gray-600 dark:text-gray-300 leading-relaxed transition-colors duration-[400ms] ${!isExpanded && isLong ? 'line-clamp-3' : ''}`}
+                        <p
+                          ref={(el) => { descRefs.current[exam.type] = el; }}
+                          className={`text-xs md:text-sm text-muted-foreground text-gray-600 dark:text-gray-300 leading-relaxed transition-colors duration-[400ms] ${!isExpanded ? 'line-clamp-3' : ''}`}
                           style={{
                             color: darkMode ? '#d1d5db' : '#4b5563',
                             transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
                           }}
                         >
                           {displayDesc}
-                        </CardDescription>
-                        {isLong && (
+                        </p>
+                        {isClipped && (
                           <button
                             onClick={() => toggleExpand(exam.type)}
                             className="text-xs font-medium mt-1 transition-colors duration-200"
