@@ -25,6 +25,12 @@ const ICON_MAP: Record<string, LucideIcon> = {
   'Compass': Compass,
 };
 
+const LANGUAGE_NAMES: Record<string, string> = {
+  bg: 'Bulgarian', en: 'English', de: 'German', el: 'Greek',
+  it: 'Italian', ru: 'Russian', es: 'Spanish', tr: 'Turkish',
+  fr: 'French', hr: 'Croatian', ro: 'Romanian', uk: 'Ukrainian',
+};
+
 interface ExamCategory {
   type: string;
   title: string;
@@ -33,6 +39,7 @@ interface ExamCategory {
   color: string;
   image: string;
   country?: string;
+  language?: string;
 }
 
 export function HomePage() {
@@ -46,44 +53,30 @@ export function HomePage() {
   const isLoggedIn = !!user;
   const [categories, setCategories] = useState<ExamCategory[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
 
-  // Load categories from server
-  useEffect(() => {
-    const loadCategories = async () => {
-      try {
-        const url = `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/categories`;
-        console.log('[HomePage] Loading categories from server...');
-        console.log('[HomePage] Fetch URL:', url);
-        
-        const response = await fetch(url, {
-          headers: {
-            'Authorization': `Bearer ${publicAnonKey}`,
-          },
-        });
-        
-        console.log('[HomePage] Response status:', response.status);
-        console.log('[HomePage] Response ok:', response.ok);
-        
-        if (response.ok) {
-          const data = await response.json();
-          console.log('[HomePage] Raw response data:', data);
-          console.log('[HomePage] Categories array:', data.categories);
-          console.log('[HomePage] Categories length:', data.categories?.length);
-          setCategories(data.categories || []);
-        } else {
-          const errorText = await response.text();
-          console.error('[HomePage] Failed to load categories. Status:', response.status, 'Error:', errorText);
-        }
-      } catch (error) {
-        console.error('[HomePage] Error loading categories:', error);
-      } finally {
-        setLoadingCategories(false);
-        console.log('[HomePage] Loading complete');
+  const loadCategories = async () => {
+    setFetchError(false);
+    setLoadingCategories(true);
+    try {
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/categories`,
+        { headers: { 'Authorization': `Bearer ${publicAnonKey}` } }
+      );
+      if (response.ok) {
+        const data = await response.json();
+        setCategories(data.categories || []);
+      } else {
+        setFetchError(true);
       }
-    };
+    } catch {
+      setFetchError(true);
+    } finally {
+      setLoadingCategories(false);
+    }
+  };
 
-    loadCategories();
-  }, []);
+  useEffect(() => { loadCategories(); }, []);
 
   // Transform server categories into display format, filtered by selected region
   const examTypes = categories
@@ -95,16 +88,13 @@ export function HomePage() {
       icon: ICON_MAP[cat.icon] || Waves,
       color: cat.color,
       image: cat.image,
+      country: cat.country,
+      language: cat.language,
     }));
 
   const handleNavigate = (page: string) => {
-    try {
-      console.log('[HomePage] Navigation requested:', page);
-      if (page === 'home') return;
-      navigate(`/${page}`);
-    } catch (error) {
-      console.error('[HomePage] Navigation error:', error);
-    }
+    if (page === 'home') return;
+    navigate(`/${page}`);
   };
 
   const handleCardClick = (examType: ExamType) => {
@@ -206,9 +196,16 @@ export function HomePage() {
                     <p className="text-gray-600 dark:text-gray-400">Loading exam categories...</p>
                   </div>
                 </div>
+              ) : fetchError ? (
+                <div className="col-span-full text-center py-20">
+                  <p className="mb-4" style={{ color: darkMode ? '#fca5a5' : '#b91c1c' }}>
+                    Failed to load exam categories. Check your connection.
+                  </p>
+                  <Button onClick={loadCategories} variant="outline">Retry</Button>
+                </div>
               ) : examTypes.length === 0 ? (
                 <div className="col-span-full text-center py-20">
-                  <p className="text-gray-600 dark:text-gray-400">No exam categories available.</p>
+                  <p style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>No exam categories available.</p>
                 </div>
               ) : examTypes.map((exam, index) => {
                 const Icon = exam.icon;
@@ -258,6 +255,20 @@ export function HomePage() {
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="pt-0 pb-3 px-3 md:px-6">
+                      {(exam.country || exam.language) && (
+                        <div className="flex flex-wrap gap-1.5 mb-3">
+                          {exam.country && (
+                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium transition-colors duration-[400ms] ${darkMode ? 'bg-slate-600 text-slate-200' : 'bg-gray-100 text-gray-600'}`}>
+                              📍 {exam.country}
+                            </span>
+                          )}
+                          {exam.language && (
+                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium transition-colors duration-[400ms] ${darkMode ? 'bg-slate-600 text-slate-200' : 'bg-gray-100 text-gray-600'}`}>
+                              🌐 {LANGUAGE_NAMES[exam.language] ?? exam.language}
+                            </span>
+                          )}
+                        </div>
+                      )}
                       <Button
                         onClick={() => handleCardClick(exam.type)}
                         className="w-full h-9 md:h-10 bg-gradient-to-r from-sky-500 via-sky-600 to-blue-600 hover:from-sky-600 hover:via-sky-700 hover:to-blue-700 shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02] font-semibold text-sm md:text-base"
