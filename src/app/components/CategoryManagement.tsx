@@ -35,6 +35,22 @@ const AVAILABLE_ICONS = [
   { name: 'Compass', component: Compass },
 ];
 
+// Available languages for exam categories
+const AVAILABLE_LANGUAGES = [
+  { code: 'bg', name: 'Bulgarian' },
+  { code: 'en', name: 'English' },
+  { code: 'de', name: 'German' },
+  { code: 'el', name: 'Greek' },
+  { code: 'it', name: 'Italian' },
+  { code: 'ru', name: 'Russian' },
+  { code: 'es', name: 'Spanish' },
+  { code: 'tr', name: 'Turkish' },
+  { code: 'fr', name: 'French' },
+  { code: 'hr', name: 'Croatian' },
+  { code: 'ro', name: 'Romanian' },
+  { code: 'uk', name: 'Ukrainian' },
+];
+
 // Available color gradients
 const AVAILABLE_COLORS = [
   { name: 'Cyan-Sky', value: 'bg-gradient-to-br from-cyan-500 to-sky-600' },
@@ -78,6 +94,7 @@ export interface ExamCategory {
   color: string;
   image: string;
   country?: string;
+  language?: string;
   price?: number;
   order?: number;
   expiringSoon?: boolean;
@@ -114,6 +131,7 @@ export function CategoryManagement({ accessToken }: CategoryManagementProps) {
     color: 'bg-gradient-to-br from-cyan-500 to-sky-600',
     image: '',
     country: '',
+    language: '',
     price: 5,
   });
 
@@ -270,6 +288,7 @@ export function CategoryManagement({ accessToken }: CategoryManagementProps) {
       color: 'bg-gradient-to-br from-cyan-500 to-sky-600',
       image: '',
       country: '',
+      language: '',
       price: 5,
     });
     setIsAddingNew(true);
@@ -293,6 +312,7 @@ export function CategoryManagement({ accessToken }: CategoryManagementProps) {
       color: 'bg-gradient-to-br from-cyan-500 to-sky-600',
       image: '',
       country: '',
+      language: '',
       price: 5,
     });
   };
@@ -675,6 +695,25 @@ export function CategoryManagement({ accessToken }: CategoryManagementProps) {
                 </select>
               </div>
 
+              {/* Language */}
+              <div>
+                <Label htmlFor="language">Language</Label>
+                <select
+                  id="language"
+                  value={formData.language || ''}
+                  onChange={(e) => setFormData({ ...formData, language: e.target.value })}
+                  className="w-full mt-1 px-3 py-2 border rounded-md"
+                  style={{ backgroundColor: darkMode ? '#374151' : '#ffffff', color: darkMode ? '#f3f4f6' : '#111827', borderColor: darkMode ? '#4b5563' : '#d1d5db' }}
+                >
+                  <option value="">Select a language...</option>
+                  {AVAILABLE_LANGUAGES.map((lang) => (
+                    <option key={lang.code} value={lang.code}>
+                      {lang.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               {/* Color Gradient */}
               <div>
                 <Label htmlFor="color">Color Gradient</Label>
@@ -859,6 +898,11 @@ export function CategoryManagement({ accessToken }: CategoryManagementProps) {
                   <h3 className="font-bold text-lg">{category.title}</h3>
                   {category.country && (
                     <p className="text-xs text-gray-500 mt-0.5">📍 {category.country}</p>
+                  )}
+                  {category.language && (
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      🌐 {AVAILABLE_LANGUAGES.find(l => l.code === category.language)?.name ?? category.language}
+                    </p>
                   )}
                   <p className="text-sm text-gray-600 mt-1 line-clamp-2">
                     {category.description}
