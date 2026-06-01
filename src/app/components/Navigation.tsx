@@ -76,7 +76,8 @@ export function Navigation({
           color: rgb(125, 211, 252) !important;
         }
       `}} />
-      <nav 
+      <nav
+        aria-label="Main navigation"
         className={`fixed top-0 left-0 right-0 z-50 border-b-2 transition-all duration-[400ms] ${
           transparent 
             ? isLoggedIn 
@@ -180,10 +181,8 @@ export function Navigation({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => {
-                  console.log('[Navigation] 🌓 Dark mode button clicked!');
-                  toggleDarkMode();
-                }}
+                aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+                onClick={toggleDarkMode}
                 className={`hidden sm:flex ${
                   darkMode
                     ? transparent
@@ -313,6 +312,7 @@ export function Navigation({
                   <Button
                     variant="ghost"
                     size="sm"
+                    aria-label="Open menu"
                     className={`sm:hidden ${
                       transparent
                         ? 'text-white hover:bg-white/10'

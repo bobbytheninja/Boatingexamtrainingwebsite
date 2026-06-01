@@ -3,14 +3,14 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Alert, AlertDescription } from './ui/alert';
-import { 
-  RefreshCw, 
-  CheckCircle, 
-  XCircle, 
-  AlertCircle, 
+import {
+  RefreshCw,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
   Database,
   FileQuestion,
-  Loader2 
+  Loader2
 } from 'lucide-react';
 import { projectId, publicAnonKey } from '../utils/supabase/info';
 import { toast } from 'sonner';
@@ -42,7 +42,10 @@ export function DatabaseDiagnostics() {
   const [error, setError] = React.useState<string | null>(null);
   const [examTypes, setExamTypes] = React.useState<{ value: string; label: string }[]>([]);
 
-  // Load exam categories on mount
+  const textPrimary = darkMode ? '#f3f4f6' : '#111827';
+  const textSecondary = darkMode ? '#9ca3af' : '#4b5563';
+  const textMuted = darkMode ? '#6b7280' : '#6b7280';
+
   React.useEffect(() => {
     const loadCategories = async () => {
       const categories = await loadExamCategories();
@@ -81,7 +84,6 @@ export function DatabaseDiagnostics() {
     }
   };
 
-  // Run diagnostics on mount
   React.useEffect(() => {
     runDiagnostics();
   }, []);
@@ -97,30 +99,30 @@ export function DatabaseDiagnostics() {
   const getExamTypeStatus = (examType: string) => {
     if (!diagnosticsData) return null;
     const data = diagnosticsData.diagnostics[examType];
-    
+
     if (!data) return { status: 'unknown', color: 'gray', icon: AlertCircle };
-    
+
     if (data.count === 0) {
-      return { 
-        status: 'No questions', 
-        color: 'red', 
+      return {
+        status: 'No questions',
+        color: 'red',
         icon: XCircle,
         message: 'No questions found. Import questions for this exam type.'
       };
     }
-    
+
     if (data.count < 40) {
-      return { 
-        status: `Only ${data.count} questions`, 
-        color: 'amber', 
+      return {
+        status: `Only ${data.count} questions`,
+        color: 'amber',
         icon: AlertCircle,
         message: `Need at least 40 questions for a full exam. Currently have ${data.count}.`
       };
     }
-    
-    return { 
-      status: `${data.count} questions`, 
-      color: 'green', 
+
+    return {
+      status: `${data.count} questions`,
+      color: 'green',
       icon: CheckCircle,
       message: `Ready! ${data.count} questions available.`
     };
@@ -136,7 +138,7 @@ export function DatabaseDiagnostics() {
                 <Database className="w-6 h-6 text-blue-500" />
                 Database Diagnostics
               </CardTitle>
-              <p className="text-sm text-gray-700 dark:text-gray-400 mt-1">
+              <p className="text-sm mt-1" style={{ color: textSecondary }}>
                 Check the status of questions in your database
               </p>
             </div>
@@ -162,9 +164,12 @@ export function DatabaseDiagnostics() {
         </CardHeader>
         <CardContent className="space-y-6">
           {error && (
-            <Alert className="border-red-200 bg-red-50 dark:bg-red-900/20 dark:border-red-700">
-              <XCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
-              <AlertDescription className="text-red-800 dark:text-red-200">
+            <Alert style={{
+              background: darkMode ? 'rgba(127,29,29,0.2)' : '#fef2f2',
+              border: `1px solid ${darkMode ? '#991b1b' : '#fecaca'}`,
+            }}>
+              <XCircle className="h-4 w-4" style={{ color: darkMode ? '#f87171' : '#dc2626' }} />
+              <AlertDescription style={{ color: darkMode ? '#fca5a5' : '#991b1b' }}>
                 {error}
               </AlertDescription>
             </Alert>
@@ -173,13 +178,13 @@ export function DatabaseDiagnostics() {
           {loading && !diagnosticsData && (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
-              <span className="ml-3 text-gray-700 dark:text-gray-400">Running diagnostics...</span>
+              <span className="ml-3" style={{ color: textSecondary }}>Running diagnostics...</span>
             </div>
           )}
 
           {diagnosticsData && (
             <>
-              {/* Summary Card */}
+              {/* Summary Cards */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Card className="border-2" style={{ background: darkMode ? 'linear-gradient(to bottom right, #1e3a5f, #1e293b)' : 'linear-gradient(to bottom right, #eff6ff, #ffffff)' }}>
                   <CardContent className="pt-6 text-center">
@@ -209,12 +214,11 @@ export function DatabaseDiagnostics() {
                 </Card>
               </div>
 
-              {/* Exam Type Details — driven by the backend response, not loadExamCategories */}
+              {/* Exam Type Details */}
               <div className="space-y-3">
-                <h3 className="font-semibold text-lg dark:text-gray-100">Exam Types Status</h3>
+                <h3 className="font-semibold text-lg" style={{ color: textPrimary }}>Exam Types Status</h3>
 
                 {Object.entries(diagnosticsData.diagnostics).map(([examType, examData]) => {
-                  // Prefer a label from the loaded categories; fall back to a formatted version of the key
                   const categoryLabel = examTypes.find(t => t.value === examType)?.label;
                   const label = categoryLabel || (
                     examType.charAt(0).toUpperCase() + examType.slice(1) + ' Exam'
@@ -225,55 +229,76 @@ export function DatabaseDiagnostics() {
 
                   const StatusIcon = status.icon;
 
+                  const cardBorder = status.color === 'green'
+                    ? (darkMode ? '#166534' : '#bbf7d0')
+                    : status.color === 'amber'
+                    ? (darkMode ? '#92400e' : '#fde68a')
+                    : (darkMode ? '#991b1b' : '#fecaca');
+
+                  const cardBg = status.color === 'green'
+                    ? (darkMode ? 'rgba(20,83,45,0.2)' : 'rgba(240,253,244,0.5)')
+                    : status.color === 'amber'
+                    ? (darkMode ? 'rgba(120,53,15,0.2)' : 'rgba(255,251,235,0.5)')
+                    : (darkMode ? 'rgba(127,29,29,0.2)' : 'rgba(254,242,242,0.5)');
+
+                  const iconColor = status.color === 'green'
+                    ? (darkMode ? '#4ade80' : '#16a34a')
+                    : status.color === 'amber'
+                    ? (darkMode ? '#fbbf24' : '#d97706')
+                    : (darkMode ? '#f87171' : '#dc2626');
+
+                  const badgeBg = status.color === 'green'
+                    ? (darkMode ? 'rgba(20,83,45,0.4)' : '#dcfce7')
+                    : status.color === 'amber'
+                    ? (darkMode ? 'rgba(120,53,15,0.4)' : '#fef9c3')
+                    : (darkMode ? 'rgba(127,29,29,0.4)' : '#fee2e2');
+
+                  const badgeText = status.color === 'green'
+                    ? (darkMode ? '#86efac' : '#15803d')
+                    : status.color === 'amber'
+                    ? (darkMode ? '#fcd34d' : '#92400e')
+                    : (darkMode ? '#fca5a5' : '#b91c1c');
+
                   return (
                     <Card
                       key={examType}
-                      className={`border-2 ${
-                        status.color === 'green'
-                          ? 'border-green-200 bg-green-50/30 dark:border-green-700 dark:bg-green-900/10'
-                          : status.color === 'amber'
-                          ? 'border-amber-200 bg-amber-50/30 dark:border-amber-700 dark:bg-amber-900/10'
-                          : 'border-red-200 bg-red-50/30 dark:border-red-700 dark:bg-red-900/10'
-                      }`}
+                      className="border-2"
+                      style={{ borderColor: cardBorder, background: cardBg }}
                     >
                       <CardContent className="pt-4 pb-4">
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2">
-                              <StatusIcon
-                                className={`w-5 h-5 ${
-                                  status.color === 'green'
-                                    ? 'text-green-600 dark:text-green-400'
-                                    : status.color === 'amber'
-                                    ? 'text-amber-600 dark:text-amber-400'
-                                    : 'text-red-600 dark:text-red-400'
-                                }`}
-                              />
-                              <h4 className="font-semibold dark:text-gray-100">{label}</h4>
+                              <StatusIcon className="w-5 h-5" style={{ color: iconColor }} />
+                              <h4 className="font-semibold" style={{ color: textPrimary }}>{label}</h4>
                               <Badge
                                 variant="outline"
-                                className={`${
-                                  status.color === 'green'
-                                    ? 'border-green-500 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
-                                    : status.color === 'amber'
-                                    ? 'border-amber-500 bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
-                                    : 'border-red-500 bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
-                                }`}
+                                style={{
+                                  background: badgeBg,
+                                  color: badgeText,
+                                  borderColor: badgeText,
+                                }}
                               >
                                 {status.status}
                               </Badge>
                             </div>
-                            <p className="text-sm text-gray-700 dark:text-gray-400 ml-8">
+                            <p className="text-sm ml-8" style={{ color: textSecondary }}>
                               {status.message}
                             </p>
 
                             {examData?.sampleQuestion && (
-                              <div className="ml-8 mt-2 p-2 bg-white dark:bg-slate-600 rounded border border-gray-200 dark:border-slate-500">
-                                <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Sample question:</p>
-                                <p className="text-xs font-mono text-gray-800 dark:text-gray-200">
+                              <div
+                                className="ml-8 mt-2 p-2 rounded"
+                                style={{
+                                  background: darkMode ? '#1e293b' : '#ffffff',
+                                  border: `1px solid ${darkMode ? '#334155' : '#e5e7eb'}`,
+                                }}
+                              >
+                                <p className="text-xs mb-1" style={{ color: textSecondary }}>Sample question:</p>
+                                <p className="text-xs font-mono" style={{ color: darkMode ? '#e2e8f0' : '#1f2937' }}>
                                   {examData.sampleQuestion.questionText}
                                 </p>
-                                <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                                <p className="text-xs mt-1" style={{ color: textMuted }}>
                                   ID: {examData.sampleQuestionId}
                                 </p>
                               </div>
@@ -288,16 +313,19 @@ export function DatabaseDiagnostics() {
 
               {/* Help Section */}
               {getTotalQuestions() === 0 && (
-                <Alert className="border-blue-200 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-700">
-                  <FileQuestion className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                  <AlertDescription className="text-blue-800 dark:text-blue-200">
+                <Alert style={{
+                  background: darkMode ? 'rgba(30,58,138,0.2)' : '#eff6ff',
+                  border: `1px solid ${darkMode ? '#1d4ed8' : '#bfdbfe'}`,
+                }}>
+                  <FileQuestion className="h-4 w-4" style={{ color: darkMode ? '#60a5fa' : '#2563eb' }} />
+                  <AlertDescription style={{ color: darkMode ? '#93c5fd' : '#1e40af' }}>
                     <strong className="block mb-2">No questions found in the database</strong>
                     <p className="text-sm mb-2">To import questions:</p>
                     <ol className="text-sm list-decimal list-inside space-y-1 ml-2">
                       <li>Go to the <strong>"Import Questions"</strong> tab</li>
                       <li>Select an exam type from the dropdown</li>
                       <li>Upload an Excel (.xlsx) or CSV file with your questions</li>
-                      <li>Enter the admin key (default: <code className="bg-blue-100 dark:bg-blue-900/40 px-1 rounded">change-this-key</code>)</li>
+                      <li>Enter the admin key (default: <code style={{ background: darkMode ? 'rgba(30,58,138,0.3)' : '#dbeafe', padding: '0 4px', borderRadius: 3 }}>change-this-key</code>)</li>
                       <li>Click "Import Questions"</li>
                     </ol>
                   </AlertDescription>
@@ -305,12 +333,15 @@ export function DatabaseDiagnostics() {
               )}
 
               {getTotalQuestions() > 0 && getTotalQuestions() < 200 && (
-                <Alert className="border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-700">
-                  <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-                  <AlertDescription className="text-amber-800 dark:text-amber-200">
+                <Alert style={{
+                  background: darkMode ? 'rgba(120,53,15,0.2)' : '#fffbeb',
+                  border: `1px solid ${darkMode ? '#92400e' : '#fde68a'}`,
+                }}>
+                  <AlertCircle className="h-4 w-4" style={{ color: darkMode ? '#fbbf24' : '#d97706' }} />
+                  <AlertDescription style={{ color: darkMode ? '#fcd34d' : '#92400e' }}>
                     <strong className="block mb-1">Recommended: 120 questions per exam type</strong>
                     <p className="text-sm">
-                      You currently have {getTotalQuestions()} total questions. For the best experience, 
+                      You currently have {getTotalQuestions()} total questions. For the best experience,
                       each exam type should have at least 120 questions to ensure variety in practice exams.
                     </p>
                   </AlertDescription>

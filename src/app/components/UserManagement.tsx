@@ -399,12 +399,18 @@ export function UserManagement() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg p-6 text-center">
-            <div className="text-amber-600 dark:text-amber-400 mb-3">
+          <div
+            className="rounded-lg p-6 text-center"
+            style={{
+              background: darkMode ? 'rgba(120,53,15,0.2)' : '#fffbeb',
+              border: `1px solid ${darkMode ? '#92400e' : '#fde68a'}`,
+            }}
+          >
+            <div className="mb-3" style={{ color: darkMode ? '#fbbf24' : '#d97706' }}>
               <XCircle className="w-12 h-12 mx-auto mb-2" />
               <h3 className="font-semibold text-lg">Admin Access Required</h3>
             </div>
-            <p className="text-amber-900 dark:text-amber-200 mb-4">
+            <p className="mb-4" style={{ color: darkMode ? '#fde68a' : '#78350f' }}>
               {errorMessage}
             </p>
             <Button
@@ -487,7 +493,8 @@ export function UserManagement() {
                                   variant="outline"
                                   size="sm"
                                   disabled={isProcessing}
-                                  className="w-fit text-xs h-7 border-red-500 text-red-600 hover:bg-red-50 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-950"
+                                  className="w-fit text-xs h-7 hover:bg-red-50"
+                                style={{ borderColor: darkMode ? '#b91c1c' : '#ef4444', color: darkMode ? '#f87171' : '#dc2626' }}
                                 >
                                   {isProcessing ? (
                                     <ButtonSpinner className="w-3 h-3" />
@@ -499,13 +506,13 @@ export function UserManagement() {
                                   )}
                                 </Button>
                               </AlertDialogTrigger>
-                              <AlertDialogContent className="dark:bg-slate-800">
+                              <AlertDialogContent style={{ background: darkMode ? '#1e293b' : undefined }}>
                                 <AlertDialogHeader>
-                                  <AlertDialogTitle className="flex items-center gap-2 text-red-600 dark:text-red-400">
+                                  <AlertDialogTitle className="flex items-center gap-2" style={{ color: darkMode ? '#f87171' : '#dc2626' }}>
                                     <AlertTriangle className="w-5 h-5" />
                                     Revoke Admin Access?
                                   </AlertDialogTitle>
-                                  <AlertDialogDescription className="dark:text-gray-300">
+                                  <AlertDialogDescription style={{ color: darkMode ? '#d1d5db' : undefined }}>
                                     Are you sure you want to revoke admin access from <strong>{user.email}</strong>?
                                     <br /><br />
                                     They will lose access to:
@@ -519,12 +526,12 @@ export function UserManagement() {
                                   </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
-                                  <AlertDialogCancel className="dark:bg-slate-700 dark:text-gray-200 dark:hover:bg-slate-600">
+                                  <AlertDialogCancel style={{ background: darkMode ? '#334155' : undefined, color: darkMode ? '#e2e8f0' : undefined }}>
                                     Cancel
                                   </AlertDialogCancel>
                                   <AlertDialogAction
                                     onClick={() => handleRevokeAdmin(user.id, user.email)}
-                                    className="bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800"
+                                    className="bg-red-600 hover:bg-red-700"
                                   >
                                     Yes, Revoke Admin Access
                                   </AlertDialogAction>
@@ -538,7 +545,8 @@ export function UserManagement() {
                             variant="outline"
                             size="sm"
                             disabled={isProcessing}
-                            className="w-fit text-xs h-7 border-green-500 text-green-600 hover:bg-green-50 dark:border-green-700 dark:text-green-400 dark:hover:bg-green-950"
+                            className="w-fit text-xs h-7 hover:bg-green-50"
+                            style={{ borderColor: darkMode ? '#15803d' : '#22c55e', color: darkMode ? '#4ade80' : '#16a34a' }}
                           >
                             {isProcessing ? (
                               <ButtonSpinner className="w-3 h-3" />
@@ -579,7 +587,7 @@ export function UserManagement() {
                           })}
                         </div>
                       ) : (
-                        <span className="text-xs text-gray-500 dark:text-gray-500 italic">None</span>
+                        <span className="text-xs italic" style={{ color: darkMode ? '#6b7280' : '#6b7280' }}>None</span>
                       )}
                     </TableCell>
                     <TableCell>
@@ -593,7 +601,7 @@ export function UserManagement() {
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="all">
-                              <span className="font-semibold text-teal-600 dark:text-teal-400">
+                              <span className="font-semibold" style={{ color: darkMode ? '#2dd4bf' : '#0d9488' }}>
                                 ⭐ All
                               </span>
                             </SelectItem>
@@ -637,8 +645,11 @@ export function UserManagement() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between mt-4 pt-4 border-t dark:border-slate-600">
-            <div className="text-sm text-gray-600 dark:text-gray-400">
+          <div
+            className="flex items-center justify-between mt-4 pt-4"
+            style={{ borderTop: `1px solid ${darkMode ? '#475569' : '#e2e8f0'}` }}
+          >
+            <div className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
               Showing {((currentPage - 1) * USERS_PER_PAGE) + 1} to {Math.min(currentPage * USERS_PER_PAGE, filteredUsers.length)} of {filteredUsers.length}
             </div>
             <div className="flex items-center gap-2">
@@ -647,11 +658,11 @@ export function UserManagement() {
                 size="sm"
                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
-                className="dark:bg-slate-600 dark:border-slate-500"
+                style={{ background: darkMode ? '#475569' : undefined, borderColor: darkMode ? '#64748b' : undefined }}
               >
                 <ChevronLeft className="w-4 h-4" />
               </Button>
-              <div className="text-sm text-gray-600 dark:text-gray-400">
+              <div className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
                 Page {currentPage} of {totalPages}
               </div>
               <Button
@@ -659,7 +670,7 @@ export function UserManagement() {
                 size="sm"
                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                 disabled={currentPage === totalPages}
-                className="dark:bg-slate-600 dark:border-slate-500"
+                style={{ background: darkMode ? '#475569' : undefined, borderColor: darkMode ? '#64748b' : undefined }}
               >
                 <ChevronRight className="w-4 h-4" />
               </Button>

@@ -7,23 +7,24 @@ import { RegionProvider } from './contexts/RegionContext';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Toaster } from './components/ui/sonner';
 import { toast } from 'sonner';
-import { LoginPage } from './components/LoginPage';
 import { HomePage } from './components/HomePage';
-import { ExamModeSelection } from './components/ExamModeSelection';
-import { ExamPage } from './components/ExamPage';
-import { ExamReviewPage } from './components/ExamReviewPage';
-import { PaymentPage } from './components/PaymentPage';
-import { PaymentSuccessPage } from './components/PaymentSuccessPage';
-import { AccountPage } from './components/AccountPage';
-import { ContactPage } from './components/ContactPage';
-import { AdminPage } from './components/AdminPage';
-import { PartnersPage } from './components/PartnersPage';
-import { PricingPage } from './components/PricingPage';
-import { ResetPasswordPage } from './components/ResetPasswordPage';
 import { Language } from './data/translations';
 import { AppDiagnostics } from './components/AppDiagnostics';
-import { ApiTest } from './pages/ApiTest';
-import { ImageDiagnostics } from './pages/ImageDiagnostics';
+
+const LoginPage = React.lazy(() => import('./components/LoginPage').then(m => ({ default: m.LoginPage })));
+const ExamModeSelection = React.lazy(() => import('./components/ExamModeSelection').then(m => ({ default: m.ExamModeSelection })));
+const ExamPage = React.lazy(() => import('./components/ExamPage').then(m => ({ default: m.ExamPage })));
+const ExamReviewPage = React.lazy(() => import('./components/ExamReviewPage').then(m => ({ default: m.ExamReviewPage })));
+const PaymentPage = React.lazy(() => import('./components/PaymentPage').then(m => ({ default: m.PaymentPage })));
+const PaymentSuccessPage = React.lazy(() => import('./components/PaymentSuccessPage').then(m => ({ default: m.PaymentSuccessPage })));
+const AccountPage = React.lazy(() => import('./components/AccountPage').then(m => ({ default: m.AccountPage })));
+const ContactPage = React.lazy(() => import('./components/ContactPage').then(m => ({ default: m.ContactPage })));
+const AdminPage = React.lazy(() => import('./components/AdminPage').then(m => ({ default: m.AdminPage })));
+const PartnersPage = React.lazy(() => import('./components/PartnersPage').then(m => ({ default: m.PartnersPage })));
+const PricingPage = React.lazy(() => import('./components/PricingPage').then(m => ({ default: m.PricingPage })));
+const ResetPasswordPage = React.lazy(() => import('./components/ResetPasswordPage').then(m => ({ default: m.ResetPasswordPage })));
+const ApiTest = React.lazy(() => import('./pages/ApiTest').then(m => ({ default: m.ApiTest })));
+const ImageDiagnostics = React.lazy(() => import('./pages/ImageDiagnostics').then(m => ({ default: m.ImageDiagnostics })));
 
 // Simple loading component
 function LoadingFallback() {
@@ -130,13 +131,6 @@ function ExamPageWrapper() {
     }
   }
 
-  console.log('[ExamPageWrapper] 🎯 Exam initialization:', {
-    examType,
-    mode,
-    tier,
-    locationState,
-  });
-
   if (!examType) {
     navigate('/home');
     return null;
@@ -194,20 +188,15 @@ function AccountPageWrapper() {
 
   // Redirect to login if not authenticated
   if (!user) {
-    console.error('[AccountPageWrapper] No user found, redirecting to login');
     navigate('/login');
     return null;
   }
 
-  // Defensive check for user data
   if (!user.email) {
-    console.error('[AccountPageWrapper] User email is missing!', user);
     toast.error('Account data is incomplete. Please log in again.');
     navigate('/login');
     return null;
   }
-
-  console.log('[AccountPageWrapper] Rendering with user:', user.email, 'Subscriptions:', user.subscriptions);
 
   const handleLogout = async () => {
     await signOut();
@@ -351,16 +340,11 @@ function AppContent() {
   const navigate = useNavigate();
 
   React.useEffect(() => {
-    console.log('[YachtExam AppContent] Mounted successfully');
-    console.log('[YachtExam AppContent] Current path:', window.location.pathname);
-    console.log('[YachtExam AppContent] Current dark mode:', darkMode);
-    
-    // Show diagnostics if 'debug' is in URL
     const params = new URLSearchParams(window.location.search);
     if (params.get('debug') === 'true') {
       setShowDiagnostics(true);
     }
-  }, [darkMode]);
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-sky-50/50 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
@@ -383,6 +367,7 @@ function AppContent() {
           </div>
         </div>
       )}
+      <React.Suspense fallback={<LoadingFallback />}>
       <Routes>
         {/* Root route - shows HomePage for both logged in and logged out users */}
         <Route path="/" element={<HomePage />} />
@@ -438,6 +423,7 @@ function AppContent() {
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      </React.Suspense>
       <Toaster />
     </div>
   );

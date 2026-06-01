@@ -7,8 +7,10 @@ interface UserData {
   id: string;
   email: string;
   name?: string;
+  created_at?: string;
   subscriptions: ExamType[];
   subscriptionExpiresAt?: number | null;
+  perExamExpiry?: Record<string, number>;
   isAdmin?: boolean;
 }
 
@@ -39,7 +41,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [forcedLogoutMessage, setForcedLogoutMessage] = useState<string | null>(null);
 
   // Fetch user subscriptions from backend
-  const fetchSubscriptions = async (userId: string, token: string): Promise<{ subscriptions: ExamType[], expiresAt: number | null }> => {
+  const fetchSubscriptions = async (userId: string, token: string): Promise<{ subscriptions: ExamType[], expiresAt: number | null, perExamExpiry: Record<string, number> }> => {
     try {
       const response = await fetch(
         `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/subscriptions`,
@@ -52,17 +54,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (!response.ok) {
         console.error('Failed to fetch subscriptions:', await response.text());
-        return { subscriptions: [], expiresAt: null };
+        return { subscriptions: [], expiresAt: null, perExamExpiry: {} };
       }
 
       const data = await response.json();
-      return { 
-        subscriptions: data.subscriptions || [], 
-        expiresAt: data.expiresAt || null 
+      return {
+        subscriptions: data.subscriptions || [],
+        expiresAt: data.expiresAt || null,
+        perExamExpiry: data.perExamExpiry || {},
       };
     } catch (error) {
       console.error('Error fetching subscriptions:', error);
-      return { subscriptions: [], expiresAt: null };
+      return { subscriptions: [], expiresAt: null, perExamExpiry: {} };
     }
   };
 
@@ -111,17 +114,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (session?.user) {
           const token = session.access_token;
-          const { subscriptions, expiresAt } = await fetchSubscriptions(session.user.id, token);
-          
-          // Check admin status
+          const { subscriptions, expiresAt, perExamExpiry } = await fetchSubscriptions(session.user.id, token);
+
           const isAdmin = session.user.user_metadata?.role === 'admin' || false;
-          
+
           setUser({
             id: session.user.id,
             email: session.user.email!,
             name: session.user.user_metadata?.name,
+            created_at: session.user.created_at,
             subscriptions,
             subscriptionExpiresAt: expiresAt,
+            perExamExpiry,
             isAdmin,
           });
           setAccessToken(token);
@@ -146,24 +150,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Try to fetch subscriptions, but don't fail if backend is down
         let subscriptions: ExamType[] = [];
         let expiresAt: number | null = null;
+        let perExamExpiry: Record<string, number> = {};
 
         try {
           const result = await fetchSubscriptions(session.user.id, token);
           subscriptions = result.subscriptions;
           expiresAt = result.expiresAt;
+          perExamExpiry = result.perExamExpiry;
         } catch (subError) {
           console.warn('Could not fetch subscriptions on auth change, continuing with empty subscriptions:', subError);
         }
 
-        // Check admin status
         const isAdmin = session.user.user_metadata?.role === 'admin' || false;
 
         setUser({
           id: session.user.id,
           email: session.user.email!,
           name: session.user.user_metadata?.name,
+          created_at: session.user.created_at,
           subscriptions,
           subscriptionExpiresAt: expiresAt,
+          perExamExpiry,
           isAdmin,
         });
         setAccessToken(token);
@@ -173,13 +180,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const token = session.access_token;
         setAccessToken(token);
 
-        // Re-fetch subscriptions in case they changed
         try {
           const result = await fetchSubscriptions(session.user.id, token);
           setUser(prev => prev ? {
             ...prev,
             subscriptions: result.subscriptions,
             subscriptionExpiresAt: result.expiresAt,
+            perExamExpiry: result.perExamExpiry,
           } : prev);
         } catch (subError) {
           console.warn('Could not refresh subscriptions after token refresh:', subError);
@@ -247,28 +254,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (data.session?.user) {
         const token = data.session.access_token;
         
-        // Try to fetch subscriptions, but don't fail signup if backend is down
         let subscriptions: ExamType[] = [];
         let expiresAt: number | null = null;
-        
+        let perExamExpiry: Record<string, number> = {};
+
         try {
           const result = await fetchSubscriptions(data.session.user.id, token);
           subscriptions = result.subscriptions;
           expiresAt = result.expiresAt;
+          perExamExpiry = result.perExamExpiry;
         } catch (subError) {
           console.warn('Could not fetch subscriptions, continuing with empty subscriptions:', subError);
-          // Signup still succeeds even if subscription fetch fails
         }
-        
-        // Check admin status
+
         const isAdmin = data.session.user.user_metadata?.role === 'admin' || false;
-        
+
         setUser({
           id: data.session.user.id,
           email: data.session.user.email!,
           name: data.session.user.user_metadata?.name,
+          created_at: data.session.user.created_at,
           subscriptions,
           subscriptionExpiresAt: expiresAt,
+          perExamExpiry,
           isAdmin,
         });
         setAccessToken(token);
@@ -289,9 +297,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) throw error;
 
-      console.log('🔐 [Login] Sign-in request successful, waiting for session...');
-
-      // ✅ Step 2: Wait until session is fully established
+      // Wait until session is fully established
       const {
         data: { session },
       } = await supabaseClient.auth.getSession();
@@ -301,12 +307,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       const token = session.access_token;
-      
-      console.log('🔐 [Login] ✅ Session established successfully');
-      
-      // ✅ Step 3: NOW invalidate all other sessions (prevents account sharing)
-      console.log('🔒 [Login] Calling backend to invalidate all other sessions...');
-      
+
+      // Invalidate all other sessions (prevents account sharing)
       try {
         const invalidateResponse = await fetch(
           `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/invalidate-sessions`,
@@ -318,48 +320,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             },
           }
         );
-        
-        console.log('🔒 [Login] Backend response status:', invalidateResponse.status, invalidateResponse.statusText);
-        
-        if (invalidateResponse.ok) {
-          const result = await invalidateResponse.json();
-          console.log('✅ [Login] All other sessions logged out successfully!', result);
-          console.log('ℹ️ [Login] This is now the ONLY active device for this account');
-        } else {
+
+        if (!invalidateResponse.ok) {
           const errorData = await invalidateResponse.json().catch(async () => ({ message: await invalidateResponse.text() }));
-          console.error('❌ [Login] Failed to invalidate other sessions. Status:', invalidateResponse.status);
-          console.error('❌ [Login] Error response:', errorData);
-          if (errorData.debug) {
-            console.error('🐛 [Login] Debug info from backend:', errorData.debug);
-          }
+          console.error('Failed to invalidate other sessions:', errorData);
         }
       } catch (sessionError) {
-        console.error('❌ [Login] Exception while invalidating other sessions:', sessionError);
-        // Continue with login even if session invalidation fails
+        console.error('Exception while invalidating other sessions:', sessionError);
       }
       
-      // Try to fetch subscriptions, but don't fail login if backend is down
       let subscriptions: ExamType[] = [];
       let expiresAt: number | null = null;
-      
+      let perExamExpiry: Record<string, number> = {};
+
       try {
         const result = await fetchSubscriptions(session.user.id, token);
         subscriptions = result.subscriptions;
         expiresAt = result.expiresAt;
+        perExamExpiry = result.perExamExpiry;
       } catch (subError) {
         console.warn('Could not fetch subscriptions, continuing with empty subscriptions:', subError);
-        // Login still succeeds even if subscription fetch fails
       }
-      
-      // Check admin status
+
       const isAdmin = session.user.user_metadata?.role === 'admin' || false;
-      
+
       setUser({
         id: session.user.id,
         email: session.user.email!,
         name: session.user.user_metadata?.name,
+        created_at: session.user.created_at,
         subscriptions,
         subscriptionExpiresAt: expiresAt,
+        perExamExpiry,
         isAdmin,
       });
       setAccessToken(token);
@@ -383,7 +375,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               },
             }
           );
-          console.log('✅ Session cleared from backend');
         } catch (logoutError) {
           console.error('Failed to clear session from backend:', logoutError);
           // Continue with local logout even if backend fails
@@ -417,9 +408,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const refreshSubscriptions = async () => {
     if (!user || !accessToken) return;
-    
-    const { subscriptions, expiresAt } = await fetchSubscriptions(user.id, accessToken);
-    setUser({ ...user, subscriptions, subscriptionExpiresAt: expiresAt });
+    const { subscriptions, expiresAt, perExamExpiry } = await fetchSubscriptions(user.id, accessToken);
+    setUser({ ...user, subscriptions, subscriptionExpiresAt: expiresAt, perExamExpiry });
   };
 
   const deleteAccount = async () => {

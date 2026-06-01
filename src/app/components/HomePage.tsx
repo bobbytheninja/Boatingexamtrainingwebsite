@@ -31,6 +31,15 @@ const LANGUAGE_NAMES: Record<string, string> = {
   fr: 'French', hr: 'Croatian', ro: 'Romanian', uk: 'Ukrainian',
 };
 
+// Maps known category types to translation keys in the Translations object
+const CATEGORY_TRANSLATION_KEYS: Record<string, { title: string; desc: string }> = {
+  jet:        { title: 'jetSki',           desc: 'jetSkiDesc' },
+  small:      { title: 'smallBoat',        desc: 'smallBoatDesc' },
+  big:        { title: 'bigBoat',          desc: 'bigBoatDesc' },
+  yacht:      { title: 'yacht',            desc: 'yachtDesc' },
+  navigation: { title: 'navigationDevice', desc: 'navigationDeviceDesc' },
+};
+
 interface ExamCategory {
   type: string;
   title: string;
@@ -54,6 +63,15 @@ export function HomePage() {
   const [categories, setCategories] = useState<ExamCategory[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [fetchError, setFetchError] = useState(false);
+  const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
+
+  const toggleExpand = (type: string) => {
+    setExpandedCards(prev => {
+      const next = new Set(prev);
+      if (next.has(type)) next.delete(type); else next.add(type);
+      return next;
+    });
+  };
 
   const loadCategories = async () => {
     setFetchError(false);
@@ -209,11 +227,16 @@ export function HomePage() {
                 </div>
               ) : examTypes.map((exam, index) => {
                 const Icon = exam.icon;
+                const keys = CATEGORY_TRANSLATION_KEYS[exam.type];
+                const displayTitle = keys ? (t as any)[keys.title] ?? exam.title : exam.title;
+                const displayDesc  = keys ? (t as any)[keys.desc]  ?? exam.description : exam.description;
+                const isExpanded = expandedCards.has(exam.type);
+                const isLong = displayDesc.length > 120;
                 return (
-                  <Card 
-                    key={exam.type} 
+                  <Card
+                    key={exam.type}
                     className="group overflow-hidden hover:shadow-2xl border border-gray-200/50 dark:border-gray-700/50 bg-white dark:bg-slate-700 backdrop-blur-sm hover:-translate-y-2 transition-all duration-[400ms]"
-                    style={{ 
+                    style={{
                       animationDelay: `${index * 100}ms`,
                       backgroundColor: darkMode ? '#334155' : '#ffffff',
                       borderColor: darkMode ? 'rgba(55, 65, 81, 0.5)' : 'rgba(229, 231, 235, 0.5)',
@@ -223,7 +246,7 @@ export function HomePage() {
                     <div className="relative h-32 md:h-40 overflow-hidden">
                       <ImageWithFallback
                         src={exam.image}
-                        alt={exam.title}
+                        alt={displayTitle}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
@@ -235,24 +258,35 @@ export function HomePage() {
                       </div>
                     </div>
                     <CardHeader className="pb-1 pt-2 px-3 md:px-6">
-                      <CardTitle 
+                      <CardTitle
                         className="text-base md:text-lg font-bold text-gray-900 dark:text-gray-100 group-hover:text-sky-700 dark:group-hover:text-sky-400 transition-colors duration-[400ms]"
-                        style={{ 
+                        style={{
                           color: darkMode ? '#f3f4f6' : '#111827',
                           transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
                         }}
                       >
-                        {exam.title}
+                        {displayTitle}
                       </CardTitle>
-                      <CardDescription 
-                        className="text-xs md:text-sm text-gray-600 dark:text-gray-300 leading-relaxed transition-colors duration-[400ms]"
-                        style={{ 
-                          color: darkMode ? '#d1d5db' : '#4b5563',
-                          transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
-                        }}
-                      >
-                        {exam.description}
-                      </CardDescription>
+                      <div>
+                        <CardDescription
+                          className={`text-xs md:text-sm text-gray-600 dark:text-gray-300 leading-relaxed transition-colors duration-[400ms] ${!isExpanded && isLong ? 'line-clamp-3' : ''}`}
+                          style={{
+                            color: darkMode ? '#d1d5db' : '#4b5563',
+                            transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
+                          }}
+                        >
+                          {displayDesc}
+                        </CardDescription>
+                        {isLong && (
+                          <button
+                            onClick={() => toggleExpand(exam.type)}
+                            className="text-xs font-medium mt-1 transition-colors duration-200"
+                            style={{ color: darkMode ? '#38bdf8' : '#0284c7' }}
+                          >
+                            {isExpanded ? 'Show less ▲' : 'Show more ▼'}
+                          </button>
+                        )}
+                      </div>
                     </CardHeader>
                     <CardContent className="pt-0 pb-3 px-3 md:px-6">
                       {(exam.country || exam.language) && (

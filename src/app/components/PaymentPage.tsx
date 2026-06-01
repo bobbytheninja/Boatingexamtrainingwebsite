@@ -44,87 +44,45 @@ export function PaymentPage({ userEmail, onBack, onComplete, onNavigate }: Payme
   const [region, setRegion] = useState('Bulgaria');
   const [categories, setCategories] = useState<ExamCategory[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
 
-  // Get the user's current subscriptions and expiration date
   const currentSubscriptions = user?.subscriptions || [];
   const subscriptionExpiresAt = user?.subscriptionExpiresAt || null;
 
-  // Load categories from server
-  useEffect(() => {
-    const loadCategories = async () => {
-      try {
-        console.log('');
-        console.log('💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳');
-        console.log('[PaymentPage] LOADING CATEGORIES');
-        console.log('💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳');
-        
-        const url = `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/categories`;
-        console.log('[PaymentPage] Request URL:', url);
-        console.log('[PaymentPage] Request Method: GET');
-        
-        const response = await fetch(url, {
-          headers: {
-            'Authorization': `Bearer ${publicAnonKey}`
-          }
-        });
-        
-        console.log('[PaymentPage] Response Status:', response.status, response.statusText);
-        console.log('[PaymentPage] Response OK:', response.ok);
-        
-        if (response.ok) {
-          const data = await response.json();
-          console.log('[PaymentPage] Response Data:', data);
-          console.log('[PaymentPage] Categories Count:', data.categories?.length);
-          console.log('[PaymentPage] Categories:', JSON.stringify(data.categories, null, 2));
-          
-          // If no categories found, force-initialize them
-          if (!data.categories || data.categories.length === 0) {
-            console.log('[PaymentPage] ⚠️ No categories found, triggering force-init...');
-            
-            const initUrl = `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/categories/force-init`;
-            console.log('[PaymentPage] Force-init URL:', initUrl);
-            console.log('[PaymentPage] Force-init Method: POST');
-            
-            const initResponse = await fetch(initUrl, { method: 'POST' });
-            
-            console.log('[PaymentPage] Force-init Response Status:', initResponse.status, initResponse.statusText);
-            console.log('[PaymentPage] Force-init Response OK:', initResponse.ok);
-            
-            if (initResponse.ok) {
-              const initData = await initResponse.json();
-              console.log('[PaymentPage] Force-init Response Data:', initData);
-              console.log('[PaymentPage] ✅ Categories initialized:', initData.categories?.length);
-              setCategories(initData.categories || []);
-            } else {
-              const errorText = await initResponse.text();
-              console.error('[PaymentPage] ❌ Force-init failed:', errorText);
-            }
+  const loadCategories = async () => {
+    setFetchError(false);
+    setLoadingCategories(true);
+    try {
+      const url = `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/categories`;
+      const response = await fetch(url, { headers: { 'Authorization': `Bearer ${publicAnonKey}` } });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (!data.categories || data.categories.length === 0) {
+          const initResponse = await fetch(
+            `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/categories/force-init`,
+            { method: 'POST' }
+          );
+          if (initResponse.ok) {
+            const initData = await initResponse.json();
+            setCategories(initData.categories || []);
           } else {
-            console.log('[PaymentPage] ✅ Setting categories:', data.categories.length);
-            setCategories(data.categories || []);
+            setFetchError(true);
           }
         } else {
-          const errorText = await response.text();
-          console.error('[PaymentPage] ❌ Failed to load categories:', errorText);
+          setCategories(data.categories || []);
         }
-        
-        console.log('💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳');
-        console.log('[PaymentPage] LOAD COMPLETE');
-        console.log('💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳💳');
-        console.log('');
-      } catch (error: any) {
-        console.error('[PaymentPage] ❌ ERROR:', error);
-        console.error('[PaymentPage] Error details:', {
-          message: error.message,
-          stack: error.stack,
-        });
-      } finally {
-        setLoadingCategories(false);
+      } else {
+        setFetchError(true);
       }
-    };
+    } catch {
+      setFetchError(true);
+    } finally {
+      setLoadingCategories(false);
+    }
+  };
 
-    loadCategories();
-  }, []);
+  useEffect(() => { loadCategories(); }, []);
 
   // Calculate expiry date for display
   const getExpiryDateString = () => {
@@ -167,7 +125,7 @@ export function PaymentPage({ userEmail, onBack, onComplete, onNavigate }: Payme
   // Calculate total price dynamically from category prices
   const totalPrice = selectedExams.reduce((sum, examType) => {
     const category = categories.find(c => c.type === examType);
-    return sum + (category?.price || 5); // Default to 5 if price not set
+    return sum + (category?.price ?? 0);
   }, 0);
 
   const handlePayment = async () => {
@@ -184,26 +142,10 @@ export function PaymentPage({ userEmail, onBack, onComplete, onNavigate }: Payme
     setIsProcessing(true);
     
     try {
-      console.log('💳 [PaymentPage] Starting checkout...');
-      console.log('💳 [PaymentPage] Selected exams:', selectedExams);
-      console.log('💳 [PaymentPage] Access token:', accessToken ? 'Present' : 'Missing');
-      
-      // Create Stripe Checkout Session
-      console.log('💳 [PaymentPage] Calling createCheckoutSession API...');
       const { url } = await api.createCheckoutSession(selectedExams, accessToken);
-      
-      console.log('💳 [PaymentPage] Checkout URL received:', url);
-      console.log('💳 [PaymentPage] Redirecting to Stripe...');
-      
-      // Redirect to Stripe Checkout
       window.location.href = url;
     } catch (error: any) {
-      console.error('💳 [PaymentPage] ❌ Payment error:', error);
-      console.error('💳 [PaymentPage] Error details:', {
-        message: error.message,
-        stack: error.stack,
-        fullError: error,
-      });
+      console.error('Payment error:', error);
       toast.error(`Failed to start checkout: ${error.message || 'Please try again'}`);
       setIsProcessing(false);
     }
@@ -284,7 +226,7 @@ export function PaymentPage({ userEmail, onBack, onComplete, onNavigate }: Payme
                 transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
               }}
             >
-              Select the exam categories you want to unlock. Each category is €5 per month with unlimited attempts.
+              Select the exam categories you want to unlock. Enjoy unlimited attempts for 30 days per category.
             </p>
           </div>
 
@@ -323,6 +265,13 @@ export function PaymentPage({ userEmail, onBack, onComplete, onNavigate }: Payme
                           Loading exam categories...
                         </p>
                       </div>
+                    </div>
+                  ) : fetchError ? (
+                    <div className="text-center py-12">
+                      <p className="mb-4" style={{ color: darkMode ? '#fca5a5' : '#b91c1c' }}>
+                        Failed to load exam categories. Check your connection.
+                      </p>
+                      <Button onClick={loadCategories} variant="outline">Retry</Button>
                     </div>
                   ) : examTypes.length === 0 ? (
                     <div className="text-center py-12">

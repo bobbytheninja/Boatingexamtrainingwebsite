@@ -1236,7 +1236,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
             }}
           >
             <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 md:gap-4">
-              <CardTitle className="flex-1 text-base md:text-lg max-h-[120px] overflow-y-auto transition-colors duration-[400ms]" style={{ color: darkMode ? '#e2e8f0' : '#1e293b' }}>{currentQuestion.question}</CardTitle>
+              <CardTitle aria-live="polite" className="flex-1 text-base md:text-lg max-h-[120px] overflow-y-auto transition-colors duration-[400ms]" style={{ color: darkMode ? '#e2e8f0' : '#1e293b' }}>{currentQuestion.question}</CardTitle>
               <div className="flex flex-row md:flex-col gap-2 md:gap-1.5 md:items-end flex-shrink-0">
                 <Badge className="shadow-md text-xs whitespace-nowrap transition-all duration-[400ms]" style={{ backgroundColor: darkMode ? '#1e40af' : '#2563eb', color: '#ffffff', borderColor: darkMode ? '#1e3a8a' : '#1d4ed8' }}>
                   {t.selectMultipleAnswers.replace('{count}', (currentQuestion.correctAnswers?.length || 1).toString())}

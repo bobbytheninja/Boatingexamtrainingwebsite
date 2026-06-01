@@ -8,11 +8,15 @@ import { Search, AlertCircle, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { ButtonSpinner } from './LoadingSpinner';
 import { projectId } from '../utils/supabase/info';
+import { useDarkMode } from '../contexts/DarkModeContext';
 
 export function SubscriptionDebug() {
+  const { darkMode } = useDarkMode();
   const [email, setEmail] = useState('bobby_rocks@me.com');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
+
+  const textPrimary = darkMode ? '#f3f4f6' : '#111827';
 
   const handleCheck = async () => {
     setLoading(true);
@@ -53,9 +57,12 @@ export function SubscriptionDebug() {
   };
 
   return (
-    <Card className="dark:bg-slate-700 dark:border-slate-600">
+    <Card style={{
+      background: darkMode ? '#334155' : undefined,
+      borderColor: darkMode ? '#475569' : undefined,
+    }}>
       <CardHeader>
-        <CardTitle className="dark:text-gray-100 flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2" style={{ color: textPrimary }}>
           <Search className="w-5 h-5" />
           Subscription Debug Tool
         </CardTitle>
@@ -70,7 +77,11 @@ export function SubscriptionDebug() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="user@example.com"
-              className="dark:bg-slate-600 dark:border-slate-500"
+              style={{
+                background: darkMode ? '#1e293b' : undefined,
+                borderColor: darkMode ? '#475569' : undefined,
+                color: darkMode ? '#f3f4f6' : undefined,
+              }}
             />
             <Button
               onClick={handleCheck}
@@ -84,33 +95,52 @@ export function SubscriptionDebug() {
 
         {result && (
           <div className="space-y-4 mt-6">
-            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
-              <h3 className="font-semibold text-blue-900 dark:text-blue-300 mb-2 flex items-center gap-2">
+            <div
+              className="rounded-lg p-4"
+              style={{
+                background: darkMode ? 'rgba(30,58,138,0.2)' : '#eff6ff',
+                border: `1px solid ${darkMode ? '#1d4ed8' : '#bfdbfe'}`,
+              }}
+            >
+              <h3
+                className="font-semibold mb-2 flex items-center gap-2"
+                style={{ color: darkMode ? '#93c5fd' : '#1e40af' }}
+              >
                 <CheckCircle className="w-4 h-4" />
                 Subscription Data for {result.email}
               </h3>
 
               <div className="space-y-3 text-sm">
                 <div>
-                  <span className="font-medium text-blue-800 dark:text-blue-400">User ID:</span>
-                  <code className="ml-2 bg-white dark:bg-slate-800 px-2 py-1 rounded text-xs">
+                  <span className="font-medium" style={{ color: darkMode ? '#60a5fa' : '#1d4ed8' }}>User ID:</span>
+                  <code
+                    className="ml-2 px-2 py-1 rounded text-xs"
+                    style={{ background: darkMode ? '#1e293b' : '#ffffff' }}
+                  >
                     {result.userId}
                   </code>
                 </div>
 
                 <div>
-                  <span className="font-medium text-blue-800 dark:text-blue-400">Exam Types Count:</span>
+                  <span className="font-medium" style={{ color: darkMode ? '#60a5fa' : '#1d4ed8' }}>Exam Types Count:</span>
                   <Badge className="ml-2 bg-blue-600 text-white">
                     {result.examTypesCount}
                   </Badge>
                 </div>
 
                 <div>
-                  <span className="font-medium text-blue-800 dark:text-blue-400">Exam Types:</span>
+                  <span className="font-medium" style={{ color: darkMode ? '#60a5fa' : '#1d4ed8' }}>Exam Types:</span>
                   <div className="mt-2 flex flex-wrap gap-2">
                     {result.examTypes && result.examTypes.length > 0 ? (
                       result.examTypes.map((type: string, index: number) => (
-                        <Badge key={index} variant="outline" className="dark:border-blue-400 dark:text-blue-300">
+                        <Badge
+                          key={index}
+                          variant="outline"
+                          style={{
+                            borderColor: darkMode ? '#60a5fa' : undefined,
+                            color: darkMode ? '#93c5fd' : undefined,
+                          }}
+                        >
                           {index + 1}. {type}
                         </Badge>
                       ))
@@ -121,8 +151,8 @@ export function SubscriptionDebug() {
                 </div>
 
                 <div>
-                  <span className="font-medium text-blue-800 dark:text-blue-400">Expires At:</span>
-                  <span className="ml-2 text-blue-900 dark:text-blue-200">
+                  <span className="font-medium" style={{ color: darkMode ? '#60a5fa' : '#1d4ed8' }}>Expires At:</span>
+                  <span className="ml-2" style={{ color: darkMode ? '#bfdbfe' : '#1e3a8a' }}>
                     {result.expiresAt
                       ? new Date(result.expiresAt).toLocaleString()
                       : 'N/A'
@@ -131,8 +161,11 @@ export function SubscriptionDebug() {
                 </div>
 
                 <div>
-                  <span className="font-medium text-blue-800 dark:text-blue-400">Raw Data:</span>
-                  <pre className="mt-2 bg-white dark:bg-slate-800 p-3 rounded text-xs overflow-x-auto">
+                  <span className="font-medium" style={{ color: darkMode ? '#60a5fa' : '#1d4ed8' }}>Raw Data:</span>
+                  <pre
+                    className="mt-2 p-3 rounded text-xs overflow-x-auto"
+                    style={{ background: darkMode ? '#1e293b' : '#ffffff' }}
+                  >
                     {JSON.stringify(result.rawSubscription, null, 2)}
                   </pre>
                 </div>
@@ -142,12 +175,21 @@ export function SubscriptionDebug() {
             {result.examTypes && result.examTypes.some((type: string) =>
               !['jet', 'small', 'big', 'yacht', 'navigation'].includes(type.toLowerCase())
             ) && (
-              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg p-4">
-                <h3 className="font-semibold text-amber-900 dark:text-amber-300 mb-2 flex items-center gap-2">
+              <div
+                className="rounded-lg p-4"
+                style={{
+                  background: darkMode ? 'rgba(120,53,15,0.2)' : '#fffbeb',
+                  border: `1px solid ${darkMode ? '#92400e' : '#fde68a'}`,
+                }}
+              >
+                <h3
+                  className="font-semibold mb-2 flex items-center gap-2"
+                  style={{ color: darkMode ? '#fcd34d' : '#92400e' }}
+                >
                   <AlertCircle className="w-4 h-4" />
                   Invalid Exam Types Detected
                 </h3>
-                <p className="text-sm text-amber-800 dark:text-amber-200">
+                <p className="text-sm" style={{ color: darkMode ? '#fde68a' : '#78350f' }}>
                   The following exam types are not valid and may display incorrectly:
                 </p>
                 <div className="mt-2 flex flex-wrap gap-2">
@@ -160,7 +202,7 @@ export function SubscriptionDebug() {
                     ))
                   }
                 </div>
-                <p className="text-xs text-amber-700 dark:text-amber-300 mt-3">
+                <p className="text-xs mt-3" style={{ color: darkMode ? '#fcd34d' : '#92400e' }}>
                   Valid exam types are: jet, small, big, yacht, navigation
                 </p>
               </div>

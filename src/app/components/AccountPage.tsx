@@ -34,67 +34,60 @@ interface CategoryData {
 export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNavigate, onStartExam, onLogout }: AccountPageProps) {
   const { language } = useLanguage();
   const t = getTranslation(language);
-  const { deleteAccount } = useAuth();
+  const { deleteAccount, user } = useAuth();
   const { darkMode } = useDarkMode();
   const [isDeleting, setIsDeleting] = useState(false);
   const [categories, setCategories] = useState<CategoryData[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
-  
-  // Fetch categories from backend
-  React.useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/categories`);
-        if (response.ok) {
-          const data = await response.json();
-          setCategories(data.categories || []);
-        }
-      } catch (error) {
-        console.error('[AccountPage] Error fetching categories:', error);
-      } finally {
-        setLoadingCategories(false);
+  const [fetchError, setFetchError] = useState(false);
+  const [payments, setPayments] = useState<any[]>([]);
+
+  const perExamExpiry = user?.perExamExpiry || {};
+
+  const memberSince = user?.created_at
+    ? new Date(user.created_at).toLocaleDateString(language === 'English' ? 'en-GB' : 'bg-BG', { month: 'long', year: 'numeric' })
+    : '—';
+
+  const fetchCategories = async () => {
+    setFetchError(false);
+    try {
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/categories`);
+      if (response.ok) {
+        const data = await response.json();
+        setCategories(data.categories || []);
+      } else {
+        setFetchError(true);
       }
-    };
-    
-    fetchCategories();
-  }, []);
-  
-  // Debug logging
+    } catch {
+      setFetchError(true);
+    } finally {
+      setLoadingCategories(false);
+    }
+  };
+
+  const fetchPayments = async () => {
+    try {
+      const { createClient } = await import('../utils/supabase/client');
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) return;
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/payments`,
+        { headers: { 'Authorization': `Bearer ${session.access_token}` } }
+      );
+      if (response.ok) {
+        const data = await response.json();
+        setPayments(data.payments || []);
+      }
+    } catch {
+      // Payment history is non-critical — fail silently
+    }
+  };
+
   React.useEffect(() => {
-    console.log('');
-    console.log('═══════════════════════════════════════════════════');
-    console.log('[AccountPage] 🔍 SUBSCRIPTION DEBUG');
-    console.log('═══════════════════════════════════════════════════');
-    console.log('[AccountPage] User Email:', userEmail);
-    console.log('[AccountPage] Paid Exams Array:', paidExams);
-    console.log('[AccountPage] Paid Exams Count:', paidExams.length);
-    console.log('[AccountPage] Paid Exams (detailed):', JSON.stringify(paidExams, null, 2));
-    console.log('[AccountPage] Categories loaded:', categories.length);
-    console.log('[AccountPage] Categories:', categories.map(c => ({ type: c.type, title: c.title })));
-    console.log('[AccountPage] Subscription Expires At:', subscriptionExpiresAt);
-    console.log('[AccountPage] Language:', language);
-    console.log('═══════════════════════════════════════════════════');
-    console.log('');
-  }, [userEmail, paidExams, subscriptionExpiresAt, language, darkMode, categories]);
-
-  // Calculate expiry dates from the subscriptionExpiresAt timestamp
-  const getExpiryDate = () => {
-    if (!subscriptionExpiresAt) {
-      return 'N/A';
-    }
-    const date = new Date(subscriptionExpiresAt);
-    return date.toLocaleDateString(language === 'English' ? 'en-US' : 'bg-BG', { year: 'numeric', month: 'long', day: 'numeric' });
-  };
-
-  const getDaysRemaining = () => {
-    if (!subscriptionExpiresAt) {
-      return 0;
-    }
-    const now = Date.now();
-    const diffInMs = subscriptionExpiresAt - now;
-    const daysRemaining = Math.ceil(diffInMs / (24 * 60 * 60 * 1000));
-    return Math.max(0, daysRemaining);
-  };
+    fetchCategories();
+    fetchPayments();
+  }, []);
 
   const handleDeleteAccount = async () => {
     setIsDeleting(true);
@@ -210,7 +203,7 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
                   </div>
                   <div>
                     <p className="text-sm mb-1 transition-colors duration-[400ms]" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>{t.memberSince}</p>
-                    <p className="font-medium transition-colors duration-[400ms]" style={{ color: darkMode ? '#f3f4f6' : '#0f172a' }}>{language === 'English' ? 'November 2024' : 'Ноември 2024'}</p>
+                    <p className="font-medium transition-colors duration-[400ms]" style={{ color: darkMode ? '#f3f4f6' : '#0f172a' }}>{memberSince}</p>
                   </div>
                   <div>
                     <p className="text-sm mb-1 transition-colors duration-[400ms]" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>{t.accountStatus}</p>
@@ -356,10 +349,21 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
                   >{t.currentExamAccess}</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {paidExams.length === 0 ? (
+                  {fetchError && (
+                    <div className="text-center py-8">
+                      <p className="mb-4" style={{ color: darkMode ? '#fca5a5' : '#b91c1c' }}>
+                        {language === 'English' ? 'Failed to load subscription data. Check your connection.' : 'Грешка при зареждане на данните. Проверете връзката си.'}
+                      </p>
+                      <Button onClick={fetchCategories} variant="outline">
+                        {language === 'English' ? 'Retry' : 'Опитай отново'}
+                      </Button>
+                    </div>
+                  )}
+
+                  {!fetchError && paidExams.length === 0 ? (
                     <div className="text-center py-12">
-                      <div className="inline-flex p-4 bg-gray-100 dark:bg-slate-600 rounded-full mb-4">
-                        <Package className="w-8 h-8 text-gray-400 dark:text-gray-300" />
+                      <div className="inline-flex p-4 bg-gray-100 rounded-full mb-4" style={{ background: darkMode ? '#475569' : '#f3f4f6' }}>
+                        <Package className="w-8 h-8" style={{ color: darkMode ? '#d1d5db' : '#9ca3af' }} />
                       </div>
                       <h3 className="text-xl font-semibold mb-2 transition-colors duration-[400ms]" style={{ color: darkMode ? '#f3f4f6' : '#0f172a' }}>{t.noActiveSubscriptions}</h3>
                       <p className="mb-6 transition-colors duration-[400ms]" style={{ color: darkMode ? '#d1d5db' : '#475569' }}>{t.noActiveSubscriptionsDesc}</p>
@@ -372,24 +376,13 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      {paidExams.map((examType, index) => {
-                        console.log(`[AccountPage] Rendering exam ${index + 1}/${paidExams.length}: "${examType}"`);
-
-                        // Try to get exam data from dynamic categories first, fallback to static examData
+                      {paidExams.map((examType) => {
                         const categoryData = categories.find(cat => cat.type === examType);
                         const exam = categoryData || examData[examType];
 
-                        console.log(`[AccountPage]   - Category data found:`, !!categoryData);
-                        console.log(`[AccountPage]   - Exam data found:`, !!exam);
-                        console.log(`[AccountPage]   - Category title:`, categoryData?.title);
-                        console.log(`[AccountPage]   - Exam title:`, exam?.title);
-
-                        // Always use the English title (no Bulgarian title/description needed)
                         const examTitle = (() => {
                           if (categoryData?.title) return categoryData.title;
                           if (exam?.title) return exam.title;
-
-                          // Fallback map using English titles
                           const typeMap: Record<string, string> = {
                             'jet': 'Jet Ski License',
                             'small': 'Small Boat License',
@@ -397,11 +390,8 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
                             'yacht': 'Yacht License (Up to 50 Tons)',
                             'navigation': 'Navigation Device License',
                           };
-
                           const normalizedType = examType.toLowerCase();
                           if (typeMap[normalizedType]) return typeMap[normalizedType];
-
-                          // Ultimate fallback: format the exam type nicely
                           return examType
                             .replace(/([a-z])([A-Z])/g, '$1 $2')
                             .replace(/[_-]/g, ' ')
@@ -410,17 +400,17 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
                             .join(' ') + ' License';
                         })();
 
-                        // Log warning but DON'T skip rendering - subscription should always be visible
-                        if (!exam && !categoryData) {
-                          console.warn(`[AccountPage] ⚠️ Category data missing for "${examType}", using fallback display`);
-                        }
+                        const examPrice = categoryData?.price ?? null;
 
-                        // Get price from category data, fallback to €5.00
-                        const examPrice = categoryData?.price || 5;
-
-                        const daysRemaining = getDaysRemaining();
-                        const expiryDate = getExpiryDate();
-                        const isExpiringSoon = daysRemaining <= 7;
+                        // Use per-exam expiry if available, fall back to shared expiry
+                        const examExpiresAt = perExamExpiry[examType] || subscriptionExpiresAt;
+                        const daysRemaining = examExpiresAt
+                          ? Math.max(0, Math.ceil((examExpiresAt - Date.now()) / 86400000))
+                          : 0;
+                        const expiryDate = examExpiresAt
+                          ? new Date(examExpiresAt).toLocaleDateString(language === 'English' ? 'en-US' : 'bg-BG', { year: 'numeric', month: 'long', day: 'numeric' })
+                          : 'N/A';
+                        const isExpiringSoon = daysRemaining <= 7 && daysRemaining > 0;
 
                         return (
                           <Card 
@@ -456,12 +446,14 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
                                       <span>{daysRemaining} {t.daysRemaining}</span>
                                     </div>
                                   </div>
-                                  <div className="mt-4 pt-4 border-t border-gray-200 dark:border-slate-600">
-                                    <div className="flex items-center justify-between text-sm">
-                                      <span style={{ color: darkMode ? '#d1d5db' : '#475569' }}>{t.monthlySubscription}</span>
-                                      <span className="font-semibold" style={{ color: darkMode ? '#f3f4f6' : '#1e293b' }}>€{examPrice.toFixed(2)}{t.perMonth}</span>
+                                  {examPrice !== null && (
+                                    <div className="mt-4 pt-4" style={{ borderTop: `1px solid ${darkMode ? '#334155' : '#e2e8f0'}` }}>
+                                      <div className="flex items-center justify-between text-sm">
+                                        <span style={{ color: darkMode ? '#d1d5db' : '#475569' }}>{t.monthlySubscription}</span>
+                                        <span className="font-semibold" style={{ color: darkMode ? '#f3f4f6' : '#1e293b' }}>€{examPrice.toFixed(2)}{t.perMonth}</span>
+                                      </div>
                                     </div>
-                                  </div>
+                                  )}
                                 </div>
                                 <div className="flex flex-col gap-2">
                                   <Button
@@ -516,9 +508,55 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
 
             </div>
           </div>
+
+          {/* Payment History */}
+          {payments.length > 0 && (
+            <div className="mt-8">
+              <Card
+                className="border-2 shadow-xl transition-all duration-[400ms]"
+                style={{
+                  backgroundColor: darkMode ? '#334155' : '#ffffff',
+                  borderColor: darkMode ? '#475569' : '#e2e8f0',
+                }}
+              >
+                <CardHeader>
+                  <CardTitle
+                    className="flex items-center gap-2"
+                    style={{ color: darkMode ? '#f3f4f6' : '#1e293b' }}
+                  >
+                    <CreditCard className="w-5 h-5" />
+                    {language === 'English' ? 'Payment History' : 'История на плащания'}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {payments.map((p: any, i: number) => (
+                      <div
+                        key={p.stripeSessionId || i}
+                        className="flex items-center justify-between py-3 text-sm"
+                        style={{ borderBottom: i < payments.length - 1 ? `1px solid ${darkMode ? '#475569' : '#e2e8f0'}` : undefined }}
+                      >
+                        <div>
+                          <p className="font-medium" style={{ color: darkMode ? '#f3f4f6' : '#1e293b' }}>
+                            {(p.examTypes || []).join(', ')}
+                          </p>
+                          <p style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
+                            {p.paidAt ? new Date(p.paidAt).toLocaleDateString(language === 'English' ? 'en-GB' : 'bg-BG', { year: 'numeric', month: 'long', day: 'numeric' }) : '—'}
+                          </p>
+                        </div>
+                        <span className="font-semibold" style={{ color: darkMode ? '#86efac' : '#15803d' }}>
+                          {p.amountTotal != null ? `€${(p.amountTotal / 100).toFixed(2)}` : '—'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </div>
       </div>
-      
+
       <Footer />
     </>
   );

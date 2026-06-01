@@ -786,63 +786,46 @@ app.get("/make-server-d36f8f91/subscriptions", async (c) => {
   }
 
   try {
-    console.log('');
-    console.log('═══════════════════════════════════════════════════');
-    console.log('[GET /subscriptions] REQUEST for user:', user.id);
-    console.log('═══════════════════════════════════════════════════');
-
     const subscription = await kv.get(`subscription:${user.id}`);
 
-    console.log('[GET /subscriptions] Raw subscription data:', JSON.stringify(subscription, null, 2));
-    console.log('[GET /subscriptions] Exam types:', subscription?.examTypes);
-    console.log('[GET /subscriptions] Exam types count:', subscription?.examTypes?.length);
-
     if (!subscription) {
-      console.log('[GET /subscriptions] No subscription found, returning empty array');
-      console.log('═══════════════════════════════════════════════════');
-      console.log('');
-      return c.json({ subscriptions: [], expiresAt: null });
+      return c.json({ subscriptions: [], expiresAt: null, perExamExpiry: {} });
     }
 
-    // Check if subscription is expired
     const now = Date.now();
-    if (subscription.expiresAt && subscription.expiresAt < now) {
-      console.log('[GET /subscriptions] Subscription EXPIRED, deleting...');
-      // Subscription expired, remove it
+
+    // Migrate old flat format ({ examTypes: string[], expiresAt: number }) to per-exam map
+    let perExamMap: Record<string, number> = {};
+    if (Array.isArray(subscription.examTypes)) {
+      const oldExpiry = subscription.expiresAt || 0;
+      for (const et of subscription.examTypes) {
+        perExamMap[et.toLowerCase().trim()] = oldExpiry;
+      }
+    } else if (subscription.examTypes && typeof subscription.examTypes === 'object') {
+      perExamMap = subscription.examTypes;
+    }
+
+    // Filter to only active (non-expired) exam types
+    const activeExamTypes = Object.keys(perExamMap).filter(et => (perExamMap[et] || 0) > now);
+
+    if (activeExamTypes.length === 0) {
       await kv.del(`subscription:${user.id}`);
-      console.log('═══════════════════════════════════════════════════');
-      console.log('');
-      return c.json({ subscriptions: [], expiresAt: null });
+      return c.json({ subscriptions: [], expiresAt: null, perExamExpiry: {} });
     }
 
-    // Normalize exam types: lowercase+trim only. Custom types (e.g. "yacht5otonesenglish") are
-    // preserved as-is so deduplication doesn't collapse distinct subscriptions into one.
-    const normalizedExamTypes = (subscription.examTypes || []).map((type: string) =>
-      type.toLowerCase().trim()
-    );
-
-    // Remove duplicates from exam types array
-    const uniqueExamTypes = [...new Set(normalizedExamTypes)];
-
-    const result = {
-      subscriptions: uniqueExamTypes,
-      expiresAt: subscription.expiresAt || null
-    };
-
-    if (uniqueExamTypes.length !== subscription.examTypes?.length) {
-      console.log('[GET /subscriptions] ⚠️ Cleaned subscription data');
-      console.log('[GET /subscriptions] Original:', subscription.examTypes);
-      console.log('[GET /subscriptions] Cleaned:', uniqueExamTypes);
+    const expiresAt = Math.max(...activeExamTypes.map(et => perExamMap[et]));
+    const activePerExamExpiry: Record<string, number> = {};
+    for (const et of activeExamTypes) {
+      activePerExamExpiry[et] = perExamMap[et];
     }
 
-    console.log('[GET /subscriptions] Returning result:', JSON.stringify(result, null, 2));
-    console.log('═══════════════════════════════════════════════════');
-    console.log('');
-
-    return c.json(result);
+    return c.json({
+      subscriptions: activeExamTypes,
+      expiresAt,
+      perExamExpiry: activePerExamExpiry,
+    });
   } catch (error: any) {
-    console.error('[GET /subscriptions] ❌ ERROR:', error);
-    console.error('[GET /subscriptions] Error stack:', error.stack);
+    console.error('[GET /subscriptions] error:', error);
     return c.json({ message: 'Error fetching subscriptions' }, 500);
   }
 });
@@ -864,24 +847,32 @@ app.post("/make-server-d36f8f91/subscriptions", async (c) => {
     }
 
     // Get current subscription
-    const currentSubscription = await kv.get(`subscription:${user.id}`) || { examTypes: [] };
+    const currentSubscription = await kv.get(`subscription:${user.id}`) || {};
+    const newExpiresAt = Date.now() + (30 * 24 * 60 * 60 * 1000);
 
-    // Add new exam types (merge with existing)
-    const allExamTypes = [...new Set([...currentSubscription.examTypes, ...examTypes])];
-
-    // Set expiration to 30 days from now
-    const expiresAt = Date.now() + (30 * 24 * 60 * 60 * 1000);
+    // Migrate old format if needed, then update per-exam expiry
+    let perExamMap: Record<string, number> = {};
+    if (Array.isArray(currentSubscription.examTypes)) {
+      const oldExpiry = currentSubscription.expiresAt || 0;
+      for (const et of currentSubscription.examTypes) {
+        perExamMap[et.toLowerCase().trim()] = oldExpiry;
+      }
+    } else if (currentSubscription.examTypes && typeof currentSubscription.examTypes === 'object') {
+      perExamMap = { ...currentSubscription.examTypes };
+    }
+    for (const et of examTypes) {
+      perExamMap[et.toLowerCase().trim()] = newExpiresAt;
+    }
 
     await kv.set(`subscription:${user.id}`, {
-      examTypes: allExamTypes,
-      expiresAt,
+      examTypes: perExamMap,
       updatedAt: Date.now(),
     });
 
-    return c.json({ 
+    return c.json({
       message: 'Subscription updated successfully',
-      subscriptions: allExamTypes,
-      expiresAt,
+      subscriptions: Object.keys(perExamMap),
+      expiresAt: newExpiresAt,
     });
   } catch (error: any) {
     console.error('Error adding subscription:', error);
@@ -1222,27 +1213,39 @@ app.post("/make-server-d36f8f91/stripe-webhook", async (c) => {
       const examTypesStr = session.metadata?.examTypes;
 
       if (userId && examTypesStr) {
-        const examTypes = examTypesStr.split(',');
+        const examTypes = examTypesStr.split(',').map((t: string) => t.toLowerCase().trim());
+        const newExpiresAt = Date.now() + (30 * 24 * 60 * 60 * 1000);
 
-        // Get current subscription
-        const currentSubscription = await kv.get(`subscription:${userId}`) || { examTypes: [] };
-
-        // Add new exam types (merge with existing)
-        const allExamTypes = [...new Set([...currentSubscription.examTypes, ...examTypes])];
-
-        // Set expiration to 30 days from now
-        const expiresAt = Date.now() + (30 * 24 * 60 * 60 * 1000);
+        // Migrate old format if needed, then update per-exam expiry
+        const currentSubscription = await kv.get(`subscription:${userId}`) || {};
+        let perExamMap: Record<string, number> = {};
+        if (Array.isArray(currentSubscription.examTypes)) {
+          const oldExpiry = currentSubscription.expiresAt || 0;
+          for (const et of currentSubscription.examTypes) {
+            perExamMap[et.toLowerCase().trim()] = oldExpiry;
+          }
+        } else if (currentSubscription.examTypes && typeof currentSubscription.examTypes === 'object') {
+          perExamMap = { ...currentSubscription.examTypes };
+        }
+        for (const et of examTypes) {
+          perExamMap[et] = newExpiresAt;
+        }
 
         await kv.set(`subscription:${userId}`, {
-          examTypes: allExamTypes,
-          expiresAt,
+          examTypes: perExamMap,
           updatedAt: Date.now(),
-          stripeSessionId: session.id,
-          amountPaid: session.amount_total,
-          currency: session.currency,
         });
 
-        console.log(`Subscription updated for user ${userId}:`, allExamTypes);
+        // Store payment history (keep last 20)
+        const existingPayments = await kv.get(`payments:${userId}`) || [];
+        const updatedPayments = [{
+          stripeSessionId: session.id,
+          examTypes,
+          amountTotal: session.amount_total,
+          currency: session.currency,
+          paidAt: Date.now(),
+        }, ...existingPayments].slice(0, 20);
+        await kv.set(`payments:${userId}`, updatedPayments);
       }
     }
 
@@ -1282,6 +1285,21 @@ app.get("/make-server-d36f8f91/verify-payment/:sessionId", async (c) => {
   } catch (error: any) {
     console.error('Error verifying payment:', error);
     return c.json({ message: 'Error verifying payment', error: error.message }, 500);
+  }
+});
+
+// Get payment history for current user
+app.get("/make-server-d36f8f91/payments", async (c) => {
+  const { error, user } = await verifyUser(c.req.header('Authorization'));
+  if (error || !user) {
+    return c.json({ message: 'Unauthorized' }, 401);
+  }
+  try {
+    const payments = await kv.get(`payments:${user.id}`) || [];
+    return c.json({ payments });
+  } catch (error: any) {
+    console.error('[GET /payments] error:', error);
+    return c.json({ message: 'Error fetching payments' }, 500);
   }
 });
 
@@ -2860,9 +2878,13 @@ app.delete("/make-server-d36f8f91/categories/:type", async (c) => {
     
     // 🚨 CLEANUP: Remove this category from ALL user subscriptions
     console.log(`[Delete Category] Removing ${categoryType} from all user subscriptions...`);
-    const allSubscriptions = await kv.getByPrefix('subscription:');
+    const { data: subRows } = await supabase
+      .from('kv_store_d36f8f91')
+      .select('key, value')
+      .like('key', 'subscription:%');
+    const allSubscriptions = subRows || [];
     let cleanedCount = 0;
-    
+
     for (const { key, value } of allSubscriptions) {
       if (value && Array.isArray(value.examTypes)) {
         const originalLength = value.examTypes.length;
@@ -3033,11 +3055,18 @@ app.get("/make-server-d36f8f91/analytics/subscribers/:examType", async (c) => {
 
     console.log(`[Analytics] Fetching subscribers for exam type: ${examType}`);
     
-    // Get all subscriptions
-    const allSubscriptions = await kv.getByPrefix('subscription:');
+    // Query DB directly to get both key and value (kv.getByPrefix strips the key)
+    const { data: subsData, error: subsError } = await supabase
+      .from('kv_store_d36f8f91')
+      .select('key, value')
+      .like('key', 'subscription:%');
+
+    if (subsError) throw new Error(subsError.message);
+
+    const allSubscriptions = subsData || [];
     const subscribers: any[] = [];
     const now = Date.now();
-    
+
     for (const { key, value } of allSubscriptions) {
       if (value && Array.isArray(value.examTypes) && value.examTypes.includes(examType)) {
         const userId = key.replace('subscription:', '');
@@ -3094,19 +3123,19 @@ app.get("/make-server-d36f8f91/analytics/overview", async (c) => {
     // Get all categories
     const categories = await kv.get('exam_categories') || [];
     
-    // Get all subscriptions
+    // Get all subscriptions — kv.getByPrefix returns raw values (no key), so iterate directly
     const allSubscriptions = await kv.getByPrefix('subscription:');
     const now = Date.now();
-    
+
     // Count active subscribers per exam type
     const subscriberCounts: { [key: string]: number } = {};
-    
-    for (const { value } of allSubscriptions) {
-      if (value && Array.isArray(value.examTypes)) {
-        const isActive = !value.expiresAt || value.expiresAt > now;
+
+    for (const sub of allSubscriptions) {
+      if (sub && Array.isArray(sub.examTypes)) {
+        const isActive = !sub.expiresAt || sub.expiresAt > now;
 
         if (isActive) {
-          for (const examType of value.examTypes) {
+          for (const examType of sub.examTypes) {
             subscriberCounts[examType] = (subscriberCounts[examType] || 0) + 1;
           }
         }

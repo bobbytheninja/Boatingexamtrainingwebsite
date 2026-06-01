@@ -2,10 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { LoadingSpinner } from './LoadingSpinner';
 import { useDarkMode } from '../contexts/DarkModeContext';
-import { BarChart, TrendingUp, Users, Calendar } from 'lucide-react';
+import { BarChart, TrendingUp, Users } from 'lucide-react';
 import { projectId } from '../utils/supabase/info';
 
 interface AnalyticsProps {
@@ -38,8 +37,14 @@ export function Analytics({ accessToken }: AnalyticsProps) {
   const [loadingOverview, setLoadingOverview] = useState(true);
   const [loadingSubscribers, setLoadingSubscribers] = useState(false);
   const [totalSubscriptions, setTotalSubscriptions] = useState(0);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
-  // Fetch overview on mount
+  const card = darkMode ? '#1e293b' : undefined;
+  const cardInner = darkMode ? '#334155' : undefined;
+  const textPrimary = darkMode ? '#f9fafb' : '#111827';
+  const textSecondary = darkMode ? '#9ca3af' : '#4b5563';
+  const borderColor = darkMode ? '#374151' : '#e5e7eb';
+
   useEffect(() => {
     const fetchOverview = async () => {
       try {
@@ -57,9 +62,11 @@ export function Analytics({ accessToken }: AnalyticsProps) {
           setOverview(data.overview || []);
           setTotalSubscriptions(data.totalActiveSubscriptions || 0);
         } else {
-          console.error('Failed to fetch analytics overview');
+          setFetchError(`Analytics fetch failed (HTTP ${response.status}) — check browser console for details`);
+          console.error('Failed to fetch analytics overview:', response.status, response.statusText);
         }
       } catch (error) {
+        setFetchError(`Analytics fetch error — check browser console for details`);
         console.error('Error fetching analytics overview:', error);
       } finally {
         setLoadingOverview(false);
@@ -69,7 +76,6 @@ export function Analytics({ accessToken }: AnalyticsProps) {
     fetchOverview();
   }, [accessToken]);
 
-  // Fetch subscribers for selected exam
   const fetchSubscribers = async (examType: string) => {
     setLoadingSubscribers(true);
     setSelectedExam(examType);
@@ -88,7 +94,7 @@ export function Analytics({ accessToken }: AnalyticsProps) {
         const data = await response.json();
         setSubscribers(data.subscribers || []);
       } else {
-        console.error('Failed to fetch subscribers');
+        console.error('Failed to fetch subscribers:', response.status);
         setSubscribers([]);
       }
     } catch (error) {
@@ -101,10 +107,10 @@ export function Analytics({ accessToken }: AnalyticsProps) {
 
   if (loadingOverview) {
     return (
-      <Card>
+      <Card style={{ background: card }}>
         <CardContent className="pt-12 pb-12 flex flex-col items-center">
           <LoadingSpinner size="lg" />
-          <p className="mt-4 text-sm text-gray-600 dark:text-gray-400">Loading analytics...</p>
+          <p className="mt-4 text-sm" style={{ color: textSecondary }}>Loading analytics...</p>
         </CardContent>
       </Card>
     );
@@ -112,52 +118,65 @@ export function Analytics({ accessToken }: AnalyticsProps) {
 
   return (
     <div className="space-y-6">
+      {/* Error banner */}
+      {fetchError && (
+        <div style={{
+          color: darkMode ? '#fca5a5' : '#b91c1c',
+          background: darkMode ? '#450a0a' : '#fee2e2',
+          border: `1px solid ${darkMode ? '#7f1d1d' : '#fecaca'}`,
+          borderRadius: 8,
+          padding: '12px 16px',
+        }}>
+          {fetchError}
+        </div>
+      )}
+
       {/* Overview Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="dark:bg-slate-800">
+        <Card style={{ background: card }}>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Total Categories</p>
-                <p className="text-3xl font-bold text-gray-900 dark:text-white">{overview.length}</p>
+                <p className="text-sm" style={{ color: textSecondary }}>Total Categories</p>
+                <p className="text-3xl font-bold" style={{ color: textPrimary }}>{overview.length}</p>
               </div>
-              <BarChart className="w-10 h-10 text-blue-500 dark:text-blue-400" />
+              <BarChart className="w-10 h-10 text-blue-500" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="dark:bg-slate-800">
+        <Card style={{ background: card }}>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Active Subscriptions</p>
-                <p className="text-3xl font-bold text-gray-900 dark:text-white">{totalSubscriptions}</p>
+                <p className="text-sm" style={{ color: textSecondary }}>Active Subscriptions</p>
+                <p className="text-3xl font-bold" style={{ color: textPrimary }}>{totalSubscriptions}</p>
               </div>
-              <Users className="w-10 h-10 text-green-500 dark:text-green-400" />
+              <Users className="w-10 h-10 text-green-500" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="dark:bg-slate-800">
+        <Card style={{ background: card }}>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Average per Category</p>
-                <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                <p className="text-sm" style={{ color: textSecondary }}>Average per Category</p>
+                <p className="text-3xl font-bold" style={{ color: textPrimary }}>
                   {overview.length > 0 ? (totalSubscriptions / overview.length).toFixed(1) : '0'}
                 </p>
               </div>
-              <TrendingUp className="w-10 h-10 text-purple-500 dark:text-purple-400" />
+              <TrendingUp className="w-10 h-10 text-purple-500" />
             </div>
           </CardContent>
         </Card>
       </div>
 
       {/* Exam Categories Overview */}
-      <Card className="dark:bg-slate-800">
+      <Card style={{ background: card }}>
         <CardHeader>
-          <CardTitle className="dark:text-white">Exam Categories - Active Subscribers</CardTitle>
-          <CardDescription className="dark:text-gray-400">
+          <CardTitle style={{ color: textPrimary }}>Exam Categories - Active Subscribers</CardTitle>
+          <CardDescription style={{ color: textSecondary }}>
             Click on a category to view detailed subscriber information
           </CardDescription>
         </CardHeader>
@@ -166,29 +185,30 @@ export function Analytics({ accessToken }: AnalyticsProps) {
             {overview.map((exam) => (
               <Card
                 key={exam.type}
-                className={`cursor-pointer transition-all hover:shadow-lg dark:bg-slate-700 ${
+                className={`cursor-pointer transition-all hover:shadow-lg ${
                   selectedExam === exam.type ? 'ring-2 ring-blue-500' : ''
                 }`}
+                style={{ background: cardInner }}
                 onClick={() => fetchSubscribers(exam.type)}
               >
                 <CardContent className="pt-6">
                   <div className="space-y-3">
                     <div className="flex items-start justify-between">
-                      <h3 className="font-semibold text-lg dark:text-white">{exam.title}</h3>
+                      <h3 className="font-semibold text-lg" style={{ color: textPrimary }}>{exam.title}</h3>
                       {exam.expiringSoon && (
                         <Badge variant="destructive" className="text-xs">Expiring Soon</Badge>
                       )}
                     </div>
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                        <p className="text-2xl font-bold text-blue-500">
                           {exam.activeSubscribers}
                         </p>
-                        <p className="text-xs text-gray-600 dark:text-gray-400">Active subscribers</p>
+                        <p className="text-xs" style={{ color: textSecondary }}>Active subscribers</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-lg font-semibold text-gray-900 dark:text-white">€{exam.price}</p>
-                        <p className="text-xs text-gray-600 dark:text-gray-400">per month</p>
+                        <p className="text-lg font-semibold" style={{ color: textPrimary }}>€{exam.price}</p>
+                        <p className="text-xs" style={{ color: textSecondary }}>per month</p>
                       </div>
                     </div>
                   </div>
@@ -197,10 +217,10 @@ export function Analytics({ accessToken }: AnalyticsProps) {
             ))}
           </div>
 
-          {overview.length === 0 && (
+          {!fetchError && overview.length === 0 && (
             <div className="text-center py-12">
-              <BarChart className="w-16 h-16 mx-auto text-gray-400 dark:text-gray-600 mb-4" />
-              <p className="text-gray-600 dark:text-gray-400">No exam categories found</p>
+              <BarChart className="w-16 h-16 mx-auto mb-4" style={{ color: textSecondary }} />
+              <p style={{ color: textSecondary }}>No exam categories found</p>
             </div>
           )}
         </CardContent>
@@ -208,12 +228,12 @@ export function Analytics({ accessToken }: AnalyticsProps) {
 
       {/* Subscriber Details */}
       {selectedExam && (
-        <Card className="dark:bg-slate-800">
+        <Card style={{ background: card }}>
           <CardHeader>
-            <CardTitle className="dark:text-white">
+            <CardTitle style={{ color: textPrimary }}>
               Subscribers for: {overview.find(e => e.type === selectedExam)?.title}
             </CardTitle>
-            <CardDescription className="dark:text-gray-400">
+            <CardDescription style={{ color: textSecondary }}>
               {subscribers.length} active subscriber{subscribers.length !== 1 ? 's' : ''}
             </CardDescription>
           </CardHeader>
@@ -226,17 +246,17 @@ export function Analytics({ accessToken }: AnalyticsProps) {
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b border-gray-200 dark:border-gray-700">
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    <tr style={{ borderBottom: `1px solid ${borderColor}` }}>
+                      <th className="text-left py-3 px-4 text-sm font-semibold" style={{ color: darkMode ? '#d1d5db' : '#374151' }}>
                         Name
                       </th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                      <th className="text-left py-3 px-4 text-sm font-semibold" style={{ color: darkMode ? '#d1d5db' : '#374151' }}>
                         Email
                       </th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                      <th className="text-left py-3 px-4 text-sm font-semibold" style={{ color: darkMode ? '#d1d5db' : '#374151' }}>
                         Expires On
                       </th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                      <th className="text-left py-3 px-4 text-sm font-semibold" style={{ color: darkMode ? '#d1d5db' : '#374151' }}>
                         Days Remaining
                       </th>
                     </tr>
@@ -245,24 +265,24 @@ export function Analytics({ accessToken }: AnalyticsProps) {
                     {subscribers.map((sub) => (
                       <tr
                         key={sub.userId}
-                        className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-slate-700/50"
+                        style={{ borderBottom: `1px solid ${borderColor}` }}
                       >
-                        <td className="py-3 px-4 text-sm text-gray-900 dark:text-gray-100">
+                        <td className="py-3 px-4 text-sm" style={{ color: textPrimary }}>
                           {sub.name}
                         </td>
-                        <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">
+                        <td className="py-3 px-4 text-sm" style={{ color: textSecondary }}>
                           {sub.email}
                         </td>
-                        <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">
+                        <td className="py-3 px-4 text-sm" style={{ color: textSecondary }}>
                           {sub.expiryDate}
                         </td>
                         <td className="py-3 px-4 text-sm">
                           <Badge
                             variant={sub.daysRemaining && sub.daysRemaining <= 7 ? 'destructive' : 'default'}
-                            className={
+                            style={
                               sub.daysRemaining && sub.daysRemaining <= 7
-                                ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300'
-                                : 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300'
+                                ? { background: darkMode ? 'rgba(124,45,18,0.5)' : '#ffedd5', color: darkMode ? '#fdba74' : '#9a3412' }
+                                : { background: darkMode ? 'rgba(20,83,45,0.5)' : '#dcfce7', color: darkMode ? '#86efac' : '#15803d' }
                             }
                           >
                             {sub.daysRemaining !== null ? `${sub.daysRemaining} days` : 'N/A'}
@@ -275,8 +295,8 @@ export function Analytics({ accessToken }: AnalyticsProps) {
               </div>
             ) : (
               <div className="text-center py-12">
-                <Users className="w-16 h-16 mx-auto text-gray-400 dark:text-gray-600 mb-4" />
-                <p className="text-gray-600 dark:text-gray-400">No active subscribers for this exam</p>
+                <Users className="w-16 h-16 mx-auto mb-4" style={{ color: textSecondary }} />
+                <p style={{ color: textSecondary }}>No active subscribers for this exam</p>
               </div>
             )}
           </CardContent>

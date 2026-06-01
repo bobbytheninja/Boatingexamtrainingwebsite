@@ -15,7 +15,7 @@ import { PartnerManagement } from './PartnerManagement';
 import { CategoryManagement } from './CategoryManagement';
 import { Analytics } from './Analytics';
 import { SubscriptionDebug } from './SubscriptionDebug';
-import { ArrowLeft, Database, Users, Key, UserPlus, AlertCircle, CheckCircle, Shield, Image as ImageIcon, Ship, Search } from 'lucide-react';
+import { ArrowLeft, Database, Users, Key, AlertCircle, CheckCircle, Shield, Image as ImageIcon, Ship, Search } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useDarkMode } from '../contexts/DarkModeContext';
 import { toast } from 'sonner';
@@ -31,17 +31,11 @@ interface AdminPageProps {
 }
 
 export function AdminPage({ onBack, onNavigate }: AdminPageProps) {
-  const { user, signUp, accessToken } = useAuth();
+  const { user, accessToken } = useAuth();
   const { darkMode, toggleDarkMode } = useDarkMode();
   const [language, setLanguage] = useState<Language>('English');
   const [region, setRegion] = useState('Bulgaria');
   const t = getTranslation(language);
-  const [testEmail, setTestEmail] = useState('test@example.com');
-  const [testPassword, setTestPassword] = useState('testpass123');
-  const [testName, setTestName] = useState('Test User');
-  const [creatingDemoAccount, setCreatingDemoAccount] = useState(false);
-  const [testingConnection, setTestingConnection] = useState(false);
-  const [grantingLicenses, setGrantingLicenses] = useState(false);
   const [adminKeyInput, setAdminKeyInput] = useState('');
   const [makingAdmin, setMakingAdmin] = useState(false);
   const [isAlreadyAdmin, setIsAlreadyAdmin] = useState(false);
@@ -99,76 +93,6 @@ export function AdminPage({ onBack, onNavigate }: AdminPageProps) {
     return () => controller.abort();
   }, [user, accessToken]);
 
-  const handleTestConnection = async () => {
-    setTestingConnection(true);
-    try {
-      // Run health check and mock questions in parallel
-      const [healthResponse, mockResponse] = await Promise.all([
-        fetch(`https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/health`, {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-        }),
-        fetch(`https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/questions/jet/mock`, {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-        }),
-      ]);
-
-      if (!healthResponse.ok) {
-        const errorText = await healthResponse.text().catch(() => 'No error details');
-        console.error('Health check failed:', healthResponse.status, errorText);
-        toast.error(`❌ Health check failed with status ${healthResponse.status}`);
-        return;
-      }
-
-      const healthData = await healthResponse.json();
-
-      let mockStatus = 'Unknown';
-      if (mockResponse.ok) {
-        const mockData = await mockResponse.json();
-        mockStatus = `Found ${mockData.questions?.length || 0} questions`;
-      } else if (mockResponse.status === 404) {
-        mockStatus = 'No questions imported yet';
-      } else {
-        mockStatus = `Error: ${mockResponse.status}`;
-      }
-
-      toast.success(`✅ Server is running!\n\nHealth: ${healthData.status}\nMock Questions: ${mockStatus}`, {
-        duration: 5000,
-      });
-    } catch (error: any) {
-      console.error('Connection test error:', error);
-      let errorMessage = error.message || 'Unknown error';
-      if (errorMessage.includes('Failed to fetch') || errorMessage.includes('NetworkError')) {
-        errorMessage = 'Cannot connect to backend. Is it deployed? Run: ./deploy-backend.sh';
-      }
-      toast.error(`❌ Cannot reach server\n\n${errorMessage}`, { duration: 7000 });
-    } finally {
-      setTestingConnection(false);
-    }
-  };
-
-  const handleCreateDemoAccount = async () => {
-    setCreatingDemoAccount(true);
-    try {
-      await signUp(testEmail, testPassword, testName);
-      toast.success('Demo account created and logged in successfully! 🎉');
-    } catch (error: any) {
-      console.error('Demo account creation error:', error);
-      const errorMessage = error.message || error.toString();
-      
-      if (errorMessage.includes('already registered') || errorMessage.includes('User already registered')) {
-        toast.error('This email is already registered. Either use the Sign In tab with these credentials, or change the email above and try again.');
-      } else if (errorMessage.includes('Missing authorization header')) {
-        toast.error('Server authorization error. Please check that the Supabase Edge Function has the correct environment variables configured.');
-      } else {
-        toast.error(`Failed to create demo account: ${errorMessage}`);
-      }
-    } finally {
-      setCreatingDemoAccount(false);
-    }
-  };
-
   const handleMakeAdmin = async () => {
     if (!user) {
       toast.error('You must be logged in');
@@ -222,59 +146,6 @@ export function AdminPage({ onBack, onNavigate }: AdminPageProps) {
     }
   };
 
-  const handleGrantAllLicenses = async () => {
-    if (!user) {
-      toast.error('You must be logged in to grant licenses');
-      return;
-    }
-
-    setGrantingLicenses(true);
-    try {
-      // Import the createClient function
-      const { createClient } = await import('../utils/supabase/client');
-      const supabase = createClient();
-      
-      // Get the current session to get the access token
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session?.access_token) {
-        throw new Error('No active session found. Please log in again.');
-      }
-
-      const allExamTypes = ['jet', 'small', 'big', 'yacht', 'navigation'];
-      
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/subscriptions`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({
-            examTypes: allExamTypes,
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to grant licenses');
-      }
-
-      const data = await response.json();
-      toast.success(`🎉 All 5 exam licenses granted! Valid for 30 days. You can now access all exams for testing.`);
-      
-      // Reload the page to refresh subscriptions
-      setTimeout(() => window.location.reload(), 1500);
-    } catch (error: any) {
-      console.error('Error granting licenses:', error);
-      toast.error(`Failed to grant licenses: ${error.message}`);
-    } finally {
-      setGrantingLicenses(false);
-    }
-  };
-
   const handleNavigate = (page: string) => {
     if (page === 'admin') return;
     if (page === 'home') {
@@ -323,8 +194,8 @@ export function AdminPage({ onBack, onNavigate }: AdminPageProps) {
             >
               <CardContent className="pt-6 flex flex-col items-center space-y-4">
                 <LoadingSpinner size="lg" />
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Loading Admin Panel...</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
+                <h3 className="text-xl font-semibold" style={{ color: darkMode ? '#f3f4f6' : '#111827' }}>Loading Admin Panel...</h3>
+                <p className="text-sm text-center" style={{ color: darkMode ? '#9ca3af' : '#4b5563' }}>
                   Checking admin permissions
                 </p>
               </CardContent>
@@ -387,19 +258,19 @@ export function AdminPage({ onBack, onNavigate }: AdminPageProps) {
             Manage users, grant licenses, import questions, and configure your yacht exam platform
           </p>
           <div className="flex flex-wrap justify-center gap-3 text-sm">
-            <a href="/FIXES_APPLIED.md" target="_blank" className="text-green-600 dark:text-green-400 hover:underline font-semibold">
+            <a href="/FIXES_APPLIED.md" target="_blank" className="hover:underline font-semibold" style={{ color: darkMode ? '#4ade80' : '#16a34a' }}>
               ✅ Latest Fixes
             </a>
-            <span className="text-gray-300 dark:text-gray-600">|</span>
-            <a href="/START_HERE.md" target="_blank" className="text-teal-600 dark:text-teal-400 hover:underline">
+            <span style={{ color: darkMode ? '#475569' : '#d1d5db' }}>|</span>
+            <a href="/START_HERE.md" target="_blank" className="hover:underline" style={{ color: darkMode ? '#2dd4bf' : '#0d9488' }}>
               📖 Start Here
             </a>
-            <span className="text-gray-300 dark:text-gray-600">|</span>
-            <a href="/DEBUG_AUTH.md" target="_blank" className="text-teal-600 dark:text-teal-400 hover:underline">
+            <span style={{ color: darkMode ? '#475569' : '#d1d5db' }}>|</span>
+            <a href="/DEBUG_AUTH.md" target="_blank" className="hover:underline" style={{ color: darkMode ? '#2dd4bf' : '#0d9488' }}>
               🔍 Debug Guide
             </a>
-            <span className="text-gray-300 dark:text-gray-600">|</span>
-            <a href="/TROUBLESHOOTING.md" target="_blank" className="text-teal-600 dark:text-teal-400 hover:underline">
+            <span style={{ color: darkMode ? '#475569' : '#d1d5db' }}>|</span>
+            <a href="/TROUBLESHOOTING.md" target="_blank" className="hover:underline" style={{ color: darkMode ? '#2dd4bf' : '#0d9488' }}>
               🔧 Troubleshooting
             </a>
           </div>
@@ -407,9 +278,9 @@ export function AdminPage({ onBack, onNavigate }: AdminPageProps) {
 
         {/* Backend Error Alert */}
         {backendError && (
-          <Alert className="mb-6 border-red-500 bg-red-50 dark:bg-red-900/20 dark:border-red-700">
-            <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
-            <AlertDescription className="text-red-900 dark:text-red-200">
+          <Alert className="mb-6" style={{ background: darkMode ? 'rgba(127,29,29,0.2)' : '#fef2f2', borderColor: darkMode ? '#991b1b' : '#ef4444' }}>
+            <AlertCircle className="h-5 w-5" style={{ color: darkMode ? '#f87171' : '#dc2626' }} />
+            <AlertDescription style={{ color: darkMode ? '#fca5a5' : '#7f1d1d' }}>
               <strong className="block mb-2">⚠️ Backend Connection Error</strong>
               <p className="text-sm mb-2">
                 Could not connect to the backend server: {backendError}
@@ -429,9 +300,9 @@ export function AdminPage({ onBack, onNavigate }: AdminPageProps) {
 
         {/* Limited Access Notice for Non-Admin Users */}
         {user && !userIsAdmin && !backendError && (
-          <Alert className="mb-6 border-yellow-500 bg-yellow-50 dark:bg-yellow-900/20 dark:border-yellow-700">
-            <Shield className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
-            <AlertDescription className="text-yellow-900 dark:text-yellow-200">
+          <Alert className="mb-6" style={{ background: darkMode ? 'rgba(113,63,18,0.2)' : '#fefce8', borderColor: darkMode ? '#713f12' : '#eab308' }}>
+            <Shield className="h-5 w-5" style={{ color: darkMode ? '#fbbf24' : '#ca8a04' }} />
+            <AlertDescription style={{ color: darkMode ? '#fde68a' : '#713f12' }}>
               <strong className="block mb-2">⚠️ Limited Access</strong>
               <p className="text-sm mb-2">
                 You currently have limited access to the admin panel. To unlock all admin features:
@@ -442,7 +313,7 @@ export function AdminPage({ onBack, onNavigate }: AdminPageProps) {
                 <li>Click "Make Me An Admin"</li>
               </ol>
               <p className="text-xs mt-2">
-                💡 Default admin key: <code className="bg-yellow-100 dark:bg-yellow-900/40 px-1 rounded">change-this-key</code>
+                💡 Default admin key: <code style={{ background: darkMode ? 'rgba(113,63,18,0.4)' : '#fef9c3', padding: '0 4px', borderRadius: 3 }}>change-this-key</code>
               </p>
             </AlertDescription>
           </Alert>
@@ -450,9 +321,9 @@ export function AdminPage({ onBack, onNavigate }: AdminPageProps) {
 
         {/* Important Notice */}
         {!user ? (
-          <Alert className="mb-6 border-amber-500 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-700">
-            <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-400" />
-            <AlertDescription className="text-amber-900 dark:text-amber-200">
+          <Alert className="mb-6" style={{ background: darkMode ? 'rgba(120,53,15,0.2)' : '#fffbeb', borderColor: darkMode ? '#92400e' : '#f59e0b' }}>
+            <AlertCircle className="h-5 w-5" style={{ color: darkMode ? '#fbbf24' : '#d97706' }} />
+            <AlertDescription style={{ color: darkMode ? '#fde68a' : '#78350f' }}>
               <strong className="block mb-1">⚠️ Getting "Invalid login credentials" error?</strong>
               <p className="text-sm">
                 This happens because no user accounts exist yet. You need to <strong>create an account first</strong> by either:
@@ -464,14 +335,14 @@ export function AdminPage({ onBack, onNavigate }: AdminPageProps) {
             </AlertDescription>
           </Alert>
         ) : userIsAdmin ? (
-          <Alert className="mb-6 border-purple-500 bg-purple-50 dark:bg-purple-900/20 dark:border-purple-700">
-            <Shield className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-            <AlertDescription className="text-purple-900 dark:text-purple-200">
+          <Alert className="mb-6" style={{ background: darkMode ? 'rgba(88,28,135,0.2)' : '#faf5ff', borderColor: darkMode ? '#7e22ce' : '#a855f7' }}>
+            <Shield className="h-5 w-5" style={{ color: darkMode ? '#c084fc' : '#9333ea' }} />
+            <AlertDescription style={{ color: darkMode ? '#e9d5ff' : '#581c87' }}>
               <strong className="block mb-1">🛡️ Admin Access Granted</strong>
               <p className="text-sm mb-2">
                 You have full admin access. Use the tabs below to manage users, grant licenses, import questions, and configure the platform.
               </p>
-              <p className="text-xs text-purple-800 dark:text-purple-300">
+              <p className="text-xs" style={{ color: darkMode ? '#d8b4fe' : '#6b21a8' }}>
                 💡 Visit the "Manage Users" tab to control user licenses and the "Questions" tab to import exam questions.
               </p>
             </AlertDescription>
@@ -481,7 +352,7 @@ export function AdminPage({ onBack, onNavigate }: AdminPageProps) {
         {/* Show admin panel to all logged-in users, but limit features based on admin status */}
         {user && (
         <Tabs defaultValue={userIsAdmin ? "diagnostics" : "keys"} className="space-y-8">
-          <TabsList className={`grid w-full max-w-6xl mx-auto gap-2.5 ${userIsAdmin ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-9' : 'grid-cols-1 sm:grid-cols-2'} h-auto p-3 ${darkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-slate-50 border-slate-200'} border shadow-lg rounded-lg backdrop-blur-sm`}>
+          <TabsList className={`grid w-full max-w-6xl mx-auto gap-2.5 ${userIsAdmin ? 'grid-cols-2 sm:grid-cols-4 lg:grid-cols-8' : 'grid-cols-1 sm:grid-cols-1'} h-auto p-3 ${darkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-slate-50 border-slate-200'} border shadow-lg rounded-lg backdrop-blur-sm`}>
             {userIsAdmin && (
               <>
                 <TabsTrigger
@@ -493,14 +364,6 @@ export function AdminPage({ onBack, onNavigate }: AdminPageProps) {
                   <span className="sm:hidden text-xs">Diag</span>
                 </TabsTrigger>
                 <TabsTrigger
-                  value="subdebug"
-                  className={`flex flex-col items-center justify-center gap-2 py-4 px-3 rounded-md text-sm font-medium transition-all data-[state=active]:bg-slate-700 data-[state=active]:text-white data-[state=active]:shadow-md ${darkMode ? 'text-slate-200 hover:bg-slate-700/40' : 'text-slate-700 hover:bg-slate-100'}`}
-                >
-                  <Search className="w-5 h-5" />
-                  <span className="hidden sm:inline text-xs">Sub Debug</span>
-                  <span className="sm:hidden text-xs">Sub</span>
-                </TabsTrigger>
-                <TabsTrigger 
                   value="categories" 
                   className={`flex flex-col items-center justify-center gap-2 py-4 px-3 rounded-md text-sm font-medium transition-all data-[state=active]:bg-slate-700 data-[state=active]:text-white data-[state=active]:shadow-md ${darkMode ? 'text-slate-200 hover:bg-slate-700/40' : 'text-slate-700 hover:bg-slate-100'}`}
                 >
@@ -542,35 +405,22 @@ export function AdminPage({ onBack, onNavigate }: AdminPageProps) {
                 </TabsTrigger>
               </>
             )}
-            <TabsTrigger 
-              value="keys" 
-              className="flex flex-col items-center justify-center gap-2 py-4 px-3 rounded-md text-sm font-medium transition-all data-[state=active]:bg-slate-700 data-[state=active]:text-white data-[state=active]:shadow-md dark:data-[state=active]:bg-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700/50"
+            <TabsTrigger
+              value="keys"
+              className={`flex flex-col items-center justify-center gap-2 py-4 px-3 rounded-md text-sm font-medium transition-all data-[state=active]:bg-slate-700 data-[state=active]:text-white data-[state=active]:shadow-md ${darkMode ? 'text-slate-200 hover:bg-slate-700/40' : 'text-slate-700 hover:bg-slate-100'}`}
             >
               <Key className="w-5 h-5" />
               <span className="hidden sm:inline text-xs">Admin Keys</span>
               <span className="sm:hidden text-xs">Keys</span>
             </TabsTrigger>
-            <TabsTrigger 
-              value="demo" 
-              className="flex flex-col items-center justify-center gap-2 py-4 px-3 rounded-md text-sm font-medium transition-all data-[state=active]:bg-slate-700 data-[state=active]:text-white data-[state=active]:shadow-md dark:data-[state=active]:bg-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700/50"
-            >
-              <UserPlus className="w-5 h-5" />
-              <span className="hidden sm:inline text-xs">Demo Accounts</span>
-              <span className="sm:hidden text-xs">Demo</span>
-            </TabsTrigger>
           </TabsList>
 
           {userIsAdmin && (
             <>
-              <TabsContent value="subdebug">
-                <div className="space-y-6">
-                  <SubscriptionDebug />
-                </div>
-              </TabsContent>
-
               <TabsContent value="diagnostics">
                 <div className="space-y-6">
                   <DatabaseDiagnostics />
+                  <SubscriptionDebug />
                 </div>
               </TabsContent>
 
@@ -596,15 +446,15 @@ export function AdminPage({ onBack, onNavigate }: AdminPageProps) {
 
               <TabsContent value="import">
                 <Accordion type="single" collapsible className="space-y-4">
-                  <AccordionItem value="questions" className="border-2 border-blue-200 dark:border-blue-800 bg-gradient-to-br from-blue-50 to-sky-50 dark:from-blue-950/30 dark:to-sky-950/20 rounded-xl px-6 shadow-md hover:shadow-lg transition-all">
+                  <AccordionItem value="questions" className="rounded-xl px-6 shadow-md hover:shadow-lg transition-all" style={{ border: `2px solid ${darkMode ? '#1d4ed8' : '#bfdbfe'}`, background: darkMode ? 'linear-gradient(to bottom right, rgba(30,58,138,0.2), rgba(14,165,233,0.1))' : 'linear-gradient(to bottom right, #eff6ff, #f0f9ff)' }}>
                     <AccordionTrigger className="hover:no-underline py-5">
                       <div className="flex items-center gap-4">
                         <div className="p-3 bg-blue-500 rounded-lg shadow-md">
                           <Database className="w-6 h-6 text-white" />
                         </div>
                         <div className="text-left">
-                          <h3 className="font-bold text-lg text-blue-900 dark:text-blue-100">Import Questions from Excel</h3>
-                          <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">Upload Excel files to import exam questions for all categories</p>
+                          <h3 className="font-bold text-lg" style={{ color: darkMode ? '#bfdbfe' : '#1e3a8a' }}>Import Questions from Excel</h3>
+                          <p className="text-sm mt-1" style={{ color: darkMode ? '#93c5fd' : '#1d4ed8' }}>Upload Excel files to import exam questions for all categories</p>
                         </div>
                       </div>
                     </AccordionTrigger>
@@ -613,15 +463,15 @@ export function AdminPage({ onBack, onNavigate }: AdminPageProps) {
                     </AccordionContent>
                   </AccordionItem>
 
-                  <AccordionItem value="images" className="border-2 border-purple-200 dark:border-purple-800 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/30 dark:to-pink-950/20 rounded-xl px-6 shadow-md hover:shadow-lg transition-all">
+                  <AccordionItem value="images" className="rounded-xl px-6 shadow-md hover:shadow-lg transition-all" style={{ border: `2px solid ${darkMode ? '#7e22ce' : '#e9d5ff'}`, background: darkMode ? 'linear-gradient(to bottom right, rgba(88,28,135,0.2), rgba(219,39,119,0.1))' : 'linear-gradient(to bottom right, #faf5ff, #fdf2f8)' }}>
                     <AccordionTrigger className="hover:no-underline py-5">
                       <div className="flex items-center gap-4">
                         <div className="p-3 bg-purple-500 rounded-lg shadow-md">
                           <ImageIcon className="w-6 h-6 text-white" />
                         </div>
                         <div className="text-left">
-                          <h3 className="font-bold text-lg text-purple-900 dark:text-purple-100">Upload Question Images</h3>
-                          <p className="text-sm text-purple-700 dark:text-purple-300 mt-1">Link images to questions by question number and category</p>
+                          <h3 className="font-bold text-lg" style={{ color: darkMode ? '#e9d5ff' : '#581c87' }}>Upload Question Images</h3>
+                          <p className="text-sm mt-1" style={{ color: darkMode ? '#d8b4fe' : '#7e22ce' }}>Link images to questions by question number and category</p>
                         </div>
                       </div>
                     </AccordionTrigger>
@@ -630,15 +480,15 @@ export function AdminPage({ onBack, onNavigate }: AdminPageProps) {
                     </AccordionContent>
                   </AccordionItem>
 
-                  <AccordionItem value="diagnostics" className="border-2 border-emerald-200 dark:border-emerald-800 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/20 rounded-xl px-6 shadow-md hover:shadow-lg transition-all">
+                  <AccordionItem value="diagnostics" className="rounded-xl px-6 shadow-md hover:shadow-lg transition-all" style={{ border: `2px solid ${darkMode ? '#065f46' : '#a7f3d0'}`, background: darkMode ? 'linear-gradient(to bottom right, rgba(6,95,70,0.2), rgba(5,150,105,0.1))' : 'linear-gradient(to bottom right, #ecfdf5, #f0fdfa)' }}>
                     <AccordionTrigger className="hover:no-underline py-5">
                       <div className="flex items-center gap-4">
                         <div className="p-3 bg-emerald-500 rounded-lg shadow-md">
-                          <AlertCircle className="w-6 h-6 text-white" />
+                          <ImageIcon className="w-6 h-6 text-white" />
                         </div>
                         <div className="text-left">
-                          <h3 className="font-bold text-lg text-emerald-900 dark:text-emerald-100">Check Image Status</h3>
-                          <p className="text-sm text-emerald-700 dark:text-emerald-300 mt-1">Verify if images are properly uploaded and linked to questions</p>
+                          <h3 className="font-bold text-lg" style={{ color: darkMode ? '#a7f3d0' : '#064e3b' }}>Check Image Status</h3>
+                          <p className="text-sm mt-1" style={{ color: darkMode ? '#6ee7b7' : '#065f46' }}>Diagnose image loading issues and verify image availability</p>
                         </div>
                       </div>
                     </AccordionTrigger>
@@ -646,6 +496,7 @@ export function AdminPage({ onBack, onNavigate }: AdminPageProps) {
                       <ImageDiagnostics />
                     </AccordionContent>
                   </AccordionItem>
+
                 </Accordion>
               </TabsContent>
 
@@ -695,168 +546,6 @@ export function AdminPage({ onBack, onNavigate }: AdminPageProps) {
             </>
           )}
 
-          <TabsContent value="demo">
-            <Card>
-              <CardHeader>
-                <CardTitle>Test Authentication</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {user && (
-                  <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg p-4">
-                    <p className="text-sm text-green-900 dark:text-green-200">
-                      ✅ Currently logged in as: <strong>{user.email}</strong>
-                    </p>
-                    <p className="text-xs text-green-800 dark:text-green-300 mt-1">
-                      User ID: {user.id}
-                    </p>
-                  </div>
-                )}
-
-                <div className="space-y-4">
-                  <h3 className="font-semibold dark:text-gray-100">Quick Test Credentials</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Use these credentials to test the authentication flow. Make sure to sign up first if you haven't already.
-                  </p>
-                  
-                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-4 space-y-3">
-                    <div>
-                      <Label className="text-xs text-blue-900 dark:text-blue-200">Email</Label>
-                      <Input
-                        type="email"
-                        value={testEmail}
-                        onChange={(e) => setTestEmail(e.target.value)}
-                        className="mt-1 font-mono text-sm"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-xs text-blue-900 dark:text-blue-200">Password</Label>
-                      <Input
-                        type="text"
-                        value={testPassword}
-                        onChange={(e) => setTestPassword(e.target.value)}
-                        className="mt-1 font-mono text-sm"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-xs text-blue-900 dark:text-blue-200">Name</Label>
-                      <Input
-                        type="text"
-                        value={testName}
-                        onChange={(e) => setTestName(e.target.value)}
-                        className="mt-1 font-mono text-sm"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="pt-4 border-t dark:border-slate-600">
-                    <h4 className="font-semibold mb-3 dark:text-gray-100">Server Connection Test:</h4>
-                    <Button
-                      onClick={handleTestConnection}
-                      disabled={testingConnection}
-                      variant="outline"
-                      className="w-full mb-4 border-2"
-                    >
-                      {testingConnection ? (
-                        <>
-                          <ButtonSpinner className="mr-2" />
-                          Testing Connection...
-                        </>
-                      ) : (
-                        <>
-                          <CheckCircle className="w-4 h-4 mr-2" />
-                          Test Server Connection
-                        </>
-                      )}
-                    </Button>
-                  </div>
-
-                  <div className="pt-4 border-t dark:border-slate-600">
-                    <h4 className="font-semibold mb-3 dark:text-gray-100">Quick Demo Account Setup:</h4>
-                    <Button
-                      onClick={handleCreateDemoAccount}
-                      disabled={creatingDemoAccount || !!user}
-                      className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white mb-4"
-                    >
-                      {creatingDemoAccount ? (
-                        <>
-                          <ButtonSpinner className="mr-2" />
-                          Creating Demo Account...
-                        </>
-                      ) : (
-                        <>
-                          <UserPlus className="w-4 h-4 mr-2" />
-                          {user ? 'Already Logged In' : 'Create & Login with Demo Account'}
-                        </>
-                      )}
-                    </Button>
-                    
-                    <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
-                      <p>✓ This will create an account with the credentials shown above</p>
-                      <p>✓ You'll be automatically logged in</p>
-                      <p>✓ You can then test all features including payments</p>
-                    </div>
-                  </div>
-
-                  {user && (
-                    <div className="pt-4 border-t dark:border-slate-600">
-                      <h4 className="font-semibold mb-3 dark:text-gray-100 flex items-center gap-2">
-                        <CheckCircle className="w-5 h-5 text-teal-500" />
-                        Grant Test Licenses (Skip Payment)
-                      </h4>
-                      <div className="bg-teal-50 dark:bg-teal-900/20 border-2 border-teal-200 dark:border-teal-700 rounded-lg p-4 mb-4">
-                        <p className="text-sm text-teal-900 dark:text-teal-200 mb-2">
-                          🎁 <strong>Testing Mode:</strong> Grant yourself all 5 exam licenses instantly without payment.
-                        </p>
-                        <ul className="text-xs text-teal-800 dark:text-teal-300 space-y-1 ml-5 list-disc">
-                          <li>Jet Ski Exam</li>
-                          <li>Small Boat Exam</li>
-                          <li>Big Boat Exam</li>
-                          <li>Yacht (up to 50 tons) Exam</li>
-                          <li>Navigation Device Exam</li>
-                        </ul>
-                      </div>
-                      
-                      <Button
-                        onClick={handleGrantAllLicenses}
-                        disabled={grantingLicenses}
-                        className="w-full bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-teal-600 hover:to-cyan-700 text-white"
-                      >
-                        {grantingLicenses ? (
-                          <>
-                            <ButtonSpinner className="mr-2" />
-                            Granting All Licenses...
-                          </>
-                        ) : (
-                          <>
-                            <CheckCircle className="w-4 h-4 mr-2" />
-                            Grant All Exam Licenses (30 Days)
-                          </>
-                        )}
-                      </Button>
-                      
-                      <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1 mt-3">
-                        <p>✓ Bypasses payment requirement for testing</p>
-                        <p>✓ Valid for 30 days from grant date</p>
-                        <p>✓ Lets you test all exam features immediately</p>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="pt-4 border-t dark:border-slate-600 mt-4">
-                    <h4 className="font-semibold mb-2 dark:text-gray-100">Manual Steps:</h4>
-                    <ol className="list-decimal list-inside space-y-2 text-sm text-gray-700 dark:text-gray-300">
-                      <li>Go to the Login page</li>
-                      <li>Click on the "Sign Up" tab</li>
-                      <li>Use the credentials above (or your own) to create an account</li>
-                      <li>You'll be automatically logged in</li>
-                      <li>You can then test the payment flow from your Account page</li>
-                    </ol>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
           <TabsContent value="keys">
             <Card>
               <CardHeader>
@@ -864,26 +553,33 @@ export function AdminPage({ onBack, onNavigate }: AdminPageProps) {
               </CardHeader>
               <CardContent className="space-y-6">
                 {user && (
-                  <div className="border-2 border-purple-300 dark:border-purple-700 rounded-lg p-4 bg-purple-50 dark:bg-purple-900/20">
-                    <h3 className="font-semibold mb-3 dark:text-gray-100 flex items-center gap-2">
+                  <div
+                    className="rounded-lg p-4"
+                    style={{
+                      border: `2px solid ${darkMode ? '#7e22ce' : '#d8b4fe'}`,
+                      background: darkMode ? 'rgba(88,28,135,0.15)' : '#faf5ff',
+                    }}
+                  >
+                    <h3 className="font-semibold mb-3 flex items-center gap-2" style={{ color: darkMode ? '#f3f4f6' : '#111827' }}>
                       <Shield className="w-5 h-5 text-purple-500" />
                       Grant Admin Access
                     </h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                    <p className="text-sm mb-3" style={{ color: darkMode ? '#9ca3af' : '#4b5563' }}>
                       Make yourself an admin to access the User Management tab and control all user licenses.
                     </p>
                     <div className="space-y-3">
                       <div>
-                        <Label className="text-sm dark:text-gray-200">Admin Key</Label>
+                        <Label className="text-sm" style={{ color: darkMode ? '#e2e8f0' : undefined }}>Admin Key</Label>
                         <Input
                           type="password"
                           value={adminKeyInput}
                           onChange={(e) => setAdminKeyInput(e.target.value)}
                           placeholder="Enter admin key (default: change-this-key)"
-                          className="mt-1 dark:bg-slate-600 dark:border-slate-500"
+                          className="mt-1"
+                          style={{ background: darkMode ? '#1e293b' : undefined, borderColor: darkMode ? '#475569' : undefined }}
                         />
-                        <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                          💡 Default key: <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">change-this-key</code>
+                        <p className="text-xs mt-1" style={{ color: darkMode ? '#6b7280' : '#6b7280' }}>
+                          💡 Default key: <code style={{ background: darkMode ? '#374151' : '#e5e7eb', padding: '0 4px', borderRadius: 3 }}>change-this-key</code>
                         </p>
                       </div>
                       <Button
@@ -903,7 +599,7 @@ export function AdminPage({ onBack, onNavigate }: AdminPageProps) {
                           </>
                         )}
                       </Button>
-                      <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
+                      <div className="text-xs space-y-1" style={{ color: darkMode ? '#9ca3af' : '#4b5563' }}>
                         <p>✓ Grants access to the User Management tab</p>
                         <p>✓ Allows you to manage all user licenses</p>
                         <p>✓ Admin status is permanent until manually removed</p>
@@ -914,36 +610,48 @@ export function AdminPage({ onBack, onNavigate }: AdminPageProps) {
 
                 <div className="space-y-4">
                   <div>
-                    <h3 className="font-semibold mb-2 dark:text-gray-100">Required Secrets</h3>
+                    <h3 className="font-semibold mb-2" style={{ color: darkMode ? '#f3f4f6' : '#111827' }}>Required Secrets</h3>
                     <ul className="space-y-2 text-sm">
                       <li className="flex items-center gap-2">
                         <span className="w-4 h-4 rounded-full bg-green-500 flex items-center justify-center text-white text-xs">✓</span>
-                        <code className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">STRIPE_SECRET_KEY</code>
-                        <span className="text-gray-600 dark:text-gray-400">- Already configured</span>
+                        <code style={{ background: darkMode ? '#1f2937' : '#f3f4f6', padding: '2px 8px', borderRadius: 4 }}>STRIPE_SECRET_KEY</code>
+                        <span style={{ color: darkMode ? '#9ca3af' : '#4b5563' }}>- Already configured</span>
                       </li>
                       <li className="flex items-center gap-2">
                         <span className="w-4 h-4 rounded-full bg-green-500 flex items-center justify-center text-white text-xs">✓</span>
-                        <code className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">SUPABASE_*</code>
-                        <span className="text-gray-600 dark:text-gray-400">- Already configured</span>
+                        <code style={{ background: darkMode ? '#1f2937' : '#f3f4f6', padding: '2px 8px', borderRadius: 4 }}>SUPABASE_*</code>
+                        <span style={{ color: darkMode ? '#9ca3af' : '#4b5563' }}>- Already configured</span>
                       </li>
                     </ul>
                   </div>
 
-                  <div className="pt-4 border-t dark:border-slate-600">
-                    <h3 className="font-semibold mb-2 dark:text-gray-100 flex items-center gap-2">
+                  <div className="pt-4" style={{ borderTop: `1px solid ${darkMode ? '#475569' : '#e2e8f0'}` }}>
+                    <h3 className="font-semibold mb-2 flex items-center gap-2" style={{ color: darkMode ? '#f3f4f6' : '#111827' }}>
                       <Key className="w-5 h-5 text-teal-500" />
                       Admin Import Key
                     </h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                      This key is required to import questions. The key is stored as an <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">ADMIN_IMPORT_KEY</code> environment variable in your Supabase Edge Functions.
+                    <p className="text-sm mb-3" style={{ color: darkMode ? '#9ca3af' : '#4b5563' }}>
+                      This key is required to import questions. The key is stored as an <code style={{ background: darkMode ? '#1f2937' : '#f3f4f6', padding: '0 4px', borderRadius: 3 }}>ADMIN_IMPORT_KEY</code> environment variable in your Supabase Edge Functions.
                     </p>
                     
                     <div className="space-y-3">
-                      <div className="bg-teal-50 dark:bg-teal-900/20 border-2 border-teal-300 dark:border-teal-600 rounded-lg p-4">
-                        <p className="text-sm text-teal-900 dark:text-teal-200 mb-2">
+                      <div
+                        className="rounded-lg p-4"
+                        style={{
+                          background: darkMode ? 'rgba(19,78,74,0.2)' : '#f0fdfa',
+                          border: `2px solid ${darkMode ? '#0f766e' : '#5eead4'}`,
+                        }}
+                      >
+                        <p className="text-sm mb-2" style={{ color: darkMode ? '#5eead4' : '#134e4a' }}>
                           <strong>🔑 Your Admin Key:</strong>
                         </p>
-                        <div className="flex items-center gap-2 bg-white dark:bg-gray-800 p-3 rounded border border-teal-200 dark:border-teal-700">
+                        <div
+                          className="flex items-center gap-2 p-3 rounded"
+                          style={{
+                            background: darkMode ? '#1f2937' : '#ffffff',
+                            border: `1px solid ${darkMode ? '#0f766e' : '#99f6e4'}`,
+                          }}
+                        >
                           <code className="flex-1 font-mono text-lg">change-this-key</code>
                           <Button
                             variant="outline"
@@ -952,44 +660,50 @@ export function AdminPage({ onBack, onNavigate }: AdminPageProps) {
                               navigator.clipboard.writeText('change-this-key');
                               toast.success('Admin key copied to clipboard!');
                             }}
-                            className="border-teal-300 hover:bg-teal-50 dark:border-teal-600 dark:hover:bg-teal-900/30"
+                            style={{ borderColor: darkMode ? '#0f766e' : '#5eead4' }}
                           >
                             Copy
                           </Button>
                         </div>
-                        <p className="text-xs text-teal-800 dark:text-teal-300 mt-2">
+                        <p className="text-xs mt-2" style={{ color: darkMode ? '#2dd4bf' : '#0f766e' }}>
                           ℹ️ This is the <strong>default admin key</strong>. Paste this into the "Admin Key" field in the Import Questions tab to import your questions.
                         </p>
                       </div>
-                      
-                      <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4">
-                        <p className="text-sm text-yellow-900 dark:text-yellow-200">
+
+                      <div
+                        className="rounded-lg p-4"
+                        style={{
+                          background: darkMode ? 'rgba(113,63,18,0.2)' : '#fefce8',
+                          border: `1px solid ${darkMode ? '#713f12' : '#fef08a'}`,
+                        }}
+                      >
+                        <p className="text-sm" style={{ color: darkMode ? '#fde68a' : '#713f12' }}>
                           <strong>⚠️ For Production:</strong>
                         </p>
-                        <p className="text-xs text-yellow-800 dark:text-yellow-300 mt-1">
+                        <p className="text-xs mt-1" style={{ color: darkMode ? '#fcd34d' : '#854d0e' }}>
                           Change this to a secure random string in your Supabase dashboard:
                         </p>
-                        <ol className="text-xs text-yellow-800 dark:text-yellow-300 mt-2 space-y-1 ml-4 list-decimal">
+                        <ol className="text-xs mt-2 space-y-1 ml-4 list-decimal" style={{ color: darkMode ? '#fcd34d' : '#854d0e' }}>
                           <li>Go to Supabase Dashboard → Edge Functions</li>
                           <li>Click on Settings → Secrets</li>
-                          <li>Add/Update secret: <code className="bg-yellow-100 dark:bg-yellow-900/40 px-1 rounded">ADMIN_IMPORT_KEY</code></li>
+                          <li>Add/Update secret: <code style={{ background: darkMode ? 'rgba(113,63,18,0.3)' : '#fef9c3', padding: '0 4px', borderRadius: 3 }}>ADMIN_IMPORT_KEY</code></li>
                           <li>Set it to a secure random string (e.g., generated UUID)</li>
                         </ol>
                       </div>
                     </div>
                   </div>
 
-                  <div className="pt-4 border-t dark:border-slate-600">
-                    <h3 className="font-semibold mb-2 dark:text-gray-100">Stripe Webhook Secret</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                  <div className="pt-4" style={{ borderTop: `1px solid ${darkMode ? '#475569' : '#e2e8f0'}` }}>
+                    <h3 className="font-semibold mb-2" style={{ color: darkMode ? '#f3f4f6' : '#111827' }}>Stripe Webhook Secret</h3>
+                    <p className="text-sm mb-3" style={{ color: darkMode ? '#9ca3af' : '#4b5563' }}>
                       For Stripe webhooks to work, you need to:
                     </p>
-                    <ol className="list-decimal list-inside space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                    <ol className="list-decimal list-inside space-y-2 text-sm" style={{ color: darkMode ? '#d1d5db' : '#374151' }}>
                       <li>Go to Stripe Dashboard → Developers → Webhooks</li>
-                      <li>Add endpoint: <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded text-xs">https://[project-id].supabase.co/functions/v1/make-server-d36f8f91/stripe-webhook</code></li>
-                      <li>Select event: <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded text-xs">checkout.session.completed</code></li>
+                      <li>Add endpoint: <code style={{ background: darkMode ? '#1f2937' : '#f3f4f6', padding: '0 4px', borderRadius: 3, fontSize: '0.75rem' }}>https://[project-id].supabase.co/functions/v1/make-server-d36f8f91/stripe-webhook</code></li>
+                      <li>Select event: <code style={{ background: darkMode ? '#1f2937' : '#f3f4f6', padding: '0 4px', borderRadius: 3, fontSize: '0.75rem' }}>checkout.session.completed</code></li>
                       <li>Copy the webhook signing secret</li>
-                      <li>Add it as <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded text-xs">STRIPE_WEBHOOK_SECRET</code> in Supabase Edge Functions secrets</li>
+                      <li>Add it as <code style={{ background: darkMode ? '#1f2937' : '#f3f4f6', padding: '0 4px', borderRadius: 3, fontSize: '0.75rem' }}>STRIPE_WEBHOOK_SECRET</code> in Supabase Edge Functions secrets</li>
                     </ol>
                   </div>
                 </div>
