@@ -595,7 +595,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                       setShowResults(false);
                     }}
                     variant="outline"
-                    className="flex-1 shadow-md border-blue-500 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-300 dark:hover:bg-blue-900/30"
+                    className="flex-1 shadow-md border-blue-500 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-300 dark:hover:bg-slate-700 dark:hover:text-blue-300"
                   >
                     <BookOpen className="w-4 h-4 mr-2" />
                     {t.reviewAnswers}
@@ -616,7 +616,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                       localStorage.removeItem(storageKey);
                     }}
                     variant="outline"
-                    className="flex-1 shadow-md border-teal-500 text-teal-600 hover:bg-teal-50 dark:border-teal-400 dark:text-teal-300 dark:hover:bg-teal-900/30"
+                    className="flex-1 shadow-md border-teal-500 text-teal-600 hover:bg-teal-50 dark:border-teal-400 dark:text-teal-300 dark:hover:bg-slate-700 dark:hover:text-teal-300"
                   >
                     <RefreshCw className="w-4 h-4 mr-2" />
                     {t.retakeExam}
@@ -638,7 +638,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                     const storageKey = `exam_progress_${examType}_${mode}_${tier}`;
                     localStorage.removeItem(storageKey);
                   }}
-                  className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg"
+                  className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 dark:from-blue-800 dark:to-slate-700 dark:hover:from-slate-700 dark:hover:to-slate-600 shadow-lg"
                 >
                   <Home className="w-4 h-4 mr-2" />
                   Take New Exam (Same Type)
@@ -922,7 +922,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
             </Button>
             <Button
               onClick={onBackToHome}
-              className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg"
+              className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 dark:from-blue-800 dark:to-slate-700 dark:hover:from-slate-700 dark:hover:to-slate-600 shadow-lg"
             >
               <Home className="w-4 h-4 mr-2" />
               {t.backToHome}
@@ -1390,7 +1390,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
               <Button
                 onClick={() => setShowSubmitDialog(true)}
                 variant="outline"
-                className="hidden sm:flex shadow-md border-cyan-600 text-cyan-700 hover:bg-cyan-50 dark:border-cyan-700 dark:text-cyan-300 dark:bg-slate-700/50 dark:hover:bg-cyan-900/40"
+                className="hidden sm:flex shadow-md border-cyan-600 text-cyan-700 hover:bg-cyan-50 dark:border-cyan-700 dark:text-cyan-300 dark:bg-slate-700/50 dark:hover:bg-slate-600 dark:hover:text-cyan-300"
               >
                 <CheckCircle className="w-4 h-4 mr-2" />
                 {t.submitExam}
@@ -1402,7 +1402,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
             <Button
               onClick={() => setShowSubmitDialog(true)}
               variant="outline"
-              className="sm:hidden w-full shadow-md border-cyan-600 text-cyan-700 hover:bg-cyan-50 dark:border-cyan-700 dark:text-cyan-300 dark:bg-slate-700/50 dark:hover:bg-cyan-900/40"
+              className="sm:hidden w-full shadow-md border-cyan-600 text-cyan-700 hover:bg-cyan-50 dark:border-cyan-700 dark:text-cyan-300 dark:bg-slate-700/50 dark:hover:bg-slate-600 dark:hover:text-cyan-300"
             >
               <CheckCircle className="w-4 h-4 mr-2" />
               {t.submitExam}

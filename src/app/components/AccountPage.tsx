@@ -473,14 +473,14 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
                                   <Button
                                     onClick={() => onStartExam(examType, 'exam')}
                                     variant="outline"
-                                    className="border-2 border-blue-500 bg-orange-50/60 text-orange-700 hover:bg-orange-100/80 dark:border-blue-400 dark:bg-orange-900/20 dark:text-orange-400 dark:hover:bg-orange-900/40 font-semibold whitespace-nowrap"
+                                    className="border-2 border-blue-500 bg-orange-50/60 text-orange-700 hover:bg-orange-100/80 dark:border-blue-400 dark:bg-orange-900/20 dark:text-orange-400 dark:hover:bg-slate-700 dark:hover:text-orange-400 font-semibold whitespace-nowrap"
                                   >
                                     {t.startExam}
                                   </Button>
                                   <Button
                                     onClick={() => onStartExam(examType, 'study')}
                                     variant="outline"
-                                    className="border-2 border-blue-500 text-blue-700 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-900/30 font-semibold whitespace-nowrap"
+                                    className="border-2 border-blue-500 text-blue-700 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-slate-700 dark:hover:text-blue-400 font-semibold whitespace-nowrap"
                                   >
                                     {t.startStudy}
                                   </Button>
@@ -508,7 +508,7 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
                             </div>
                             <Button
                               onClick={() => onNavigate('/payment')}
-                              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-md font-semibold whitespace-nowrap"
+                              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 dark:from-blue-800 dark:to-slate-700 dark:hover:from-slate-700 dark:hover:to-slate-600 shadow-md font-semibold whitespace-nowrap"
                             >
                               {t.addMore}
                             </Button>
