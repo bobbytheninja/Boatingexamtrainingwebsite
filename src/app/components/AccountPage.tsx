@@ -445,6 +445,20 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
                                     <div className="flex items-center gap-2 transition-colors duration-[400ms]" style={{ color: darkMode ? '#d1d5db' : '#475569' }}>
                                       <span>{daysRemaining} {t.daysRemaining}</span>
                                     </div>
+                                    {(categoryData?.country || categoryData?.language) && (
+                                      <div className="flex flex-wrap gap-1.5 pt-1">
+                                        {categoryData?.country && (
+                                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${darkMode ? 'bg-slate-600 text-slate-200' : 'bg-gray-100 text-gray-600'}`}>
+                                            📍 {categoryData.country}
+                                          </span>
+                                        )}
+                                        {categoryData?.language && (
+                                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${darkMode ? 'bg-slate-600 text-slate-200' : 'bg-gray-100 text-gray-600'}`}>
+                                            🌐 {categoryData.language}
+                                          </span>
+                                        )}
+                                      </div>
+                                    )}
                                   </div>
                                   {examPrice !== null && (
                                     <div className="mt-4 pt-4" style={{ borderTop: `1px solid ${darkMode ? '#334155' : '#e2e8f0'}` }}>

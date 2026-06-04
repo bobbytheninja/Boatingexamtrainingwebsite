@@ -595,7 +595,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                       setShowResults(false);
                     }}
                     variant="outline"
-                    className="flex-1 shadow-md border-blue-500 text-blue-600 hover:bg-blue-50"
+                    className="flex-1 shadow-md border-blue-500 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-300 dark:hover:bg-blue-900/30"
                   >
                     <BookOpen className="w-4 h-4 mr-2" />
                     {t.reviewAnswers}
@@ -616,7 +616,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                       localStorage.removeItem(storageKey);
                     }}
                     variant="outline"
-                    className="flex-1 shadow-md border-teal-500 text-teal-600 hover:bg-teal-50"
+                    className="flex-1 shadow-md border-teal-500 text-teal-600 hover:bg-teal-50 dark:border-teal-400 dark:text-teal-300 dark:hover:bg-teal-900/30"
                   >
                     <RefreshCw className="w-4 h-4 mr-2" />
                     {t.retakeExam}
@@ -820,7 +820,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                         <ImageWithFallback
                           src={question.image}
                           alt="Question illustration"
-                          className="w-full max-h-52 object-contain mx-auto"
+                          className="w-full min-h-40 max-h-80 object-contain mx-auto"
                         />
                       </div>
                     )}
@@ -1080,7 +1080,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
             <Button 
               onClick={() => setShowExitDialog(true)} 
               variant="outline" 
-              className="border-red-500 dark:border-red-400 text-red-600 dark:text-red-400 bg-transparent hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors duration-200"
+              className="border-red-500 dark:border-red-400 text-red-600 dark:text-red-300 bg-transparent hover:bg-red-50 dark:hover:bg-red-900/40 transition-colors duration-200"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               {t.exitExam}
@@ -1250,7 +1250,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                 <ImageWithFallback
                   src={currentQuestion.image}
                   alt="Question illustration"
-                  className="w-full max-h-52 object-contain mx-auto"
+                  className="w-full min-h-40 max-h-80 object-contain mx-auto"
                 />
               </div>
             )}
@@ -1387,7 +1387,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
           <Button
             onClick={() => setShowSubmitDialog(true)}
             variant="outline"
-            className="shadow-md border-cyan-500 text-cyan-700 hover:bg-cyan-50 dark:border-cyan-600 dark:text-cyan-400 dark:hover:bg-cyan-900/30"
+            className="shadow-md border-cyan-600 text-cyan-700 hover:bg-cyan-50 dark:border-cyan-700 dark:text-cyan-300 dark:bg-slate-700/50 dark:hover:bg-cyan-900/40"
           >
             <CheckCircle className="w-4 h-4 mr-2" />
             {t.submitExam}

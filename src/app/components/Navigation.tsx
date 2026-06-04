@@ -78,14 +78,12 @@ export function Navigation({
       `}} />
       <nav
         aria-label="Main navigation"
-        className={`fixed top-0 left-0 right-0 z-50 border-b-2 transition-all duration-[400ms] ${
-          transparent 
-            ? isLoggedIn 
-              ? 'backdrop-blur-md border-cyan-400/50' 
-              : 'backdrop-blur-md border-white/30'
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-[400ms] ${
+          transparent
+            ? 'backdrop-blur-md border-b-0'
             : isLoggedIn
-            ? 'backdrop-blur-xl border-cyan-400/60 dark:border-cyan-500/60 shadow-sm'
-            : 'backdrop-blur-xl border-gray-200/70 dark:border-gray-600/70 shadow-sm'
+            ? 'backdrop-blur-xl border-b-2 border-cyan-400/60 dark:border-cyan-500/60 shadow-sm'
+            : 'backdrop-blur-xl border-b-2 border-gray-200/70 dark:border-gray-600/70 shadow-sm'
         }`}
         style={transparent ? {
           background: 'linear-gradient(to bottom, rgba(107, 114, 128, 0.05), rgba(107, 114, 128, 0.05)), linear-gradient(to bottom, rgba(30, 58, 138, 0.05), rgba(30, 58, 138, 0.05))'
