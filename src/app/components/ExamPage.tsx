@@ -1356,42 +1356,58 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
           </CardContent>
         </Card>
 
-        <div className="flex justify-between gap-2 mb-4">
-          <Button
-            onClick={handlePrevious}
-            disabled={currentQuestionIndex === 0}
-            variant="outline"
-            className="shadow-md border-2 transition-all duration-[400ms] font-semibold hover:opacity-80"
-            style={{
-              borderColor: darkMode ? '#475569' : '#cbd5e1',
-              color: darkMode ? '#cbd5e1' : '#334155',
-              backgroundColor: darkMode ? '#334155' : '#f8fafc'
-            }}
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            {t.previous}
-          </Button>
-          <Button
-            id="next-button"
-            onClick={mode === 'study' && showAnswerFeedback ? handleContinueAfterFeedback : handleNext}
-            disabled={tier !== 'mock' && (isMultipleChoice ? selectedAnswers.length === 0 : selectedAnswer === null)}
-            className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg"
-          >
-            {mode === 'study' && showAnswerFeedback 
-              ? (currentQuestionIndex === totalQuestions - 1 ? t.finish : t.continue) 
-              : (isMultipleChoice ? selectedAnswers.length > 0 : selectedAnswer !== null)
-              ? (currentQuestionIndex === totalQuestions - 1 ? t.finishExam : t.submitAndNext)
-              : (currentQuestionIndex === totalQuestions - 1 ? t.finish : t.next)}
-            <ArrowRight className="w-4 h-4 ml-2" />
-          </Button>
-          <Button
-            onClick={() => setShowSubmitDialog(true)}
-            variant="outline"
-            className="shadow-md border-cyan-600 text-cyan-700 hover:bg-cyan-50 dark:border-cyan-700 dark:text-cyan-300 dark:bg-slate-700/50 dark:hover:bg-cyan-900/40"
-          >
-            <CheckCircle className="w-4 h-4 mr-2" />
-            {t.submitExam}
-          </Button>
+        <div className="flex flex-col gap-2 mb-4">
+          <div className="flex justify-between gap-2">
+            <Button
+              onClick={handlePrevious}
+              disabled={currentQuestionIndex === 0}
+              variant="outline"
+              className="shadow-md border-2 transition-all duration-[400ms] font-semibold hover:opacity-80"
+              style={{
+                borderColor: darkMode ? '#475569' : '#cbd5e1',
+                color: darkMode ? '#cbd5e1' : '#334155',
+                backgroundColor: darkMode ? '#334155' : '#f8fafc'
+              }}
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              {t.previous}
+            </Button>
+            <Button
+              id="next-button"
+              onClick={mode === 'study' && showAnswerFeedback ? handleContinueAfterFeedback : handleNext}
+              disabled={tier !== 'mock' && (isMultipleChoice ? selectedAnswers.length === 0 : selectedAnswer === null)}
+              className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg"
+            >
+              {mode === 'study' && showAnswerFeedback
+                ? (currentQuestionIndex === totalQuestions - 1 ? t.finish : t.continue)
+                : (isMultipleChoice ? selectedAnswers.length > 0 : selectedAnswer !== null)
+                ? (currentQuestionIndex === totalQuestions - 1 ? t.finishExam : t.submitAndNext)
+                : (currentQuestionIndex === totalQuestions - 1 ? t.finish : t.next)}
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+            {/* Desktop: Submit in the same row */}
+            {mode === 'exam' && (
+              <Button
+                onClick={() => setShowSubmitDialog(true)}
+                variant="outline"
+                className="hidden sm:flex shadow-md border-cyan-600 text-cyan-700 hover:bg-cyan-50 dark:border-cyan-700 dark:text-cyan-300 dark:bg-slate-700/50 dark:hover:bg-cyan-900/40"
+              >
+                <CheckCircle className="w-4 h-4 mr-2" />
+                {t.submitExam}
+              </Button>
+            )}
+          </div>
+          {/* Mobile: Submit on its own full-width row */}
+          {mode === 'exam' && (
+            <Button
+              onClick={() => setShowSubmitDialog(true)}
+              variant="outline"
+              className="sm:hidden w-full shadow-md border-cyan-600 text-cyan-700 hover:bg-cyan-50 dark:border-cyan-700 dark:text-cyan-300 dark:bg-slate-700/50 dark:hover:bg-cyan-900/40"
+            >
+              <CheckCircle className="w-4 h-4 mr-2" />
+              {t.submitExam}
+            </Button>
+          )}
         </div>
 
         <Card 

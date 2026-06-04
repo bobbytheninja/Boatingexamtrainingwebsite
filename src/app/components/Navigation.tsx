@@ -80,7 +80,9 @@ export function Navigation({
         aria-label="Main navigation"
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-[400ms] ${
           transparent
-            ? 'backdrop-blur-md border-b-0'
+            ? isLoggedIn
+              ? 'backdrop-blur-md border-b-2 border-cyan-400/50'
+              : 'backdrop-blur-md'
             : isLoggedIn
             ? 'backdrop-blur-xl border-b-2 border-cyan-400/60 dark:border-cyan-500/60 shadow-sm'
             : 'backdrop-blur-xl border-b-2 border-gray-200/70 dark:border-gray-600/70 shadow-sm'
@@ -314,7 +316,7 @@ export function Navigation({
                     className={`sm:hidden ${
                       transparent
                         ? 'text-white hover:bg-white/10'
-                        : 'text-gray-700 hover:bg-gray-100'
+                        : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'
                     } px-2`}
                   >
                     <Menu className="w-5 h-5" />
@@ -329,7 +331,10 @@ export function Navigation({
                   }}
                 >
                   <SheetHeader className="flex-shrink-0 border-b border-gray-200 dark:border-gray-700 pb-4">
-                    <SheetTitle className="flex items-center gap-2 text-gray-900 dark:text-gray-100">
+                    <SheetTitle
+                      className="flex items-center gap-2"
+                      style={{ color: darkMode ? '#f1f5f9' : '#111827' }}
+                    >
                       <Anchor className="w-5 h-5 text-sky-600 dark:text-sky-400" />
                       Menu
                     </SheetTitle>
