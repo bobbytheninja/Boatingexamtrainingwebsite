@@ -330,15 +330,21 @@ export function Navigation({
                     borderLeftColor: darkMode ? 'rgb(55, 65, 81)' : 'rgb(229, 231, 235)'
                   }}
                 >
-                  <SheetHeader className="flex-shrink-0 border-b border-gray-200 dark:border-gray-700 pb-4">
+                  <SheetHeader
+                    className="flex-shrink-0 pb-4"
+                    style={{ borderBottom: `1px solid ${darkMode ? '#374151' : '#e5e7eb'}` }}
+                  >
                     <SheetTitle
                       className="flex items-center gap-2"
                       style={{ color: darkMode ? '#f1f5f9' : '#111827' }}
                     >
-                      <Anchor className="w-5 h-5 text-sky-600 dark:text-sky-400" />
+                      <Anchor
+                        className="w-5 h-5"
+                        style={{ color: darkMode ? '#38bdf8' : '#0284c7' }}
+                      />
                       Menu
                     </SheetTitle>
-                    <SheetDescription className="text-gray-600 dark:text-gray-400">
+                    <SheetDescription style={{ color: darkMode ? '#94a3b8' : '#4b5563' }}>
                       Navigate through different sections and settings
                     </SheetDescription>
                   </SheetHeader>
@@ -352,20 +358,22 @@ export function Navigation({
                         className={`w-full justify-start text-base ${
                           currentPage === link.id
                             ? 'bg-sky-600 hover:bg-sky-700 text-white font-semibold'
-                            : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'
+                            : 'hover:bg-gray-100'
                         }`}
+                        style={currentPage !== link.id ? { color: darkMode ? '#e2e8f0' : '#374151' } : undefined}
                       >
                         {link.label}
                       </Button>
                     ))}
 
-                    <div className="h-px bg-gray-300 dark:bg-gray-600 my-2" />
+                    <div className="h-px my-2" style={{ backgroundColor: darkMode ? '#4b5563' : '#d1d5db' }} />
 
                     {/* Dark Mode Toggle */}
                     <Button
                       onClick={toggleDarkMode}
                       variant="ghost"
-                      className="w-full justify-start text-base text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+                      className="w-full justify-start text-base hover:bg-gray-100"
+                      style={{ color: darkMode ? '#e2e8f0' : '#374151' }}
                     >
                       {darkMode ? <Moon className="w-4 h-4 mr-2" /> : <Sun className="w-4 h-4 mr-2" />}
                       {darkMode ? 'Light Mode' : 'Dark Mode'}
@@ -373,7 +381,7 @@ export function Navigation({
 
                     {/* Language Selection */}
                     <div className="space-y-2">
-                      <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 px-3 mb-2">Language</p>
+                      <p className="text-sm font-semibold px-3 mb-2" style={{ color: darkMode ? '#cbd5e1' : '#374151' }}>Language</p>
                       {languages.map((lang) => (
                         <Button
                           key={lang}
@@ -385,8 +393,9 @@ export function Navigation({
                           className={`w-full justify-start text-base ${
                             language === lang
                               ? 'bg-sky-600 hover:bg-sky-700 text-white font-semibold'
-                              : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'
+                              : 'hover:bg-gray-100'
                           }`}
+                          style={language !== lang ? { color: darkMode ? '#e2e8f0' : '#374151' } : undefined}
                         >
                           <Globe className="w-4 h-4 mr-2" />
                           {lang}
@@ -396,7 +405,7 @@ export function Navigation({
 
                     {/* Region Selection */}
                     <div className="space-y-2">
-                      <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 px-3 mb-2">Region</p>
+                      <p className="text-sm font-semibold px-3 mb-2" style={{ color: darkMode ? '#cbd5e1' : '#374151' }}>Region</p>
                       {regions.map((reg) => (
                         <Button
                           key={reg}
@@ -408,8 +417,9 @@ export function Navigation({
                           className={`w-full justify-start text-base ${
                             region === reg
                               ? 'bg-sky-600 hover:bg-sky-700 text-white font-semibold'
-                              : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'
+                              : 'hover:bg-gray-100'
                           }`}
+                          style={region !== reg ? { color: darkMode ? '#e2e8f0' : '#374151' } : undefined}
                         >
                           <MapPin className="w-4 h-4 mr-2" />
                           {reg}
@@ -417,7 +427,7 @@ export function Navigation({
                       ))}
                     </div>
 
-                    <div className="h-px bg-gray-300 dark:bg-gray-600 my-2" />
+                    <div className="h-px my-2" style={{ backgroundColor: darkMode ? '#4b5563' : '#d1d5db' }} />
                     
                     {/* Account/Login */}
                     {isLoggedIn ? (
@@ -432,6 +442,10 @@ export function Navigation({
                         onClick={() => handleNavigate('login')}
                         variant="outline"
                         className="w-full border-2"
+                        style={{
+                          color: darkMode ? '#e2e8f0' : '#374151',
+                          borderColor: darkMode ? '#4b5563' : '#d1d5db',
+                        }}
                       >
                         {t.login}
                       </Button>

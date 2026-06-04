@@ -9,6 +9,7 @@ import { Plus, Edit, Trash2, Save, X, ExternalLink, AlertCircle, CheckCircle, Re
 import { projectId, publicAnonKey } from '../utils/supabase/info';
 import { ButtonSpinner } from './LoadingSpinner';
 import { toast } from 'sonner';
+import { useDarkMode } from '../contexts/DarkModeContext';
 
 interface Partner {
   id: string;
@@ -28,6 +29,7 @@ interface PartnerManagementProps {
 }
 
 export function PartnerManagement({ accessToken }: PartnerManagementProps) {
+  const { darkMode } = useDarkMode();
   const [partners, setPartners] = useState<Partner[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -235,14 +237,16 @@ export function PartnerManagement({ accessToken }: PartnerManagementProps) {
     }
   };
 
+  const cardStyle = { background: darkMode ? '#1e293b' : undefined, borderColor: darkMode ? '#334155' : undefined };
+
   if (loading) {
     return (
-      <Card>
+      <Card style={cardStyle}>
         <CardHeader>
           <CardTitle>Partner Management</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-gray-500">Loading partners...</p>
+          <p className="text-gray-500 dark:text-gray-400">Loading partners...</p>
         </CardContent>
       </Card>
     );
@@ -250,7 +254,7 @@ export function PartnerManagement({ accessToken }: PartnerManagementProps) {
 
   return (
     <div className="space-y-4">
-      <Card>
+      <Card style={cardStyle}>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Partner Management</CardTitle>
           <div className="flex gap-2">
@@ -404,7 +408,7 @@ export function PartnerManagement({ accessToken }: PartnerManagementProps) {
           ) : (
             <div className="space-y-3">
               {partners.map((partner) => (
-                <Card key={partner.id} className="border-2">
+                <Card key={partner.id} className="border-2" style={{ background: darkMode ? '#27374d' : undefined, borderColor: darkMode ? '#475569' : undefined }}>
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1">

@@ -428,7 +428,7 @@ export function AdminPage({ onBack, onNavigate }: AdminPageProps) {
                 {accessToken ? (
                   <CategoryManagement accessToken={accessToken} />
                 ) : (
-                  <Card>
+                  <Card style={{ background: darkMode ? '#1e293b' : undefined, borderColor: darkMode ? '#334155' : undefined }}>
                     <CardHeader>
                       <CardTitle>Category Management</CardTitle>
                     </CardHeader>
@@ -508,7 +508,7 @@ export function AdminPage({ onBack, onNavigate }: AdminPageProps) {
                 {accessToken ? (
                   <PartnerManagement accessToken={accessToken} />
                 ) : (
-                  <Card>
+                  <Card style={{ background: darkMode ? '#1e293b' : undefined, borderColor: darkMode ? '#334155' : undefined }}>
                     <CardHeader>
                       <CardTitle>Partner Management</CardTitle>
                     </CardHeader>
@@ -528,7 +528,7 @@ export function AdminPage({ onBack, onNavigate }: AdminPageProps) {
                 {accessToken ? (
                   <Analytics accessToken={accessToken} />
                 ) : (
-                  <Card>
+                  <Card style={{ background: darkMode ? '#1e293b' : undefined, borderColor: darkMode ? '#334155' : undefined }}>
                     <CardHeader>
                       <CardTitle>Analytics</CardTitle>
                     </CardHeader>
@@ -547,7 +547,7 @@ export function AdminPage({ onBack, onNavigate }: AdminPageProps) {
           )}
 
           <TabsContent value="keys">
-            <Card>
+            <Card style={{ background: darkMode ? '#1e293b' : undefined, borderColor: darkMode ? '#334155' : undefined }}>
               <CardHeader>
                 <CardTitle>Environment Variables & Keys</CardTitle>
               </CardHeader>

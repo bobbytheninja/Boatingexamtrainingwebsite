@@ -558,7 +558,7 @@ export function CategoryManagement({ accessToken }: CategoryManagementProps) {
 
   if (loading) {
     return (
-      <Card>
+      <Card style={{ background: darkMode ? '#1e293b' : undefined, borderColor: darkMode ? '#334155' : undefined }}>
         <CardContent className="pt-6 flex justify-center">
           <LoadingSpinner size="lg" />
         </CardContent>
@@ -571,7 +571,7 @@ export function CategoryManagement({ accessToken }: CategoryManagementProps) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <Card>
+      <Card style={{ background: darkMode ? '#1e293b' : undefined, borderColor: darkMode ? '#334155' : undefined }}>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
@@ -615,7 +615,7 @@ export function CategoryManagement({ accessToken }: CategoryManagementProps) {
 
       {/* Add/Edit Form */}
       {(isAddingNew || editingCategory) && (
-        <Card className="border-2 border-blue-500">
+        <Card className="border-2 border-blue-500" style={{ background: darkMode ? '#1e293b' : undefined }}>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               {isAddingNew ? <Plus className="w-5 h-5" /> : <Edit2 className="w-5 h-5" />}
@@ -870,7 +870,7 @@ export function CategoryManagement({ accessToken }: CategoryManagementProps) {
           const Icon = AVAILABLE_ICONS.find(i => i.name === category.icon)?.component || Waves;
           
           return (
-            <Card key={category.type} className="overflow-hidden">
+            <Card key={category.type} className="overflow-hidden" style={{ background: darkMode ? '#1e293b' : undefined, borderColor: darkMode ? '#334155' : undefined }}>
               <div className={`h-32 ${category.color} relative`}>
                 {category.image && (
                   <img 
@@ -895,16 +895,16 @@ export function CategoryManagement({ accessToken }: CategoryManagementProps) {
                       </Badge>
                     )}
                   </div>
-                  <h3 className="font-bold text-lg">{category.title}</h3>
+                  <h3 className="font-bold text-lg dark:text-slate-100">{category.title}</h3>
                   {category.country && (
-                    <p className="text-xs text-gray-500 mt-0.5">📍 {category.country}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">📍 {category.country}</p>
                   )}
                   {category.language && (
-                    <p className="text-xs text-gray-500 mt-0.5">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                       🌐 {AVAILABLE_LANGUAGES.find(l => l.code === category.language)?.name ?? category.language}
                     </p>
                   )}
-                  <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                  <p className="text-sm text-gray-600 dark:text-gray-300 mt-1 line-clamp-2">
                     {category.description}
                   </p>
                   {category.price && (
@@ -949,7 +949,7 @@ export function CategoryManagement({ accessToken }: CategoryManagementProps) {
       )}
 
       {/* Pricing Settings */}
-      <Card>
+      <Card style={{ background: darkMode ? '#1e293b' : undefined, borderColor: darkMode ? '#334155' : undefined }}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Waves className="w-5 h-5 text-blue-500" />
@@ -1014,7 +1014,7 @@ export function CategoryManagement({ accessToken }: CategoryManagementProps) {
       </Card>
 
       {/* Regions Management */}
-      <Card>
+      <Card style={{ background: darkMode ? '#1e293b' : undefined, borderColor: darkMode ? '#334155' : undefined }}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Compass className="w-5 h-5 text-blue-500" />
