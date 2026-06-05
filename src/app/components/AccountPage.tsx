@@ -473,14 +473,24 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
                                   <Button
                                     onClick={() => onStartExam(examType, 'exam')}
                                     variant="outline"
-                                    className="border-2 border-blue-500 bg-orange-50/60 text-orange-700 hover:bg-orange-100/80 dark:border-blue-400 dark:bg-orange-900/20 dark:text-orange-400 dark:hover:bg-slate-700 dark:hover:text-orange-400 font-semibold whitespace-nowrap"
+                                    className="border-2 font-semibold whitespace-nowrap hover:opacity-90 transition-opacity"
+                                    style={{
+                                      borderColor: darkMode ? '#60a5fa' : '#3b82f6',
+                                      backgroundColor: darkMode ? 'rgba(124,45,18,0.25)' : 'rgba(255,237,213,0.6)',
+                                      color: darkMode ? '#fb923c' : '#c2410c',
+                                    }}
                                   >
                                     {t.startExam}
                                   </Button>
                                   <Button
                                     onClick={() => onStartExam(examType, 'study')}
                                     variant="outline"
-                                    className="border-2 border-blue-500 text-blue-700 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-slate-700 dark:hover:text-blue-400 font-semibold whitespace-nowrap"
+                                    className="border-2 font-semibold whitespace-nowrap hover:opacity-90 transition-opacity"
+                                    style={{
+                                      borderColor: darkMode ? '#60a5fa' : '#3b82f6',
+                                      backgroundColor: darkMode ? 'rgba(51,65,85,0.4)' : 'transparent',
+                                      color: darkMode ? '#93c5fd' : '#1d4ed8',
+                                    }}
                                   >
                                     {t.startStudy}
                                   </Button>

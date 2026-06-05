@@ -595,7 +595,12 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                       setShowResults(false);
                     }}
                     variant="outline"
-                    className="flex-1 shadow-md border-blue-500 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-300 dark:hover:bg-slate-700 dark:hover:text-blue-300"
+                    className="flex-1 shadow-md hover:opacity-90 transition-opacity"
+                    style={{
+                      borderColor: darkMode ? '#60a5fa' : '#3b82f6',
+                      color: darkMode ? '#93c5fd' : '#2563eb',
+                      backgroundColor: darkMode ? 'rgba(51,65,85,0.5)' : 'transparent',
+                    }}
                   >
                     <BookOpen className="w-4 h-4 mr-2" />
                     {t.reviewAnswers}
@@ -616,7 +621,12 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                       localStorage.removeItem(storageKey);
                     }}
                     variant="outline"
-                    className="flex-1 shadow-md border-teal-500 text-teal-600 hover:bg-teal-50 dark:border-teal-400 dark:text-teal-300 dark:hover:bg-slate-700 dark:hover:text-teal-300"
+                    className="flex-1 shadow-md hover:opacity-90 transition-opacity"
+                    style={{
+                      borderColor: darkMode ? '#2dd4bf' : '#14b8a6',
+                      color: darkMode ? '#5eead4' : '#0f766e',
+                      backgroundColor: darkMode ? 'rgba(51,65,85,0.5)' : 'transparent',
+                    }}
                   >
                     <RefreshCw className="w-4 h-4 mr-2" />
                     {t.retakeExam}
@@ -1077,10 +1087,15 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
       <div className="container mx-auto max-w-5xl">
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Button 
-              onClick={() => setShowExitDialog(true)} 
-              variant="outline" 
-              className="border-red-500 dark:border-red-400 text-red-600 dark:text-red-300 bg-transparent hover:bg-red-50 dark:hover:bg-red-900/40 transition-colors duration-200"
+            <Button
+              onClick={() => setShowExitDialog(true)}
+              variant="outline"
+              className="hover:opacity-90 transition-opacity duration-200"
+              style={{
+                borderColor: darkMode ? '#f87171' : '#ef4444',
+                color: darkMode ? '#fca5a5' : '#dc2626',
+                backgroundColor: darkMode ? 'rgba(51,65,85,0.5)' : 'transparent',
+              }}
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               {t.exitExam}
@@ -1386,28 +1401,34 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
             {/* Desktop: Submit in the same row */}
-            {mode === 'exam' && (
-              <Button
-                onClick={() => setShowSubmitDialog(true)}
-                variant="outline"
-                className="hidden sm:flex shadow-md border-cyan-600 text-cyan-700 hover:bg-cyan-50 dark:border-cyan-700 dark:text-cyan-300 dark:bg-slate-700/50 dark:hover:bg-slate-600 dark:hover:text-cyan-300"
-              >
-                <CheckCircle className="w-4 h-4 mr-2" />
-                {t.submitExam}
-              </Button>
-            )}
-          </div>
-          {/* Mobile: Submit on its own full-width row */}
-          {mode === 'exam' && (
             <Button
               onClick={() => setShowSubmitDialog(true)}
               variant="outline"
-              className="sm:hidden w-full shadow-md border-cyan-600 text-cyan-700 hover:bg-cyan-50 dark:border-cyan-700 dark:text-cyan-300 dark:bg-slate-700/50 dark:hover:bg-slate-600 dark:hover:text-cyan-300"
+              className="hidden sm:flex shadow-md hover:opacity-90 transition-opacity"
+              style={{
+                borderColor: darkMode ? '#0891b2' : '#0891b2',
+                color: darkMode ? '#67e8f9' : '#0e7490',
+                backgroundColor: darkMode ? 'rgba(51,65,85,0.5)' : 'transparent',
+              }}
             >
               <CheckCircle className="w-4 h-4 mr-2" />
               {t.submitExam}
             </Button>
-          )}
+          </div>
+          {/* Mobile: Submit on its own full-width row */}
+          <Button
+            onClick={() => setShowSubmitDialog(true)}
+            variant="outline"
+            className="sm:hidden w-full shadow-md hover:opacity-90 transition-opacity"
+            style={{
+              borderColor: darkMode ? '#0891b2' : '#0891b2',
+              color: darkMode ? '#67e8f9' : '#0e7490',
+              backgroundColor: darkMode ? 'rgba(51,65,85,0.5)' : 'transparent',
+            }}
+          >
+            <CheckCircle className="w-4 h-4 mr-2" />
+            {t.submitExam}
+          </Button>
         </div>
 
         <Card 
