@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import { User, Calendar, CreditCard, Package, ArrowLeft, Trash2 } from 'lucide-react';
+import { User, Calendar, CreditCard, Package, ArrowLeft, Trash2, KeyRound, Eye, EyeOff } from 'lucide-react';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
 import { ExamType, examData } from '../data/examQuestions';
 import { getTranslation } from '../data/translations';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
@@ -37,6 +39,12 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
   const { deleteAccount, user } = useAuth();
   const { darkMode } = useDarkMode();
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [pwNew, setPwNew] = useState('');
+  const [pwConfirm, setPwConfirm] = useState('');
+  const [showPwNew, setShowPwNew] = useState(false);
+  const [showPwConfirm, setShowPwConfirm] = useState(false);
+  const [pwError, setPwError] = useState('');
   const [categories, setCategories] = useState<CategoryData[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [fetchError, setFetchError] = useState(false);
@@ -93,16 +101,43 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
     setIsDeleting(true);
     try {
       await deleteAccount();
-      toast.success(language === 'English' 
-        ? 'Your account has been permanently deleted.' 
+      toast.success(language === 'English'
+        ? 'Your account has been permanently deleted.'
         : 'Акаунтът ви е изтрит перманентно.');
     } catch (error: any) {
       console.error('Delete account error:', error);
-      toast.error(language === 'English' 
-        ? `Failed to delete account: ${error.message}` 
+      toast.error(language === 'English'
+        ? `Failed to delete account: ${error.message}`
         : `Грешка при изтриване на акаунт: ${error.message}`);
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPwError('');
+    if (pwNew.length < 6) {
+      setPwError(language === 'English' ? 'Password must be at least 6 characters.' : 'Паролата трябва да е поне 6 символа.');
+      return;
+    }
+    if (pwNew !== pwConfirm) {
+      setPwError(language === 'English' ? 'Passwords do not match.' : 'Паролите не съвпадат.');
+      return;
+    }
+    setIsChangingPassword(true);
+    try {
+      const { createClient } = await import('../utils/supabase/client');
+      const supabase = createClient();
+      const { error } = await supabase.auth.updateUser({ password: pwNew });
+      if (error) throw error;
+      setPwNew('');
+      setPwConfirm('');
+      toast.success(language === 'English' ? 'Password updated successfully!' : 'Паролата е актуализирана успешно!');
+    } catch (error: any) {
+      setPwError(error.message || (language === 'English' ? 'Failed to update password.' : 'Грешка при актуализиране на паролата.'));
+    } finally {
+      setIsChangingPassword(false);
     }
   };
 
@@ -244,15 +279,89 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
                 </CardContent>
               </Card>
 
-              {/* Danger Zone */}
-              <Card 
+              {/* Change Password */}
+              <Card
                 className="border-2 shadow-xl transition-all duration-[400ms]"
-                style={{ 
-                  background: darkMode 
+                style={{
+                  backgroundColor: darkMode ? '#334155' : '#ffffff',
+                  borderColor: darkMode ? '#475569' : '#e2e8f0',
+                  transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)',
+                }}
+              >
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 transition-colors duration-[400ms]" style={{ color: darkMode ? '#f3f4f6' : '#0f172a' }}>
+                    <KeyRound className="w-5 h-5" style={{ color: '#0ea5e9' }} />
+                    {language === 'English' ? 'Change Password' : 'Промяна на Парола'}
+                  </CardTitle>
+                  <CardDescription style={{ color: darkMode ? '#d1d5db' : '#64748b' }}>
+                    {language === 'English' ? 'Update your password while logged in.' : 'Актуализирайте паролата си докато сте влезли.'}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleChangePassword} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="pw-new" style={{ color: darkMode ? '#d1d5db' : '#374151' }}>
+                        {language === 'English' ? 'New Password' : 'Нова Парола'}
+                      </Label>
+                      <div className="relative">
+                        <Input
+                          id="pw-new"
+                          type={showPwNew ? 'text' : 'password'}
+                          value={pwNew}
+                          onChange={e => setPwNew(e.target.value)}
+                          placeholder={language === 'English' ? 'At least 6 characters' : 'Поне 6 символа'}
+                          autoComplete="new-password"
+                          style={{ backgroundColor: darkMode ? '#1e293b' : '#f8fafc', borderColor: darkMode ? '#475569' : '#e2e8f0', color: darkMode ? '#f3f4f6' : '#0f172a', paddingRight: '2.5rem' }}
+                        />
+                        <button type="button" onClick={() => setShowPwNew(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 opacity-60 hover:opacity-100" style={{ color: darkMode ? '#94a3b8' : '#64748b' }}>
+                          {showPwNew ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="pw-confirm" style={{ color: darkMode ? '#d1d5db' : '#374151' }}>
+                        {language === 'English' ? 'Confirm New Password' : 'Потвърди Нова Парола'}
+                      </Label>
+                      <div className="relative">
+                        <Input
+                          id="pw-confirm"
+                          type={showPwConfirm ? 'text' : 'password'}
+                          value={pwConfirm}
+                          onChange={e => setPwConfirm(e.target.value)}
+                          placeholder={language === 'English' ? 'Repeat new password' : 'Повторете новата парола'}
+                          autoComplete="new-password"
+                          style={{ backgroundColor: darkMode ? '#1e293b' : '#f8fafc', borderColor: darkMode ? '#475569' : '#e2e8f0', color: darkMode ? '#f3f4f6' : '#0f172a', paddingRight: '2.5rem' }}
+                        />
+                        <button type="button" onClick={() => setShowPwConfirm(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 opacity-60 hover:opacity-100" style={{ color: darkMode ? '#94a3b8' : '#64748b' }}>
+                          {showPwConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    </div>
+                    {pwError && (
+                      <p className="text-sm" style={{ color: darkMode ? '#fca5a5' : '#dc2626' }}>{pwError}</p>
+                    )}
+                    <Button
+                      type="submit"
+                      disabled={isChangingPassword || !pwNew || !pwConfirm}
+                      className="w-full bg-gradient-to-r from-sky-500 to-cyan-600 hover:from-sky-600 hover:to-cyan-700 text-white font-semibold"
+                    >
+                      {isChangingPassword
+                        ? (language === 'English' ? 'Updating...' : 'Актуализиране...')
+                        : (language === 'English' ? 'Update Password' : 'Актуализирай Парола')}
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
+
+              {/* Danger Zone */}
+              <Card
+                className="border-2 shadow-xl transition-all duration-[400ms]"
+                style={{
+                  background: darkMode
                     ? 'linear-gradient(to bottom right, rgba(127, 29, 29, 0.2), #334155)'
                     : 'linear-gradient(to bottom right, #fee2e2, #ffffff)',
                   borderColor: darkMode ? '#991b1b' : '#fecaca',
-                  transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+                  transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
                 }}
               >
                 <CardHeader>
@@ -401,16 +510,20 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
                         })();
 
                         const examPrice = categoryData?.price ?? null;
+                        const isFreeCategory = categoryData?.isFree || false;
 
-                        // Use per-exam expiry if available, fall back to shared expiry
-                        const examExpiresAt = perExamExpiry[examType] || subscriptionExpiresAt;
-                        const daysRemaining = examExpiresAt
+                        // Use per-exam expiry if available, fall back to shared expiry.
+                        // Ignore any value >= FREE_EXPIRY_THRESHOLD — those are free-era artifacts.
+                        const FREE_EXPIRY_THRESHOLD = 9000000000000;
+                        const rawExpiry = perExamExpiry[examType] || subscriptionExpiresAt;
+                        const examExpiresAt = (rawExpiry && rawExpiry < FREE_EXPIRY_THRESHOLD) ? rawExpiry : null;
+                        const daysRemaining = isFreeCategory ? Infinity : (examExpiresAt
                           ? Math.max(0, Math.ceil((examExpiresAt - Date.now()) / 86400000))
-                          : 0;
+                          : 0);
                         const expiryDate = examExpiresAt
                           ? new Date(examExpiresAt).toLocaleDateString(language === 'English' ? 'en-US' : 'bg-BG', { year: 'numeric', month: 'long', day: 'numeric' })
                           : 'N/A';
-                        const isExpiringSoon = daysRemaining <= 7 && daysRemaining > 0;
+                        const isExpiringSoon = !isFreeCategory && daysRemaining <= 7 && daysRemaining > 0;
 
                         return (
                           <Card 
@@ -427,17 +540,25 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
                                 <div className="flex-1">
                                   <div className="flex items-center gap-3 mb-3">
                                     <h4 className="font-bold text-lg transition-colors duration-[400ms]" style={{ color: darkMode ? '#f3f4f6' : '#0f172a' }}>{examTitle}</h4>
-                                    <Badge 
+                                    <Badge
                                       className={`${
-                                        isExpiringSoon 
-                                          ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300' 
+                                        isFreeCategory
+                                          ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300'
+                                          : isExpiringSoon
+                                          ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300'
                                           : 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300'
                                       }`}
                                     >
-                                      {isExpiringSoon ? t.expiringSoon : t.active}
+                                      {isFreeCategory ? '✓ Free' : isExpiringSoon ? t.expiringSoon : t.active}
                                     </Badge>
                                   </div>
                                   <div className="space-y-2 text-sm">
+                                    {isFreeCategory ? (
+                                      <div className="flex items-center gap-2 transition-colors duration-[400ms]" style={{ color: darkMode ? '#86efac' : '#16a34a' }}>
+                                        <span>Free access — no expiry</span>
+                                      </div>
+                                    ) : (
+                                    <>
                                     <div className="flex items-center gap-2 transition-colors duration-[400ms]" style={{ color: darkMode ? '#d1d5db' : '#475569' }}>
                                       <Calendar className="w-4 h-4" />
                                       <span>{t.validUntil}: <strong style={{ color: darkMode ? '#f3f4f6' : '#1e293b' }}>{expiryDate}</strong></span>
@@ -445,6 +566,8 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
                                     <div className="flex items-center gap-2 transition-colors duration-[400ms]" style={{ color: darkMode ? '#d1d5db' : '#475569' }}>
                                       <span>{daysRemaining} {t.daysRemaining}</span>
                                     </div>
+                                    </>
+                                    )}
                                     {(categoryData?.country || categoryData?.language) && (
                                       <div className="flex flex-wrap gap-1.5 pt-1">
                                         {categoryData?.country && (
@@ -473,7 +596,7 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
                                   <Button
                                     onClick={() => onStartExam(examType, 'exam')}
                                     variant="outline"
-                                    className="border-2 font-semibold whitespace-nowrap hover:opacity-90 transition-opacity"
+                                    className="border-2 font-semibold whitespace-nowrap hover:opacity-70 transition-opacity"
                                     style={{
                                       borderColor: darkMode ? '#60a5fa' : '#3b82f6',
                                       backgroundColor: darkMode ? 'rgba(124,45,18,0.25)' : 'rgba(255,237,213,0.6)',
@@ -485,7 +608,7 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
                                   <Button
                                     onClick={() => onStartExam(examType, 'study')}
                                     variant="outline"
-                                    className="border-2 font-semibold whitespace-nowrap hover:opacity-90 transition-opacity"
+                                    className="border-2 font-semibold whitespace-nowrap hover:opacity-70 transition-opacity"
                                     style={{
                                       borderColor: darkMode ? '#60a5fa' : '#3b82f6',
                                       backgroundColor: darkMode ? 'rgba(51,65,85,0.4)' : 'transparent',

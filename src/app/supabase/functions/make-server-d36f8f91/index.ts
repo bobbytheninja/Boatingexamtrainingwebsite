@@ -62,7 +62,7 @@ app.use('*', logger(console.log));
 app.use(
   "/*",
   cors({
-    origin: ["https://blackseabulgaria.com", "https://www.blackseabulgaria.com"],
+    origin: ["https://blackseabulgaria.com", "https://www.blackseabulgaria.com", "https://boatingexamtrainingwebsite.vercel.app"],
     allowHeaders: ["Content-Type", "Authorization"],
     allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     exposeHeaders: ["Content-Length"],
@@ -221,6 +221,140 @@ async function verifyAdmin(authHeader: string | null) {
   return { error: null, user, isAdmin: true };
 }
 
+// ============== EMAIL HELPERS ==============
+
+const EMAIL_LOGO_SVG = `<svg width="28" height="28" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"><g transform="rotate(-12 32 32)"><g stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><circle cx="32" cy="13" r="5" fill="none"/><line x1="32" y1="18" x2="32" y2="50"/><line x1="22" y1="24" x2="42" y2="24"/><path d="M 10 38 Q 14 54 32 54 Q 50 54 54 38" fill="none"/></g><polygon points="10,38 6,34 14,33" fill="#ffffff"/><polygon points="54,38 58,34 50,33" fill="#ffffff"/></g></svg>`;
+
+function emailShell(content: string): string {
+  return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/></head>
+<body style="margin:0;padding:0;background-color:#f0f9ff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f0f9ff;padding:40px 16px;"><tr><td align="center">
+<table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;">
+<tr><td align="center" style="padding-bottom:28px;">
+<table cellpadding="0" cellspacing="0"><tr>
+<td style="padding-right:12px;vertical-align:middle;">
+<div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#0ea5e9 0%,#06b6d4 50%,#0d9488 100%);display:inline-flex;align-items:center;justify-content:center;">${EMAIL_LOGO_SVG}</div>
+</td>
+<td style="vertical-align:middle;">
+<span style="font-size:18px;font-weight:700;color:#0f172a;letter-spacing:-0.3px;">Black Sea Bulgaria</span><br/>
+<span style="font-size:12px;color:#64748b;">Yacht &amp; Boat Exam Training</span>
+</td></tr></table></td></tr>
+${content}
+<tr><td style="padding:24px 0 8px;text-align:center;">
+<p style="margin:0;font-size:12px;color:#94a3b8;line-height:1.8;">&copy; 2025 Black Sea Bulgaria &bull; Yacht &amp; Boat Exam Training<br/>
+<a href="https://blackseabulgaria.com" style="color:#06b6d4;text-decoration:none;">blackseabulgaria.com</a></p>
+</td></tr>
+</table></td></tr></table>
+</body></html>`;
+}
+
+function examTypeLabel(type: string): string {
+  const labels: Record<string, string> = {
+    jetski: 'Jet Ski', smallboat: 'Small Boat', bigboat: 'Big Boat',
+    yacht: 'Yacht (Водач до 40 БТ)', navigation: 'Navigation Device',
+  };
+  return labels[type.toLowerCase()] || type;
+}
+
+async function sendEmail(to: string, subject: string, html: string): Promise<void> {
+  const resendApiKey = getEnv('RESEND_API_KEY');
+  if (!resendApiKey) return;
+  try {
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${resendApiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ from: 'Black Sea Bulgaria <noreply@blackseabulgaria.com>', to: [to], subject, html }),
+    });
+    if (!res.ok) console.error('[sendEmail] Resend error:', await res.text());
+  } catch (e) {
+    console.error('[sendEmail] error:', e);
+  }
+}
+
+function buildWelcomeEmail(name: string): string {
+  return emailShell(`<tr><td style="background:#ffffff;border-radius:16px;box-shadow:0 4px 24px rgba(14,165,233,0.10);overflow:hidden;">
+<div style="height:4px;background:linear-gradient(90deg,#0ea5e9,#06b6d4,#0d9488);"></div>
+<div style="padding:40px 40px 36px;">
+<div style="text-align:center;margin-bottom:24px;">
+<div style="display:inline-flex;align-items:center;justify-content:center;width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#e0f2fe,#cffafe);">
+<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline>
+</svg></div></div>
+<h1 style="margin:0 0 8px;font-size:24px;font-weight:700;color:#0f172a;text-align:center;letter-spacing:-0.5px;">Welcome aboard, ${name}!</h1>
+<p style="margin:0 0 28px;font-size:15px;color:#64748b;text-align:center;line-height:1.6;">Your account is ready. Start practising with official ДАМТН exam questions — free for 10 questions per category.</p>
+<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+<tr><td style="padding:10px 14px;background:#f0f9ff;border-radius:8px;"><span style="color:#0ea5e9;font-size:15px;margin-right:10px;">⚓</span><strong style="color:#0f172a;font-size:14px;">5 exam categories</strong><span style="color:#64748b;font-size:13px;"> — Jet ski, small boat, big boat, yacht, navigation</span></td></tr>
+<tr><td style="height:6px;"></td></tr>
+<tr><td style="padding:10px 14px;background:#f0f9ff;border-radius:8px;"><span style="color:#0ea5e9;font-size:15px;margin-right:10px;">📝</span><strong style="color:#0f172a;font-size:14px;">Official ДАМТН questions</strong><span style="color:#64748b;font-size:13px;"> — 40 questions, 60-minute timer</span></td></tr>
+<tr><td style="height:6px;"></td></tr>
+<tr><td style="padding:10px 14px;background:#f0f9ff;border-radius:8px;"><span style="color:#0ea5e9;font-size:15px;margin-right:10px;">🎯</span><strong style="color:#0f172a;font-size:14px;">Study + exam mode</strong><span style="color:#64748b;font-size:13px;"> — instant feedback on every question</span></td></tr>
+</table>
+<div style="text-align:center;margin-bottom:20px;">
+<a href="https://blackseabulgaria.com" style="display:inline-block;padding:14px 36px;background:linear-gradient(135deg,#0ea5e9,#0d9488);color:#ffffff;font-size:16px;font-weight:600;text-decoration:none;border-radius:10px;">Start practising</a>
+</div>
+<p style="margin:0;font-size:13px;color:#94a3b8;text-align:center;">Full access from €5/month per exam category.</p>
+</div></td></tr>`);
+}
+
+function buildPaymentEmail(examTypes: string[], amountEur: string, expiresAt: number): string {
+  const expiryDate = new Date(expiresAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  const examRows = examTypes.map(t => `<tr>
+<td style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:14px;color:#0f172a;">✓ ${examTypeLabel(t)}</td>
+<td style="padding:8px 0;border-bottom:1px solid #f1f5f9;text-align:right;font-size:13px;color:#64748b;">30-day access</td>
+</tr>`).join('');
+  return emailShell(`<tr><td style="background:#ffffff;border-radius:16px;box-shadow:0 4px 24px rgba(14,165,233,0.10);overflow:hidden;">
+<div style="height:4px;background:linear-gradient(90deg,#0ea5e9,#06b6d4,#0d9488);"></div>
+<div style="padding:40px 40px 36px;">
+<div style="text-align:center;margin-bottom:24px;">
+<div style="display:inline-flex;align-items:center;justify-content:center;width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#dcfce7,#bbf7d0);">
+<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline>
+</svg></div></div>
+<h1 style="margin:0 0 8px;font-size:24px;font-weight:700;color:#0f172a;text-align:center;letter-spacing:-0.5px;">Payment confirmed!</h1>
+<p style="margin:0 0 28px;font-size:15px;color:#64748b;text-align:center;line-height:1.6;">Thank you for your purchase. Your exam access is now active.</p>
+<div style="background:#f8fafc;border-radius:12px;padding:20px 24px;margin-bottom:20px;">
+<p style="margin:0 0 12px;font-size:12px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.8px;">Order summary</p>
+<table width="100%" cellpadding="0" cellspacing="0">
+${examRows}
+<tr><td style="padding-top:12px;font-size:15px;font-weight:700;color:#0f172a;">Total</td>
+<td style="padding-top:12px;text-align:right;font-size:15px;font-weight:700;color:#0f172a;">€${amountEur}</td></tr>
+</table>
+</div>
+<div style="background:#f0fdf4;border-radius:8px;border-left:3px solid #16a34a;padding:14px 16px;margin-bottom:24px;">
+<p style="margin:0;font-size:13px;color:#15803d;line-height:1.6;"><strong>Access expires:</strong> ${expiryDate}</p>
+</div>
+<div style="text-align:center;">
+<a href="https://blackseabulgaria.com" style="display:inline-block;padding:14px 36px;background:linear-gradient(135deg,#0ea5e9,#0d9488);color:#ffffff;font-size:16px;font-weight:600;text-decoration:none;border-radius:10px;">Start your exam</a>
+</div>
+</div></td></tr>`);
+}
+
+function buildContactEmail(name: string, email: string, phone: string, message: string): string {
+  return emailShell(`<tr><td style="background:#ffffff;border-radius:16px;box-shadow:0 4px 24px rgba(14,165,233,0.10);overflow:hidden;">
+<div style="height:4px;background:linear-gradient(90deg,#0ea5e9,#06b6d4,#0d9488);"></div>
+<div style="padding:40px 40px 36px;">
+<h1 style="margin:0 0 24px;font-size:22px;font-weight:700;color:#0f172a;letter-spacing:-0.5px;">📧 New Contact Enquiry</h1>
+<div style="background:#f0f9ff;border-radius:12px;padding:20px 24px;margin-bottom:20px;">
+<table width="100%" cellpadding="0" cellspacing="0">
+<tr><td style="padding-bottom:4px;"><span style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.6px;">Name</span></td></tr>
+<tr><td style="padding-bottom:14px;border-bottom:1px solid #e2e8f0;"><span style="font-size:15px;color:#0f172a;">${name}</span></td></tr>
+<tr><td style="height:12px;"></td></tr>
+<tr><td style="padding-bottom:4px;"><span style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.6px;">Email</span></td></tr>
+<tr><td style="padding-bottom:14px;border-bottom:1px solid #e2e8f0;"><a href="mailto:${email}" style="font-size:15px;color:#0ea5e9;text-decoration:none;">${email}</a></td></tr>
+<tr><td style="height:12px;"></td></tr>
+<tr><td style="padding-bottom:4px;"><span style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.6px;">Phone</span></td></tr>
+<tr><td><a href="tel:${phone}" style="font-size:15px;color:#0ea5e9;text-decoration:none;">${phone}</a></td></tr>
+</table>
+</div>
+<div style="border-left:3px solid #0ea5e9;padding:16px 20px;background:#f8fafc;border-radius:0 8px 8px 0;">
+<p style="margin:0 0 8px;font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.6px;">Message</p>
+<p style="margin:0;font-size:14px;color:#334155;line-height:1.7;">${message.replace(/\n/g, '<br/>')}</p>
+</div>
+</div></td></tr>`);
+}
+
+// ============== END EMAIL HELPERS ==============
+
 // Health check endpoint (no auth required)
 app.get("/make-server-d36f8f91/health", (c) => {
   return c.json({
@@ -277,6 +411,24 @@ app.get("/make-server-d36f8f91/admin/debug-subscription/:email", async (c) => {
   } catch (error: any) {
     console.error('[DEBUG] Error:', error);
     return c.json({ message: 'Error fetching subscription data', error: error.message }, 500);
+  }
+});
+
+// Admin: get payment history for a specific user by userId
+app.get("/make-server-d36f8f91/admin/payments/:userId", async (c) => {
+  const { error, user, isAdmin: adminStatus } = await verifyAdmin(c.req.header('Authorization'));
+
+  if (error || !user || !adminStatus) {
+    return c.json({ message: error || 'Admin access required' }, error === 'Unauthorized' ? 401 : 403);
+  }
+
+  try {
+    const targetUserId = c.req.param('userId');
+    const payments = await kv.get(`payments:${targetUserId}`) || [];
+    return c.json({ payments });
+  } catch (error: any) {
+    console.error('[admin/payments] error:', error);
+    return c.json({ message: 'Error fetching payment history' }, 500);
   }
 });
 
@@ -518,7 +670,10 @@ app.post("/make-server-d36f8f91/signup", async (c) => {
       region: 'Bulgaria',
     });
 
-    return c.json({ 
+    // Send welcome email (non-blocking)
+    sendEmail(email, 'Welcome to Black Sea Bulgaria ⚓', buildWelcomeEmail(name || email)).catch(() => {});
+
+    return c.json({
       message: 'User created successfully',
       userId: data.user.id,
     });
@@ -686,87 +841,16 @@ app.post("/make-server-d36f8f91/contact", async (c) => {
       return c.json({ message: 'Name, email, phone, and message are required' }, 400);
     }
 
-    console.log('[Contact] Preparing email to send via Resend API...');
+    console.log('[Contact] Sending contact email via Resend...');
 
-    // Send email using Resend API
-    const emailPayload = {
-      from: 'Yacht Exam Training <onboarding@resend.dev>',
-      to: ['88xgdgbckn@privaterelay.appleid.com'], // Your Resend account email (forwards to bobby_rocks@me.com)
-      subject: `New Contact Enquiry from ${name}`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #0369a1; border-bottom: 3px solid #0ea5e9; padding-bottom: 10px;">
-            📧 New Contact Form Submission
-          </h2>
-          
-          <div style="background-color: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h3 style="margin-top: 0; color: #0c4a6e;">Visitor Contact Details:</h3>
-            
-            <p style="margin: 10px 0;">
-              <strong style="color: #0369a1;">Name:</strong><br/>
-              ${name}
-            </p>
-            
-            <p style="margin: 10px 0;">
-              <strong style="color: #0369a1;">Email:</strong><br/>
-              <a href="mailto:${email}" style="color: #0ea5e9;">${email}</a>
-            </p>
-            
-            <p style="margin: 10px 0;">
-              <strong style="color: #0369a1;">Phone:</strong><br/>
-              <a href="tel:${phone}" style="color: #0ea5e9;">${phone}</a>
-            </p>
-          </div>
-          
-          <div style="background-color: #ffffff; padding: 20px; border-left: 4px solid #0ea5e9; margin: 20px 0;">
-            <h3 style="margin-top: 0; color: #0c4a6e;">Message:</h3>
-            <p style="line-height: 1.6; color: #334155;">${message.replace(/\n/g, '<br>')}</p>
-          </div>
-          
-          <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;">
-          
-          <p style="color: #64748b; font-size: 12px; text-align: center;">
-            Sent from Yacht Exam Training Website Contact Form<br/>
-            <a href="https://boatingexamtrainingwebsite.vercel.app" style="color: #0ea5e9;">boatingexamtrainingwebsite.vercel.app</a>
-          </p>
-        </div>
-      `,
-    };
+    await sendEmail(
+      '88xgdgbckn@privaterelay.appleid.com',
+      `New Contact Enquiry from ${name}`,
+      buildContactEmail(name, email, phone, message),
+    );
 
-    console.log('[Contact] Email payload:', {
-      from: emailPayload.from,
-      to: emailPayload.to,
-      subject: emailPayload.subject,
-    });
-
-    const emailResponse = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${resendApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(emailPayload),
-    });
-
-    console.log('[Contact] Resend API response status:', emailResponse.status, emailResponse.statusText);
-
-    if (!emailResponse.ok) {
-      const errorData = await emailResponse.json().catch(() => ({}));
-      console.error('[Contact] ❌ Resend API error response:', JSON.stringify(errorData, null, 2));
-      return c.json({ 
-        message: 'Failed to send email', 
-        error: errorData,
-        status: emailResponse.status 
-      }, 500);
-    }
-
-    const result = await emailResponse.json();
-    console.log('[Contact] ✅ Email sent successfully! Resend response:', JSON.stringify(result, null, 2));
-
-    return c.json({ 
-      message: 'Email sent successfully',
-      emailId: result.id 
-    });
+    console.log('[Contact] ✅ Contact email sent');
+    return c.json({ message: 'Email sent successfully' });
   } catch (error: any) {
     console.error('[Contact] ❌ Unexpected error while sending email:', error);
     console.error('[Contact] Error stack:', error.stack);
@@ -774,6 +858,114 @@ app.post("/make-server-d36f8f91/contact", async (c) => {
       message: 'Internal server error while sending email',
       error: error.message 
     }, 500);
+  }
+});
+
+// Send password reset email via Resend (bypasses Supabase rate limit)
+app.post("/make-server-d36f8f91/send-reset-email", async (c) => {
+  try {
+    const { email } = await c.req.json();
+    if (!email || typeof email !== 'string') {
+      return c.json({ message: 'Email required' }, 400);
+    }
+
+    const resendApiKey = getEnv('RESEND_API_KEY');
+    if (!resendApiKey) {
+      console.error('[ResetEmail] RESEND_API_KEY not configured');
+      return c.json({ message: 'Email service not configured' }, 500);
+    }
+
+    // Generate a PKCE-aware recovery link via Supabase Admin API
+    const { data, error } = await supabase!.auth.admin.generateLink({
+      type: 'recovery',
+      email: email.toLowerCase().trim(),
+      options: { redirectTo: 'https://blackseabulgaria.com/reset-password' },
+    });
+
+    if (error || !data?.properties?.action_link) {
+      // Return success regardless to avoid email enumeration
+      console.log('[ResetEmail] generateLink result:', error?.message || 'no action_link');
+      return c.json({ success: true });
+    }
+
+    const actionLink = data.properties.action_link;
+
+    const emailHtml = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/></head>
+<body style="margin:0;padding:0;background-color:#f0f9ff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f0f9ff;padding:40px 16px;">
+<tr><td align="center">
+<table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;">
+<tr><td align="center" style="padding-bottom:28px;">
+<table cellpadding="0" cellspacing="0"><tr>
+<td style="padding-right:12px;vertical-align:middle;">
+<div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#0ea5e9 0%,#06b6d4 50%,#0d9488 100%);display:inline-flex;align-items:center;justify-content:center;">
+<svg width="28" height="28" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g transform="rotate(-12 32 32)">
+<g stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+<circle cx="32" cy="13" r="5" fill="none"/><line x1="32" y1="18" x2="32" y2="50"/>
+<line x1="22" y1="24" x2="42" y2="24"/>
+<path d="M 10 38 Q 14 54 32 54 Q 50 54 54 38" fill="none"/>
+</g>
+<polygon points="10,38 6,34 14,33" fill="#ffffff"/>
+<polygon points="54,38 58,34 50,33" fill="#ffffff"/>
+</g></svg></div></td>
+<td style="vertical-align:middle;">
+<span style="font-size:18px;font-weight:700;color:#0f172a;letter-spacing:-0.3px;">Black Sea Bulgaria</span><br/>
+<span style="font-size:12px;color:#64748b;">Yacht &amp; Boat Exam Training</span>
+</td></tr></table></td></tr>
+<tr><td style="background:#ffffff;border-radius:16px;box-shadow:0 4px 24px rgba(14,165,233,0.10);overflow:hidden;">
+<div style="height:4px;background:linear-gradient(90deg,#0ea5e9,#06b6d4,#0d9488);"></div>
+<div style="padding:40px 40px 36px;">
+<div style="text-align:center;margin-bottom:24px;">
+<div style="display:inline-flex;align-items:center;justify-content:center;width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#e0f2fe,#cffafe);">
+<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+<rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+</svg></div></div>
+<h1 style="margin:0 0 8px;font-size:24px;font-weight:700;color:#0f172a;text-align:center;letter-spacing:-0.5px;">Reset your password</h1>
+<p style="margin:0 0 28px;font-size:15px;color:#64748b;text-align:center;line-height:1.6;">We received a request to reset the password for your account. Click the button below to choose a new password.</p>
+<div style="text-align:center;margin-bottom:28px;">
+<a href="${actionLink}" style="display:inline-block;padding:14px 36px;background:linear-gradient(135deg,#0ea5e9,#0d9488);color:#ffffff;font-size:16px;font-weight:600;text-decoration:none;border-radius:10px;letter-spacing:0.2px;">Reset Password</a>
+</div>
+<p style="margin:0 0 20px;font-size:13px;color:#94a3b8;text-align:center;">This link expires in <strong>1 hour</strong>.</p>
+<div style="border-top:1px solid #e2e8f0;margin:24px 0;"></div>
+<p style="margin:0 0 8px;font-size:13px;color:#64748b;">If the button doesn't work, copy and paste this link into your browser:</p>
+<p style="margin:0;font-size:12px;color:#0ea5e9;word-break:break-all;line-height:1.6;">${actionLink}</p>
+<div style="margin-top:24px;padding:14px 16px;background:#f8fafc;border-radius:8px;border-left:3px solid #06b6d4;">
+<p style="margin:0;font-size:13px;color:#475569;line-height:1.6;"><strong>Didn't request this?</strong> You can safely ignore this email — your password will not change unless you click the button above.</p>
+</div></div></td></tr>
+<tr><td style="padding:24px 0 8px;text-align:center;">
+<p style="margin:0;font-size:12px;color:#94a3b8;line-height:1.8;">&copy; 2025 Black Sea Bulgaria &bull; Yacht &amp; Boat Exam Training<br/>
+<a href="https://blackseabulgaria.com" style="color:#06b6d4;text-decoration:none;">blackseabulgaria.com</a></p>
+</td></tr>
+</table></td></tr></table>
+</body></html>`;
+
+    const emailRes = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${resendApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: 'Black Sea Bulgaria <noreply@blackseabulgaria.com>',
+        to: [email],
+        subject: 'Reset your password — Black Sea Bulgaria',
+        html: emailHtml,
+      }),
+    });
+
+    if (!emailRes.ok) {
+      console.error('[ResetEmail] Resend error:', await emailRes.text());
+    } else {
+      console.log('[ResetEmail] Reset email sent to:', email);
+    }
+
+    return c.json({ success: true });
+  } catch (err: any) {
+    console.error('[ResetEmail] Unexpected error:', err.message);
+    return c.json({ success: true }); // Always return success to avoid enumeration
   }
 });
 
@@ -788,8 +980,17 @@ app.get("/make-server-d36f8f91/subscriptions", async (c) => {
   try {
     const subscription = await kv.get(`subscription:${user.id}`);
 
+    // Fetch free categories (always included regardless of paid subscription)
+    const allCategories = await kv.get('exam_categories') || [];
+    const freeTypes: string[] = Array.isArray(allCategories)
+      ? allCategories.filter((c: any) => c.isFree).map((c: any) => (c.type as string).toLowerCase().trim())
+      : [];
+    // FREE_EXPIRY sentinel is only ever used in API responses — it must never be stored in KV.
+    // Any stored expiry >= this value is treated as invalid (was set when exam was free).
+    const FREE_EXPIRY_THRESHOLD = 9000000000000;
+
     if (!subscription) {
-      return c.json({ subscriptions: [], expiresAt: null, perExamExpiry: {} });
+      return c.json({ subscriptions: freeTypes, expiresAt: null, perExamExpiry: {} });
     }
 
     const now = Date.now();
@@ -798,19 +999,37 @@ app.get("/make-server-d36f8f91/subscriptions", async (c) => {
     let perExamMap: Record<string, number> = {};
     if (Array.isArray(subscription.examTypes)) {
       const oldExpiry = subscription.expiresAt || 0;
-      for (const et of subscription.examTypes) {
-        perExamMap[et.toLowerCase().trim()] = oldExpiry;
+      // Skip any old expiry that was set to FREE_EXPIRY — it means the exam was free, not paid
+      if (oldExpiry < FREE_EXPIRY_THRESHOLD) {
+        for (const et of subscription.examTypes) {
+          perExamMap[et.toLowerCase().trim()] = oldExpiry;
+        }
       }
     } else if (subscription.examTypes && typeof subscription.examTypes === 'object') {
-      perExamMap = subscription.examTypes;
+      // Copy only entries with a real (non-free-sentinel) expiry
+      for (const [et, expiry] of Object.entries(subscription.examTypes as Record<string, number>)) {
+        if ((expiry as number) < FREE_EXPIRY_THRESHOLD) {
+          perExamMap[et] = expiry as number;
+        }
+      }
     }
 
-    // Filter to only active (non-expired) exam types
-    const activeExamTypes = Object.keys(perExamMap).filter(et => (perExamMap[et] || 0) > now);
+    // Filter to only exam types that are still within their paid window AND currently marked as paid
+    const paidTypes = new Set(
+      Array.isArray(allCategories)
+        ? allCategories.filter((c: any) => !c.isFree).map((c: any) => (c.type as string).toLowerCase().trim())
+        : []
+    );
+    const activeExamTypes = Object.keys(perExamMap).filter(et => {
+      const expiry = perExamMap[et] || 0;
+      // Only count as active if: not expired AND the exam is currently a paid category
+      return expiry > now && paidTypes.has(et);
+    });
 
+    // Clean up KV if all paid subscriptions have expired or were free-era artifacts
     if (activeExamTypes.length === 0) {
       await kv.del(`subscription:${user.id}`);
-      return c.json({ subscriptions: [], expiresAt: null, perExamExpiry: {} });
+      return c.json({ subscriptions: freeTypes, expiresAt: null, perExamExpiry: {} });
     }
 
     const expiresAt = Math.max(...activeExamTypes.map(et => perExamMap[et]));
@@ -818,9 +1037,10 @@ app.get("/make-server-d36f8f91/subscriptions", async (c) => {
     for (const et of activeExamTypes) {
       activePerExamExpiry[et] = perExamMap[et];
     }
+    const allActiveTypes = [...new Set([...activeExamTypes, ...freeTypes])];
 
     return c.json({
-      subscriptions: activeExamTypes,
+      subscriptions: allActiveTypes,
       expiresAt,
       perExamExpiry: activePerExamExpiry,
     });
@@ -1096,6 +1316,12 @@ app.post("/make-server-d36f8f91/create-checkout-session", async (c) => {
         ? categories.find((cat: any) => cat.type === examType)
         : null;
       
+      // Skip free categories — access is already granted automatically
+      if (category?.isFree) {
+        console.log(`[Checkout] Category ${examType} is free - skipping`);
+        continue;
+      }
+
       // 🚨 CHECK: Block purchase if category is marked as "expiring soon"
       if (category?.expiringSoon) {
         console.log(`[Checkout] ❌ Category ${examType} is marked as expiring soon - blocking purchase`);
@@ -1246,6 +1472,17 @@ app.post("/make-server-d36f8f91/stripe-webhook", async (c) => {
           paidAt: Date.now(),
         }, ...existingPayments].slice(0, 20);
         await kv.set(`payments:${userId}`, updatedPayments);
+
+        // Send payment confirmation email (non-blocking)
+        const customerEmail = session.customer_email || session.customer_details?.email;
+        if (customerEmail) {
+          const amountEur = ((session.amount_total || 0) / 100).toFixed(2);
+          sendEmail(
+            customerEmail,
+            'Payment confirmed — Black Sea Bulgaria',
+            buildPaymentEmail(examTypes, amountEur, newExpiresAt),
+          ).catch(() => {});
+        }
       }
     }
 
@@ -1442,29 +1679,39 @@ app.post("/make-server-d36f8f91/admin/grant-licenses", async (c) => {
       return c.json({ message: 'Invalid request data' }, 400);
     }
 
-    // Get current subscription
-    const currentSubscription = await kv.get(`subscription:${userId}`) || { examTypes: [] };
+    // Get current subscription and normalize to per-exam object format
+    const currentSubscription = await kv.get(`subscription:${userId}`) || {};
+    const newExpiresAt = Date.now() + (30 * 24 * 60 * 60 * 1000);
 
-    // Add new exam types (merge with existing)
-    const allExamTypes = [...new Set([...currentSubscription.examTypes, ...examTypes])];
+    let perExamMap: Record<string, number> = {};
+    if (Array.isArray(currentSubscription.examTypes)) {
+      const oldExpiry = currentSubscription.expiresAt || 0;
+      for (const et of currentSubscription.examTypes) {
+        perExamMap[et.toLowerCase().trim()] = oldExpiry;
+      }
+    } else if (currentSubscription.examTypes && typeof currentSubscription.examTypes === 'object') {
+      perExamMap = { ...currentSubscription.examTypes };
+    }
 
-    // Set expiration to 30 days from now
-    const expiresAt = Date.now() + (30 * 24 * 60 * 60 * 1000);
+    // Grant each requested exam type with fresh 30-day expiry
+    for (const et of examTypes) {
+      perExamMap[et.toLowerCase().trim()] = newExpiresAt;
+    }
 
     await kv.set(`subscription:${userId}`, {
-      examTypes: allExamTypes,
-      expiresAt,
+      examTypes: perExamMap,
       updatedAt: Date.now(),
       grantedBy: user.id,
       grantedByAdmin: true,
     });
 
+    const allExamTypes = Object.keys(perExamMap);
     console.log(`Admin ${user.email} granted licenses to user ${userId}:`, examTypes);
 
-    return c.json({ 
+    return c.json({
       message: 'Licenses granted successfully',
       subscriptions: allExamTypes,
-      expiresAt,
+      expiresAt: newExpiresAt,
     });
   } catch (error: any) {
     console.error('Error granting licenses:', error);
@@ -1488,19 +1735,29 @@ app.post("/make-server-d36f8f91/admin/revoke-licenses", async (c) => {
       return c.json({ message: 'Invalid request data' }, 400);
     }
 
-    // Get current subscription
-    const currentSubscription = await kv.get(`subscription:${userId}`) || { examTypes: [] };
+    // Get current subscription and normalize to per-exam object format
+    const currentSubscription = await kv.get(`subscription:${userId}`) || {};
+    let perExamMap: Record<string, number> = {};
+    if (Array.isArray(currentSubscription.examTypes)) {
+      const oldExpiry = currentSubscription.expiresAt || 0;
+      for (const et of currentSubscription.examTypes) {
+        perExamMap[et.toLowerCase().trim()] = oldExpiry;
+      }
+    } else if (currentSubscription.examTypes && typeof currentSubscription.examTypes === 'object') {
+      perExamMap = { ...currentSubscription.examTypes };
+    }
 
     // Remove specified exam types
-    const remainingExamTypes = currentSubscription.examTypes.filter(
-      (type: string) => !examTypes.includes(type)
-    );
+    for (const et of examTypes) {
+      delete perExamMap[et.toLowerCase().trim()];
+    }
+    const remainingExamTypes = Object.keys(perExamMap);
 
     if (remainingExamTypes.length === 0) {
       // No licenses left, delete subscription
       await kv.del(`subscription:${userId}`);
       console.log(`Admin ${user.email} revoked all licenses from user ${userId}`);
-      return c.json({ 
+      return c.json({
         message: 'All licenses revoked',
         subscriptions: [],
       });
@@ -1508,8 +1765,7 @@ app.post("/make-server-d36f8f91/admin/revoke-licenses", async (c) => {
 
     // Update subscription with remaining licenses
     await kv.set(`subscription:${userId}`, {
-      ...currentSubscription,
-      examTypes: remainingExamTypes,
+      examTypes: perExamMap,
       updatedAt: Date.now(),
     });
 
@@ -1773,20 +2029,51 @@ app.get("/make-server-d36f8f91/questions/:examType", async (c) => {
       return c.json({ message: 'Exam type required' }, 400);
     }
 
-    // Verify user has subscription for this exam type
-    const subscription = await kv.get(`subscription:${user.id}`);
-    
-    console.log(`[Questions API] User subscription:`, subscription);
-    
-    if (!subscription || !subscription.examTypes?.includes(examType)) {
-      console.log(`[Questions API] User does not have subscription for ${examType}`);
-      return c.json({ message: 'Subscription required for this exam type' }, 403);
-    }
+    // Check if this exam type is a free category (free exams are always accessible)
+    const allCategories = await kv.get('exam_categories') || [];
+    const freeTypes: string[] = Array.isArray(allCategories)
+      ? allCategories.filter((cat: any) => cat.isFree).map((cat: any) => (cat.type as string).toLowerCase().trim())
+      : [];
+    const isFreeExam = freeTypes.includes(examType.toLowerCase().trim());
 
-    // Check if subscription is expired
-    if (subscription.expiresAt && subscription.expiresAt < Date.now()) {
-      console.log(`[Questions API] User subscription expired at ${new Date(subscription.expiresAt)}`);
-      return c.json({ message: 'Subscription expired' }, 403);
+    if (isFreeExam) {
+      console.log(`[Questions API] Free exam type ${examType} — granting access`);
+    } else {
+      // Verify user has a valid paid subscription for this exam type
+      const subscription = await kv.get(`subscription:${user.id}`);
+      const now = Date.now();
+      // Any expiry >= this was set when the exam was free — not a real paid subscription
+      const FREE_EXPIRY_THRESHOLD = 9000000000000;
+
+      let hasAccess = false;
+      let isExpired = false;
+      if (subscription?.examTypes) {
+        if (Array.isArray(subscription.examTypes)) {
+          const storedExpiry = subscription.expiresAt || 0;
+          // Reject free-era expirations
+          if (storedExpiry < FREE_EXPIRY_THRESHOLD) {
+            hasAccess = subscription.examTypes.includes(examType);
+            isExpired = storedExpiry > 0 && storedExpiry < now;
+          }
+        } else if (typeof subscription.examTypes === 'object') {
+          const expiry = subscription.examTypes[examType];
+          // Reject free-era expirations
+          if (expiry !== undefined && expiry < FREE_EXPIRY_THRESHOLD) {
+            hasAccess = true;
+            isExpired = expiry < now;
+          }
+        }
+      }
+
+      if (!hasAccess) {
+        console.log(`[Questions API] User does not have a valid paid subscription for ${examType}`);
+        return c.json({ message: 'Subscription required for this exam type' }, 403);
+      }
+
+      if (isExpired) {
+        console.log(`[Questions API] User subscription expired for ${examType}`);
+        return c.json({ message: 'Subscription expired' }, 403);
+      }
     }
 
     // Get random questions
@@ -2476,10 +2763,10 @@ async function initializeDefaultCategories() {
     const defaultCategories = [
       {
         type: 'jet',
-        title: 'Jet Ski License',
-        titleBg: 'Лиценз за джет',
-        description: 'Master jet ski operation and safety procedures',
-        descriptionBg: 'Овладейте управлението на джет и процедурите за безопасност',
+        title: 'Jet Ski License Exam',
+        titleBg: 'Изпит джет ски — ДАМТН',
+        description: 'Prepare for the Bulgarian jet ski license exam with official ДАМТН questions. 40 questions, 60-minute timer, instant feedback.',
+        descriptionBg: 'Подгответе се за изпита за джет ски с официални въпроси от ДАМТН. 40 въпроса, 60-минутен таймер. Незабавна обратна връзка.',
         icon: 'Waves',
         color: 'bg-gradient-to-br from-cyan-500 to-sky-600',
         image: 'https://images.unsplash.com/photo-1721798974342-7b2b859493a0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxqZXQlMjBza2klMjBvY2VhbnxlbnwxfHx8fDE3NjIzMjEyOTB8MA&ixlib=rb-4.1.0&q=80&w=1080',
@@ -2487,10 +2774,10 @@ async function initializeDefaultCategories() {
       },
       {
         type: 'small',
-        title: 'Small Boat License',
-        titleBg: 'Лиценз за малка лодка',
-        description: 'Learn fundamentals of small boat navigation and handling',
-        descriptionBg: 'Научете основите на навигацията и управлението на малки лодки',
+        title: 'Small Boat License Exam',
+        titleBg: 'Изпит малка лодка — ДАМТН',
+        description: 'Prepare for the Bulgarian small boat license exam with official ДАМТН questions. 40 questions, 60-minute timer, study & exam modes.',
+        descriptionBg: 'Подгответе се за изпита за малка лодка с официални въпроси от ДАМТН. 40 въпроса, 60-минутен таймер. Режим на обучение и пробен изпит.',
         icon: 'Ship',
         color: 'bg-gradient-to-br from-sky-500 to-blue-600',
         image: 'https://images.unsplash.com/photo-1759809278956-70c6a72eecdd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzbWFsbCUyMGJvYXQlMjBzYWlsaW5nfGVufDF8fHx8MTc2MjM1NDIzMnww&ixlib=rb-4.1.0&q=80&w=1080',
@@ -2498,10 +2785,10 @@ async function initializeDefaultCategories() {
       },
       {
         type: 'big',
-        title: 'Big Boat License',
-        titleBg: 'Лиценз за голяма лодка',
-        description: 'Advanced training for operating larger vessels',
-        descriptionBg: 'Разширено обучение за управление на по-големи съдове',
+        title: 'Big Boat License Exam',
+        titleBg: 'Изпит голяма лодка — ДАМТН',
+        description: 'Prepare for the Bulgarian big boat license exam with official ДАМТН questions. 40 questions, 60-minute timer, unlimited attempts.',
+        descriptionBg: 'Подгответе се за изпита за голяма лодка с официални въпроси от ДАМТН. 40 въпроса, 60-минутен таймер. Неограничени опити.',
         icon: 'Anchor',
         color: 'bg-gradient-to-br from-blue-600 to-indigo-700',
         image: 'https://images.unsplash.com/photo-1604930270269-67876a4cbe4a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsYXJnZSUyMHNoaXAlMjBkZWNrfGVufDF8fHx8MTc2MjM1NDIzNHww&ixlib=rb-4.1.0&q=80&w=1080',
@@ -2509,10 +2796,10 @@ async function initializeDefaultCategories() {
       },
       {
         type: 'yacht',
-        title: 'Yacht License (Up to 50 Tons)',
-        titleBg: 'Лиценз за яхта (до 50 тона)',
-        description: 'Professional certification for yacht operation and management',
-        descriptionBg: 'Професионална сертификация за управление на яхти',
+        title: 'Yacht Exam — Водач до 40 БТ',
+        titleBg: 'Изпит яхта — Водач на кораб до 40 БТ',
+        description: 'Prepare for the yacht license exam (Водач до 40 БТ) with official ДАМТН questions. 40 questions, 60-min timer, instant feedback.',
+        descriptionBg: 'Подгответе се за изпит яхта (Водач на кораб до 40 БТ) с официални въпроси от ДАМТН. 40 въпроса, 60-минутен таймер. Незабавна обратна връзка.',
         icon: 'Sailboat',
         color: 'bg-gradient-to-br from-indigo-600 to-purple-700',
         image: 'https://images.unsplash.com/photo-1598737285721-29346a5c9278?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjB5YWNodCUyMG9jZWFufGVufDF8fHx8MTc2MjMwMjQ5N3ww&ixlib=rb-4.1.0&q=80&w=1080',
@@ -2520,10 +2807,10 @@ async function initializeDefaultCategories() {
       },
       {
         type: 'navigation',
-        title: 'Navigation Device License',
-        titleBg: 'Лиценз за навигационно устройство',
-        description: 'Expert knowledge of marine navigation equipment and systems',
-        descriptionBg: 'Експертни познания за морско навигационно оборудване',
+        title: 'Navigation Device License Exam',
+        titleBg: 'Изпит навигационен прибор — ДАМТН',
+        description: 'Prepare for the Bulgarian navigation device certification exam with official ДАМТН questions. 40 questions, 60-minute timer.',
+        descriptionBg: 'Подгответе се за изпита за навигационен прибор с официални въпроси от ДАМТН. 40 въпроса, 60-минутен таймер.',
         icon: 'Compass',
         color: 'bg-gradient-to-br from-teal-500 to-cyan-600',
         image: 'https://images.unsplash.com/photo-1723988433925-035f8625b5c0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxuYXZpZ2F0aW9uJTIwY29tcGFzcyUyMG1hcmluZXxlbnwxfHx8fDE3NjIzNTQyMzl8MA&ixlib=rb-4.1.0&q=80&w=1080',
@@ -2567,10 +2854,10 @@ app.post("/make-server-d36f8f91/debug/init-categories", async (c) => {
     const defaultCategories = [
       {
         type: 'jet',
-        title: 'Jet Ski License',
-        titleBg: 'Лиценз за джет',
-        description: 'Master jet ski operation and safety procedures',
-        descriptionBg: 'Овладейте управлението на джет и процедурите за безопасност',
+        title: 'Jet Ski License Exam',
+        titleBg: 'Изпит джет ски — ДАМТН',
+        description: 'Prepare for the Bulgarian jet ski license exam with official ДАМТН questions. 40 questions, 60-minute timer, instant feedback.',
+        descriptionBg: 'Подгответе се за изпита за джет ски с официални въпроси от ДАМТН. 40 въпроса, 60-минутен таймер. Незабавна обратна връзка.',
         icon: 'Waves',
         color: 'bg-gradient-to-br from-cyan-500 to-sky-600',
         image: 'https://images.unsplash.com/photo-1721798974342-7b2b859493a0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxqZXQlMjBza2klMjBvY2VhbnxlbnwxfHx8fDE3NjIzMjEyOTB8MA&ixlib=rb-4.1.0&q=80&w=1080',
@@ -2578,10 +2865,10 @@ app.post("/make-server-d36f8f91/debug/init-categories", async (c) => {
       },
       {
         type: 'small',
-        title: 'Small Boat License',
-        titleBg: 'Лиценз за малка лодка',
-        description: 'Learn fundamentals of small boat navigation and handling',
-        descriptionBg: 'Научете основите на навигацията и управлението на малки лодки',
+        title: 'Small Boat License Exam',
+        titleBg: 'Изпит малка лодка — ДАМТН',
+        description: 'Prepare for the Bulgarian small boat license exam with official ДАМТН questions. 40 questions, 60-minute timer, study & exam modes.',
+        descriptionBg: 'Подгответе се за изпита за малка лодка с официални въпроси от ДАМТН. 40 въпроса, 60-минутен таймер. Режим на обучение и пробен изпит.',
         icon: 'Ship',
         color: 'bg-gradient-to-br from-sky-500 to-blue-600',
         image: 'https://images.unsplash.com/photo-1759809278956-70c6a72eecdd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzbWFsbCUyMGJvYXQlMjBzYWlsaW5nfGVufDF8fHx8MTc2MjM1NDIzMnww&ixlib=rb-4.1.0&q=80&w=1080',
@@ -2589,10 +2876,10 @@ app.post("/make-server-d36f8f91/debug/init-categories", async (c) => {
       },
       {
         type: 'big',
-        title: 'Big Boat License',
-        titleBg: 'Лиценз за голяма лодка',
-        description: 'Advanced training for operating larger vessels',
-        descriptionBg: 'Разширено обучение за управление на по-големи съдове',
+        title: 'Big Boat License Exam',
+        titleBg: 'Изпит голяма лодка — ДАМТН',
+        description: 'Prepare for the Bulgarian big boat license exam with official ДАМТН questions. 40 questions, 60-minute timer, unlimited attempts.',
+        descriptionBg: 'Подгответе се за изпита за голяма лодка с официални въпроси от ДАМТН. 40 въпроса, 60-минутен таймер. Неограничени опити.',
         icon: 'Anchor',
         color: 'bg-gradient-to-br from-blue-600 to-indigo-700',
         image: 'https://images.unsplash.com/photo-1604930270269-67876a4cbe4a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsYXJnZSUyMHNoaXAlMjBkZWNrfGVufDF8fHx8MTc2MjM1NDIzNHww&ixlib=rb-4.1.0&q=80&w=1080',
@@ -2600,10 +2887,10 @@ app.post("/make-server-d36f8f91/debug/init-categories", async (c) => {
       },
       {
         type: 'yacht',
-        title: 'Yacht License (Up to 50 Tons)',
-        titleBg: 'Лиценз за яхта (до 50 тона)',
-        description: 'Professional certification for yacht operation and management',
-        descriptionBg: 'Професионална сертификация за управление на яхти',
+        title: 'Yacht Exam — Водач до 40 БТ',
+        titleBg: 'Изпит яхта — Водач на кораб до 40 БТ',
+        description: 'Prepare for the yacht license exam (Водач до 40 БТ) with official ДАМТН questions. 40 questions, 60-min timer, instant feedback.',
+        descriptionBg: 'Подгответе се за изпит яхта (Водач на кораб до 40 БТ) с официални въпроси от ДАМТН. 40 въпроса, 60-минутен таймер. Незабавна обратна връзка.',
         icon: 'Sailboat',
         color: 'bg-gradient-to-br from-indigo-600 to-purple-700',
         image: 'https://images.unsplash.com/photo-1598737285721-29346a5c9278?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjB5YWNodCUyMG9jZWFufGVufDF8fHx8MTc2MjMwMjQ5N3ww&ixlib=rb-4.1.0&q=80&w=1080',
@@ -2611,10 +2898,10 @@ app.post("/make-server-d36f8f91/debug/init-categories", async (c) => {
       },
       {
         type: 'navigation',
-        title: 'Navigation Device License',
-        titleBg: 'Лиценз за навигационно устройство',
-        description: 'Expert knowledge of marine navigation equipment and systems',
-        descriptionBg: 'Експертни познания за морско навигационно оборудване',
+        title: 'Navigation Device License Exam',
+        titleBg: 'Изпит навигационен прибор — ДАМТН',
+        description: 'Prepare for the Bulgarian navigation device certification exam with official ДАМТН questions. 40 questions, 60-minute timer.',
+        descriptionBg: 'Подгответе се за изпита за навигационен прибор с официални въпроси от ДАМТН. 40 въпроса, 60-минутен таймер.',
         icon: 'Compass',
         color: 'bg-gradient-to-br from-teal-500 to-cyan-600',
         image: 'https://images.unsplash.com/photo-1723988433925-035f8625b5c0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxuYXZpZ2F0aW9uJTIwY29tcGFzcyUyMG1hcmluZXxlbnwxfHx8fDE3NjIzNTQyMzl8MA&ixlib=rb-4.1.0&q=80&w=1080',
@@ -2710,10 +2997,10 @@ app.post("/make-server-d36f8f91/categories/force-init", async (c) => {
     const defaultCategories = [
       {
         type: 'jet',
-        title: 'Jet Ski License',
-        titleBg: 'Лиценз за джет',
-        description: 'Master jet ski operation and safety procedures',
-        descriptionBg: 'Овладейте управлението на джет и процедурите за безопасност',
+        title: 'Jet Ski License Exam',
+        titleBg: 'Изпит джет ски — ДАМТН',
+        description: 'Prepare for the Bulgarian jet ski license exam with official ДАМТН questions. 40 questions, 60-minute timer, instant feedback.',
+        descriptionBg: 'Подгответе се за изпита за джет ски с официални въпроси от ДАМТН. 40 въпроса, 60-минутен таймер. Незабавна обратна връзка.',
         icon: 'Waves',
         color: 'bg-gradient-to-br from-cyan-500 to-sky-600',
         image: 'https://images.unsplash.com/photo-1721798974342-7b2b859493a0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxqZXQlMjBza2klMjBvY2VhbnxlbnwxfHx8fDE3NjIzMjEyOTB8MA&ixlib=rb-4.1.0&q=80&w=1080',
@@ -2721,10 +3008,10 @@ app.post("/make-server-d36f8f91/categories/force-init", async (c) => {
       },
       {
         type: 'small',
-        title: 'Small Boat License',
-        titleBg: 'Лиценз за малка лодка',
-        description: 'Learn fundamentals of small boat navigation and handling',
-        descriptionBg: 'Научете основите на навигацията и управлението на малки лодки',
+        title: 'Small Boat License Exam',
+        titleBg: 'Изпит малка лодка — ДАМТН',
+        description: 'Prepare for the Bulgarian small boat license exam with official ДАМТН questions. 40 questions, 60-minute timer, study & exam modes.',
+        descriptionBg: 'Подгответе се за изпита за малка лодка с официални въпроси от ДАМТН. 40 въпроса, 60-минутен таймер. Режим на обучение и пробен изпит.',
         icon: 'Ship',
         color: 'bg-gradient-to-br from-sky-500 to-blue-600',
         image: 'https://images.unsplash.com/photo-1759809278956-70c6a72eecdd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzbWFsbCUyMGJvYXQlMjBzYWlsaW5nfGVufDF8fHx8MTc2MjM1NDIzMnww&ixlib=rb-4.1.0&q=80&w=1080',
@@ -2732,10 +3019,10 @@ app.post("/make-server-d36f8f91/categories/force-init", async (c) => {
       },
       {
         type: 'big',
-        title: 'Big Boat License',
-        titleBg: 'Лиценз за голяма лодка',
-        description: 'Advanced training for operating larger vessels',
-        descriptionBg: 'Разширено обучение за управление на по-големи съдове',
+        title: 'Big Boat License Exam',
+        titleBg: 'Изпит голяма лодка — ДАМТН',
+        description: 'Prepare for the Bulgarian big boat license exam with official ДАМТН questions. 40 questions, 60-minute timer, unlimited attempts.',
+        descriptionBg: 'Подгответе се за изпита за голяма лодка с официални въпроси от ДАМТН. 40 въпроса, 60-минутен таймер. Неограничени опити.',
         icon: 'Anchor',
         color: 'bg-gradient-to-br from-blue-600 to-indigo-700',
         image: 'https://images.unsplash.com/photo-1604930270269-67876a4cbe4a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsYXJnZSUyMHNoaXAlMjBkZWNrfGVufDF8fHx8MTc2MjM1NDIzNHww&ixlib=rb-4.1.0&q=80&w=1080',
@@ -2743,10 +3030,10 @@ app.post("/make-server-d36f8f91/categories/force-init", async (c) => {
       },
       {
         type: 'yacht',
-        title: 'Yacht License (Up to 50 Tons)',
-        titleBg: 'Лиценз за яхта (до 50 тона)',
-        description: 'Professional certification for yacht operation and management',
-        descriptionBg: 'Професионална сертификация за управление на яхти',
+        title: 'Yacht Exam — Водач до 40 БТ',
+        titleBg: 'Изпит яхта — Водач на кораб до 40 БТ',
+        description: 'Prepare for the yacht license exam (Водач до 40 БТ) with official ДАМТН questions. 40 questions, 60-min timer, instant feedback.',
+        descriptionBg: 'Подгответе се за изпит яхта (Водач на кораб до 40 БТ) с официални въпроси от ДАМТН. 40 въпроса, 60-минутен таймер. Незабавна обратна връзка.',
         icon: 'Sailboat',
         color: 'bg-gradient-to-br from-indigo-600 to-purple-700',
         image: 'https://images.unsplash.com/photo-1598737285721-29346a5c9278?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjB5YWNodCUyMG9jZWFufGVufDF8fHx8MTc2MjMwMjQ5N3ww&ixlib=rb-4.1.0&q=80&w=1080',
@@ -2754,10 +3041,10 @@ app.post("/make-server-d36f8f91/categories/force-init", async (c) => {
       },
       {
         type: 'navigation',
-        title: 'Navigation Device License',
-        titleBg: 'Лиценз за навигационно устройство',
-        description: 'Expert knowledge of marine navigation equipment and systems',
-        descriptionBg: 'Експертни познания за морско навигационно оборудване',
+        title: 'Navigation Device License Exam',
+        titleBg: 'Изпит навигационен прибор — ДАМТН',
+        description: 'Prepare for the Bulgarian navigation device certification exam with official ДАМТН questions. 40 questions, 60-minute timer.',
+        descriptionBg: 'Подгответе се за изпита за навигационен прибор с официални въпроси от ДАМТН. 40 въпроса, 60-минутен таймер.',
         icon: 'Compass',
         color: 'bg-gradient-to-br from-teal-500 to-cyan-600',
         image: 'https://images.unsplash.com/photo-1723988433925-035f8625b5c0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxuYXZpZ2F0aW9uJTIwY29tcGFzcyUyMG1hcmluZXxlbnwxfHx8fDE3NjIzNTQyMzl8MA&ixlib=rb-4.1.0&q=80&w=1080',

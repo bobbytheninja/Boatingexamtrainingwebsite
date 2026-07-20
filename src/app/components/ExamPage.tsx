@@ -6,7 +6,6 @@ import { Label } from './ui/label';
 import { Progress } from './ui/progress';
 import { Badge } from './ui/badge';
 import { Alert, AlertDescription } from './ui/alert';
-import { ScrollArea } from './ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from './ui/alert-dialog';
 import { 
@@ -158,7 +157,9 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
           }
 
           if (errorMsg.includes('Subscription required')) {
-            setQuestionLoadError('You need an active subscription for this exam type. Please purchase access or contact support.');
+            setQuestionLoadError('subscription: You need an active subscription for this exam type. Please purchase access.');
+          } else if (errorMsg.includes('Subscription expired') || errorMsg.includes('subscription expired')) {
+            setQuestionLoadError('subscription: Your subscription for this exam has expired. Please renew your access.');
           } else if (errorMsg.includes('No questions available')) {
             setQuestionLoadError(`No questions found for ${examType} exam. The admin needs to import questions. Check Admin Panel > Diagnostics.`);
           } else {
@@ -460,6 +461,13 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
     }
   };
 
+  const handleSkipNext = () => {
+    if (currentQuestionIndex < totalQuestions - 1) {
+      setCurrentQuestionIndex(currentQuestionIndex + 1);
+      setShowAnswerFeedback(false);
+    }
+  };
+
   const jumpToQuestion = (index: number) => {
     setCurrentQuestionIndex(index);
     setShowAnswerFeedback(false);
@@ -468,6 +476,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
   const calculateResults = () => {
     let wrongCount = 0;
     let correctCount = 0;
+    const submittedCount = Object.keys(answeredQuestions).length;
 
     examQuestions.forEach((question, index) => {
       const answer = answeredQuestions[index];
@@ -479,11 +488,11 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
       }
     });
 
-    return { wrongCount, correctCount };
+    return { wrongCount, correctCount, submittedCount };
   };
 
   if (showResults) {
-    const { wrongCount, correctCount } = calculateResults();
+    const { wrongCount, correctCount, submittedCount } = calculateResults();
     const passed = wrongCount < MAX_WRONG_ANSWERS;
     const percentage = Math.round((correctCount / totalQuestions) * 100);
 
@@ -540,7 +549,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 pt-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Card
                   className="border-2"
                   style={{
@@ -569,6 +578,19 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                     <p className="text-xs mt-1" style={{ color: darkMode ? '#64748b' : '#6b7280' }}>{t.maximum}: {MAX_WRONG_ANSWERS}</p>
                   </CardContent>
                 </Card>
+                <Card
+                  className="border-2"
+                  style={{
+                    background: darkMode ? 'linear-gradient(to bottom right, #064e3b, #1e293b)' : 'linear-gradient(to bottom right, #f0fdf4, #ffffff)',
+                    borderColor: darkMode ? '#475569' : '#bbf7d0',
+                  }}
+                >
+                  <CardContent className="pt-4 pb-4 text-center">
+                    <p className="text-xs mb-1" style={{ color: darkMode ? '#94a3b8' : '#4b5563' }}>Questions Submitted</p>
+                    <p className="text-3xl font-bold" style={{ color: darkMode ? '#4ade80' : '#16a34a' }}>{submittedCount}</p>
+                    <p className="text-xs mt-1" style={{ color: darkMode ? '#64748b' : '#6b7280' }}>{t.of} {totalQuestions} total</p>
+                  </CardContent>
+                </Card>
               </div>
 
               {mode === 'exam' && (
@@ -595,7 +617,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                       setShowResults(false);
                     }}
                     variant="outline"
-                    className="flex-1 shadow-md hover:opacity-90 transition-opacity"
+                    className="flex-1 shadow-md hover:opacity-70 transition-opacity"
                     style={{
                       borderColor: darkMode ? '#60a5fa' : '#3b82f6',
                       color: darkMode ? '#93c5fd' : '#2563eb',
@@ -621,7 +643,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                       localStorage.removeItem(storageKey);
                     }}
                     variant="outline"
-                    className="flex-1 shadow-md hover:opacity-90 transition-opacity"
+                    className="flex-1 shadow-md hover:opacity-70 transition-opacity"
                     style={{
                       borderColor: darkMode ? '#2dd4bf' : '#14b8a6',
                       color: darkMode ? '#5eead4' : '#0f766e',
@@ -644,6 +666,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                     setTimeRemaining(60 * 60);
                     setShowAnswerFeedback(false);
                     setExamStarted(false);
+                    setExamQuestions([]); // Clear so loadQuestions fetches a fresh random set
                     // Clear localStorage
                     const storageKey = `exam_progress_${examType}_${mode}_${tier}`;
                     localStorage.removeItem(storageKey);
@@ -687,7 +710,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
   }
   
   if (showReview) {
-    const { wrongCount, correctCount } = calculateResults();
+    const { wrongCount, correctCount, submittedCount } = calculateResults();
     
     return (
       <>
@@ -752,6 +775,10 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                     <p className={`text-2xl font-bold`} style={{ color: wrongCount < MAX_WRONG_ANSWERS ? (darkMode ? '#4ade80' : '#16a34a') : (darkMode ? '#f87171' : '#dc2626') }}>
                       {wrongCount}/{MAX_WRONG_ANSWERS}
                     </p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-sm mb-1" style={{ color: darkMode ? '#94a3b8' : '#6b7280' }}>Submitted</p>
+                    <p className="text-2xl font-bold" style={{ color: darkMode ? '#2dd4bf' : '#0f766e' }}>{submittedCount}/{totalQuestions}</p>
                   </div>
                 </div>
               </CardContent>
@@ -1009,10 +1036,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                 borderColor: darkMode ? '#4b5563' : '#cbd5e1'
               }}
             >
-              {language === 'English' 
-                ? `No questions found for ${examType} exam. Contact the web page administrator.`
-                : `Няма намерени въпроси за ${examType} изпит. Свържете се с администратора.`
-              }
+              {questionLoadError.replace(/^subscription:\s*/i, '')}
             </p>
             
             <div className="flex flex-col gap-2">
@@ -1090,7 +1114,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
             <Button
               onClick={() => setShowExitDialog(true)}
               variant="outline"
-              className="hover:opacity-90 transition-opacity duration-200"
+              className="hover:opacity-70 transition-opacity duration-200"
               style={{
                 borderColor: darkMode ? '#f87171' : '#ef4444',
                 color: darkMode ? '#fca5a5' : '#dc2626',
@@ -1400,11 +1424,25 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                 : (currentQuestionIndex === totalQuestions - 1 ? t.finish : t.next)}
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
+            <Button
+              onClick={handleSkipNext}
+              disabled={currentQuestionIndex === totalQuestions - 1}
+              variant="outline"
+              title="Skip to next question without submitting"
+              className="h-9 px-3 shadow-md hover:opacity-70 transition-opacity"
+              style={{
+                borderColor: darkMode ? '#475569' : '#cbd5e1',
+                color: darkMode ? '#94a3b8' : '#6b7280',
+                backgroundColor: darkMode ? '#334155' : '#f8fafc',
+              }}
+            >
+              {'>'}
+            </Button>
             {/* Desktop: Submit in the same row */}
             <Button
               onClick={() => setShowSubmitDialog(true)}
               variant="outline"
-              className="hidden sm:flex shadow-md hover:opacity-90 transition-opacity"
+              className="hidden sm:flex shadow-md hover:opacity-70 transition-opacity"
               style={{
                 borderColor: darkMode ? '#0891b2' : '#0891b2',
                 color: darkMode ? '#67e8f9' : '#0e7490',
@@ -1419,7 +1457,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
           <Button
             onClick={() => setShowSubmitDialog(true)}
             variant="outline"
-            className="sm:hidden w-full shadow-md hover:opacity-90 transition-opacity"
+            className="sm:hidden w-full shadow-md hover:opacity-70 transition-opacity"
             style={{
               borderColor: darkMode ? '#0891b2' : '#0891b2',
               color: darkMode ? '#67e8f9' : '#0e7490',
@@ -1463,8 +1501,8 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
               transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
             }}
           >
-            <ScrollArea className="h-[190px]">
-              <div className="grid grid-cols-10 gap-1 pr-2 p-1">
+            <div>
+              <div className="grid grid-cols-10 gap-1 p-1">
                 {examQuestions.map((q, index) => {
                   const answer = answeredQuestions[index];
                   const isCurrentQuestion = index === currentQuestionIndex;
@@ -1534,7 +1572,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                   );
                 })}
               </div>
-            </ScrollArea>
+            </div>
             <div className="flex items-center justify-center gap-3 mt-2 pt-2 border-t dark:border-t-slate-500 flex-wrap">
               {mode === 'study' ? (
                 <>
