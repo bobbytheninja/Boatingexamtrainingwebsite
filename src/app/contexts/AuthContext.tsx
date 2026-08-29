@@ -71,8 +71,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const clearForcedLogoutMessage = useCallback(() => setForcedLogoutMessage(null), []);
 
+  // Remove all cached exam questions from sessionStorage so a logged-out
+  // user cannot continue an exam using stale data after forced logout.
+  const clearQuestionCache = () => {
+    try {
+      const keys = Object.keys(sessionStorage).filter(k => k.startsWith('qcache_'));
+      keys.forEach(k => sessionStorage.removeItem(k));
+    } catch {}
+  };
+
   const triggerForcedLogout = useCallback(async (message: string) => {
     await supabaseClient.auth.signOut({ scope: 'local' });
+    clearQuestionCache();
     setUser(null);
     setAccessToken(null);
     setForcedLogoutMessage(message);
@@ -384,6 +394,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     try {
+      clearQuestionCache();
       // Clear the active session from the backend FIRST (before Supabase signOut)
       if (user && accessToken) {
         try {

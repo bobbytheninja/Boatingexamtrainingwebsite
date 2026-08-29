@@ -84,8 +84,9 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
   const [showExitDialog, setShowExitDialog] = useState(false);
   const [showSubmitDialog, setShowSubmitDialog] = useState(false);
 
-  // Session-level question cache — avoids re-fetching on remount within same session
-  const questionsCacheKey = `qcache_${tier}_${examType}`;
+  // Session-level question cache — keyed to this user's ID so a different
+  // account logging into the same tab never reads another user's cached data.
+  const questionsCacheKey = `qcache_${user?.id ?? 'anon'}_${tier}_${examType}`;
   const getCachedQuestions = (): Question[] | null => {
     try {
       const raw = sessionStorage.getItem(questionsCacheKey);
