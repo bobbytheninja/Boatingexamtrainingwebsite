@@ -84,17 +84,43 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
   const [showExitDialog, setShowExitDialog] = useState(false);
   const [showSubmitDialog, setShowSubmitDialog] = useState(false);
 
+  // Session-level question cache — avoids re-fetching on remount within same session
+  const questionsCacheKey = `qcache_${tier}_${examType}`;
+  const getCachedQuestions = (): Question[] | null => {
+    try {
+      const raw = sessionStorage.getItem(questionsCacheKey);
+      return raw ? (JSON.parse(raw) as Question[]) : null;
+    } catch { return null; }
+  };
+  const setCachedQuestions = (qs: Question[]) => {
+    try { sessionStorage.setItem(questionsCacheKey, JSON.stringify(qs)); } catch {}
+  };
+
+  // Prefetch the next question's image so advancing feels instant
+  useEffect(() => {
+    const next = examQuestions[currentQuestionIndex + 1];
+    if (next?.image) {
+      const img = new window.Image();
+      img.src = next.image;
+    }
+  }, [currentQuestionIndex, examQuestions]);
+
   // Load questions based on tier
   useEffect(() => {
     const loadQuestions = async () => {
-      console.log('[ExamPage] 🔄 loadQuestions called with:', { examType, tier, hasAccessToken: !!accessToken, questionsLoaded: examQuestions.length });
-      
       // Prevent duplicate loads
       if (examQuestions.length > 0) {
-        console.log('[ExamPage] ⚠️ Questions already loaded, skipping duplicate load');
         return;
       }
-      
+
+      // Serve from session cache so remounts are instant
+      const cached = getCachedQuestions();
+      if (cached && cached.length > 0) {
+        setExamQuestions(cached);
+        setLoadingQuestions(false);
+        return;
+      }
+
       setLoadingQuestions(true);
       setQuestionLoadError(null);
 
@@ -144,8 +170,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
             };
           });
 
-          console.log(`[ExamPage] Successfully converted ${dbQuestions.length} questions`);
-          console.log('[ExamPage] Sample question structure:', dbQuestions[0]);
+          setCachedQuestions(dbQuestions);
           setExamQuestions(dbQuestions);
           setLoadingQuestions(false);
         } catch (error: any) {
@@ -210,7 +235,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
             };
           });
 
-          console.log(`[ExamPage] Successfully converted ${dbQuestions.length} mock questions`);
+          setCachedQuestions(dbQuestions);
           setExamQuestions(dbQuestions);
           setLoadingQuestions(false);
         } catch (error: any) {
@@ -1330,6 +1355,8 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                   src={currentQuestion.image}
                   alt="Question illustration"
                   className="w-full min-h-[136px] max-h-[272px] object-contain mx-auto"
+                  fetchPriority="high"
+                  loading="eager"
                 />
               </div>
             )}

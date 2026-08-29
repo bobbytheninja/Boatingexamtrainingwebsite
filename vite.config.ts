@@ -16,6 +16,25 @@ function figmaAssetResolver() {
   }
 }
 
+// Makes the Tailwind CSS link non-blocking so it no longer delays FCP.
+// The browser downloads CSS in parallel with JS; `onload` swaps it to a
+// real stylesheet once available. FOUC is negligible since React must
+// also execute before any content renders.
+function nonBlockingCSSPlugin() {
+  return {
+    name: 'non-blocking-css',
+    enforce: 'post' as const,
+    transformIndexHtml(html: string) {
+      return html.replace(
+        /<link rel="stylesheet"(\s[^>]*)?href="([^"]+\.css)"([^>]*)>/g,
+        (_, before = '', href, after = '') =>
+          `<link rel="preload" as="style"${before}href="${href}"${after} onload="this.onload=null;this.rel='stylesheet'">` +
+          `<noscript><link rel="stylesheet"${before}href="${href}"${after}></noscript>`
+      );
+    },
+  };
+}
+
 export default defineConfig({
   plugins: [
     figmaAssetResolver(),
@@ -23,6 +42,7 @@ export default defineConfig({
     // Tailwind is not being actively used – do not remove them
     react(),
     tailwindcss(),
+    nonBlockingCSSPlugin(),
   ],
   // Point to the correct public directory
   publicDir: path.resolve(__dirname, './src/app/public'),
