@@ -204,7 +204,6 @@ export function PartnersPage({ onNavigate, selectedPartnerIndex = 0, isLoggedIn 
               ))
             ) : partners.length === 0 ? (
               <div className="text-center py-24">
-                <p className="text-5xl mb-4">🤝</p>
                 <h3 className="text-xl font-semibold mb-2 transition-colors duration-[400ms]" style={{ color: darkMode ? '#f3f4f6' : '#1e293b' }}>
                   No partners yet
                 </h3>

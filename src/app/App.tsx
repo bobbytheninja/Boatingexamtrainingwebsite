@@ -9,7 +9,7 @@ import { Toaster } from './components/ui/sonner';
 import { toast } from 'sonner';
 import { HomePage } from './components/HomePage';
 import { Language } from './data/translations';
-import { AppDiagnostics } from './components/AppDiagnostics';
+const AppDiagnostics = React.lazy(() => import('./components/AppDiagnostics').then(m => ({ default: m.AppDiagnostics })));
 
 const LoginPage = React.lazy(() => import('./components/LoginPage').then(m => ({ default: m.LoginPage })));
 const ExamModeSelection = React.lazy(() => import('./components/ExamModeSelection').then(m => ({ default: m.ExamModeSelection })));

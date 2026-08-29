@@ -28,10 +28,14 @@ interface QuestionEditorProps {
 
 const ANSWER_LABELS = ['A', 'B', 'C', 'D'] as const;
 
+// correctAnswer is stored lowercase ('a','b','c','d') — normalise for display
+const toUpper = (s: string) => (s || '').toUpperCase();
+const toLower = (s: string) => (s || '').toLowerCase();
+
 export function QuestionEditor({ accessToken }: QuestionEditorProps) {
   const { darkMode } = useDarkMode();
 
-  const [categories, setCategories] = useState<{ type: string; name: string }[]>([]);
+  const [categories, setCategories] = useState<{ type: string; title: string }[]>([]);
   const [selectedExam, setSelectedExam] = useState('');
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loadingQuestions, setLoadingQuestions] = useState(false);
@@ -172,7 +176,7 @@ export function QuestionEditor({ accessToken }: QuestionEditorProps) {
               >
                 <option value="">— Select an exam —</option>
                 {categories.map(cat => (
-                  <option key={cat.type} value={cat.type}>{cat.name}</option>
+                  <option key={cat.type} value={cat.type}>{cat.title || cat.type}</option>
                 ))}
               </select>
             </div>
@@ -229,7 +233,7 @@ export function QuestionEditor({ accessToken }: QuestionEditorProps) {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {ANSWER_LABELS.map(letter => {
                 const key = `answer${letter}` as keyof Question;
-                const isCorrect = draftQuestion.correctAnswer === letter;
+                const isCorrect = toUpper(draftQuestion.correctAnswer) === letter;
                 return (
                   <div key={letter}>
                     <Label className="mb-1.5 flex items-center gap-1.5 text-sm font-medium" style={labelStyle}>
@@ -261,12 +265,12 @@ export function QuestionEditor({ accessToken }: QuestionEditorProps) {
                 {ANSWER_LABELS.map(letter => (
                   <button
                     key={letter}
-                    onClick={() => setDraftQuestion(prev => prev ? { ...prev, correctAnswer: letter } : prev)}
+                    onClick={() => setDraftQuestion(prev => prev ? { ...prev, correctAnswer: toLower(letter) } : prev)}
                     className="flex-1 py-2 rounded-md text-sm font-bold border-2 transition-all"
                     style={{
-                      borderColor: draftQuestion.correctAnswer === letter ? '#16a34a' : (darkMode ? '#475569' : '#e5e7eb'),
-                      background: draftQuestion.correctAnswer === letter ? '#16a34a' : (darkMode ? '#1e293b' : '#ffffff'),
-                      color: draftQuestion.correctAnswer === letter ? '#ffffff' : (darkMode ? '#e2e8f0' : '#374151'),
+                      borderColor: toUpper(draftQuestion.correctAnswer) === letter ? '#16a34a' : (darkMode ? '#475569' : '#e5e7eb'),
+                      background: toUpper(draftQuestion.correctAnswer) === letter ? '#16a34a' : (darkMode ? '#1e293b' : '#ffffff'),
+                      color: toUpper(draftQuestion.correctAnswer) === letter ? '#ffffff' : (darkMode ? '#e2e8f0' : '#374151'),
                     }}
                   >{letter}</button>
                 ))}
@@ -349,11 +353,11 @@ export function QuestionEditor({ accessToken }: QuestionEditorProps) {
                         <div className="flex flex-wrap gap-x-3 mt-1">
                           {ANSWER_LABELS.map(letter => (
                             <span key={letter} className="text-xs" style={{
-                              color: q.correctAnswer === letter ? '#16a34a' : (darkMode ? '#64748b' : '#9ca3af'),
-                              fontWeight: q.correctAnswer === letter ? 700 : 400,
+                              color: toUpper(q.correctAnswer) === letter ? '#16a34a' : (darkMode ? '#64748b' : '#9ca3af'),
+                              fontWeight: toUpper(q.correctAnswer) === letter ? 700 : 400,
                             }}>
                               {letter}: {q[`answer${letter}` as keyof Question] as string}
-                              {q.correctAnswer === letter && ' ✓'}
+                              {toUpper(q.correctAnswer) === letter && ' ✓'}
                             </span>
                           ))}
                         </div>

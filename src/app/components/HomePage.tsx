@@ -171,6 +171,8 @@ export function HomePage() {
         <div className="relative h-[77vh] md:h-[81vh] overflow-hidden">
           <ImageWithFallback
             src="/hero-yacht.jpg"
+            srcSet="/hero-yacht-mobile.jpg 750w, /hero-yacht.jpg 1400w"
+            sizes="(max-width: 768px) 750px, 1400px"
             alt="Bavaria Cruiser 45 yacht"
             className="w-full h-full object-cover"
             style={{ objectPosition: 'center 70%' }}

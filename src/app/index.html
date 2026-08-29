@@ -11,8 +11,9 @@
     <!-- Preconnect for faster load of external resources (Core Web Vitals) -->
     <link rel="preconnect" href="https://abtrsjhvjfgcxxpkszwi.supabase.co" />
     <link rel="dns-prefetch" href="https://abtrsjhvjfgcxxpkszwi.supabase.co" />
-    <!-- LCP image preload — must be discoverable in initial document for Core Web Vitals -->
-    <link rel="preload" as="image" href="/hero-yacht.jpg" fetchpriority="high" />
+    <!-- LCP image preload — responsive: mobile gets smaller file, desktop gets full -->
+    <link rel="preload" as="image" href="/hero-yacht-mobile.jpg" fetchpriority="high" media="(max-width: 768px)" />
+    <link rel="preload" as="image" href="/hero-yacht.jpg" fetchpriority="high" media="(min-width: 769px)" />
 
     <!-- Favicons for all devices and browsers -->
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
