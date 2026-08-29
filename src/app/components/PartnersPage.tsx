@@ -102,7 +102,7 @@ export function PartnersPage({ onNavigate, selectedPartnerIndex = 0, isLoggedIn 
       const raw = localStorage.getItem(CACHE_KEY);
       if (raw) {
         const { partners: cached, cachedAt } = JSON.parse(raw);
-        if (Array.isArray(cached) && cached.length > 0) {
+        if (Array.isArray(cached)) {
           setPartners(cached);
           setInitialLoading(false);
           // If cache is still fresh, skip the network request
@@ -121,7 +121,7 @@ export function PartnersPage({ onNavigate, selectedPartnerIndex = 0, isLoggedIn 
     )
       .then(res => (res.ok ? res.json() : null))
       .then(data => {
-        const fetched: Partner[] = data?.partners?.length ? data.partners : getDefaultPartners();
+        const fetched: Partner[] = Array.isArray(data?.partners) ? data.partners : [];
         setPartners(fetched);
         setInitialLoading(false);
         try {
@@ -131,7 +131,6 @@ export function PartnersPage({ onNavigate, selectedPartnerIndex = 0, isLoggedIn 
         }
       })
       .catch(() => {
-        setPartners(prev => prev.length ? prev : getDefaultPartners());
         setInitialLoading(false);
       });
   }, []);
@@ -203,6 +202,16 @@ export function PartnersPage({ onNavigate, selectedPartnerIndex = 0, isLoggedIn 
                   style={{ background: darkMode ? '#334155' : '#e2e8f0' }}
                 />
               ))
+            ) : partners.length === 0 ? (
+              <div className="text-center py-24">
+                <p className="text-5xl mb-4">🤝</p>
+                <h3 className="text-xl font-semibold mb-2 transition-colors duration-[400ms]" style={{ color: darkMode ? '#f3f4f6' : '#1e293b' }}>
+                  No partners yet
+                </h3>
+                <p className="text-sm" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
+                  Partner listings will appear here once added.
+                </p>
+              </div>
             ) : (
               partners.map((partner, index) => (
                 <div key={index} ref={(el) => { partnerRefs.current[index] = el; }}>

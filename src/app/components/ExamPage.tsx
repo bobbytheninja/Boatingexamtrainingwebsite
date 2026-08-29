@@ -897,7 +897,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                         <ImageWithFallback
                           src={question.image}
                           alt="Question illustration"
-                          className="w-full min-h-40 max-h-80 object-contain mx-auto"
+                          className="w-full min-h-[136px] max-h-[272px] object-contain mx-auto"
                         />
                       </div>
                     )}
@@ -1329,7 +1329,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                 <ImageWithFallback
                   src={currentQuestion.image}
                   alt="Question illustration"
-                  className="w-full min-h-40 max-h-80 object-contain mx-auto"
+                  className="w-full min-h-[136px] max-h-[272px] object-contain mx-auto"
                 />
               </div>
             )}

@@ -2490,6 +2490,49 @@ app.post("/make-server-d36f8f91/diagnostics/check-question", async (c) => {
   }
 });
 
+// Get ALL questions for an exam type (admin only — for the question editor)
+app.get("/make-server-d36f8f91/questions/:examType/all", async (c) => {
+  const { error, user, isAdmin: adminStatus } = await verifyAdmin(c.req.header('Authorization'));
+  if (error || !user || !adminStatus) return c.json({ message: 'Admin required' }, 403);
+
+  try {
+    const examType = c.req.param('examType');
+    const questionIds = await questions.getQuestionIds(examType);
+    if (questionIds.length === 0) return c.json({ questions: [] });
+
+    const fetched = await Promise.all(questionIds.map(id => kv.get(`question:${id}`)));
+    const sorted = (fetched.filter(Boolean) as any[]).sort((a, b) => a.questionNumber - b.questionNumber);
+    return c.json({ questions: sorted });
+  } catch (error: any) {
+    return c.json({ message: error.message }, 500);
+  }
+});
+
+// Update a single question (admin only)
+app.put("/make-server-d36f8f91/questions/:examType/:questionNumber", async (c) => {
+  const { error, user, isAdmin: adminStatus } = await verifyAdmin(c.req.header('Authorization'));
+  if (error || !user || !adminStatus) return c.json({ message: 'Admin required' }, 403);
+
+  try {
+    const examType = c.req.param('examType');
+    const questionNumber = c.req.param('questionNumber');
+    const paddedNumber = String(Number(questionNumber)).padStart(3, '0');
+    const questionId = `${examType}_${paddedNumber}`;
+
+    const body = await c.req.json();
+    const { questionText, answerA, answerB, answerC, answerD, correctAnswer } = body;
+
+    const existing = await kv.get(`question:${questionId}`);
+    if (!existing) return c.json({ message: 'Question not found' }, 404);
+
+    const updated = { ...existing, questionText, answerA, answerB, answerC, answerD, correctAnswer };
+    await kv.set(`question:${questionId}`, updated);
+    return c.json({ success: true, question: updated });
+  } catch (error: any) {
+    return c.json({ message: error.message }, 500);
+  }
+});
+
 // Delete all questions (admin only - for cleanup)
 app.post("/make-server-d36f8f91/admin/delete-all-questions", async (c) => {
   try {

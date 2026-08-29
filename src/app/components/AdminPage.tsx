@@ -15,7 +15,8 @@ import { PartnerManagement } from './PartnerManagement';
 import { CategoryManagement } from './CategoryManagement';
 import { Analytics } from './Analytics';
 import { SubscriptionDebug } from './SubscriptionDebug';
-import { ArrowLeft, Database, Users, Key, AlertCircle, CheckCircle, Shield, Image as ImageIcon, Ship, Search } from 'lucide-react';
+import { QuestionEditor } from './QuestionEditor';
+import { ArrowLeft, Database, Users, Key, AlertCircle, CheckCircle, Shield, Image as ImageIcon, Ship, Search, FileEdit } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useDarkMode } from '../contexts/DarkModeContext';
 import { toast } from 'sonner';
@@ -359,7 +360,7 @@ export function AdminPage({ onBack, onNavigate }: AdminPageProps) {
         {/* Show admin panel to all logged-in users, but limit features based on admin status */}
         {user && (
         <Tabs defaultValue={userIsAdmin ? "diagnostics" : "keys"} className="space-y-8">
-          <TabsList className={`grid w-full max-w-6xl mx-auto gap-2.5 ${userIsAdmin ? 'grid-cols-2 sm:grid-cols-4 lg:grid-cols-8' : 'grid-cols-1 sm:grid-cols-1'} h-auto p-3 ${darkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-slate-50 border-slate-200'} border shadow-lg rounded-lg backdrop-blur-sm`}>
+          <TabsList className={`grid w-full max-w-6xl mx-auto gap-2.5 ${userIsAdmin ? 'grid-cols-3 sm:grid-cols-5 lg:grid-cols-9' : 'grid-cols-1 sm:grid-cols-1'} h-auto p-3 ${darkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-slate-50 border-slate-200'} border shadow-lg rounded-lg backdrop-blur-sm`}>
             {userIsAdmin && (
               <>
                 <TabsTrigger
@@ -402,13 +403,21 @@ export function AdminPage({ onBack, onNavigate }: AdminPageProps) {
                   <span className="hidden sm:inline text-xs">Partners</span>
                   <span className="sm:hidden text-xs">Partners</span>
                 </TabsTrigger>
-                <TabsTrigger 
-                  value="analytics" 
+                <TabsTrigger
+                  value="analytics"
                   className={`flex flex-col items-center justify-center gap-2 py-4 px-3 rounded-md text-sm font-medium transition-all data-[state=active]:bg-slate-700 data-[state=active]:text-white data-[state=active]:shadow-md ${darkMode ? 'text-slate-200 hover:bg-slate-700/40' : 'text-slate-700 hover:bg-slate-100'}`}
                 >
                   <Database className="w-5 h-5" />
                   <span className="hidden sm:inline text-xs">Analytics</span>
                   <span className="sm:hidden text-xs">Stats</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="question-editor"
+                  className={`flex flex-col items-center justify-center gap-2 py-4 px-3 rounded-md text-sm font-medium transition-all data-[state=active]:bg-slate-700 data-[state=active]:text-white data-[state=active]:shadow-md ${darkMode ? 'text-slate-200 hover:bg-slate-700/40' : 'text-slate-700 hover:bg-slate-100'}`}
+                >
+                  <FileEdit className="w-5 h-5" />
+                  <span className="hidden sm:inline text-xs">Questions</span>
+                  <span className="sm:hidden text-xs">Q&apos;s</span>
                 </TabsTrigger>
               </>
             )}
@@ -545,6 +554,24 @@ export function AdminPage({ onBack, onNavigate }: AdminPageProps) {
                         <AlertDescription>
                           Please log in to view analytics.
                         </AlertDescription>
+                      </Alert>
+                    </CardContent>
+                  </Card>
+                )}
+              </TabsContent>
+
+              <TabsContent value="question-editor">
+                {accessToken ? (
+                  <QuestionEditor accessToken={accessToken} />
+                ) : (
+                  <Card style={{ background: darkMode ? '#1e293b' : undefined, borderColor: darkMode ? '#334155' : undefined }}>
+                    <CardHeader>
+                      <CardTitle>Question Editor</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Alert>
+                        <AlertCircle className="w-4 h-4" />
+                        <AlertDescription>Please log in to edit questions.</AlertDescription>
                       </Alert>
                     </CardContent>
                   </Card>
