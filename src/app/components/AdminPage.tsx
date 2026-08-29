@@ -232,7 +232,14 @@ export function AdminPage({ onBack, onNavigate }: AdminPageProps) {
         }}
       >
         <div className="container mx-auto max-w-6xl">
-          <Button onClick={onBack} variant="ghost" className="mb-8">
+          <Button
+            onClick={onBack}
+            variant="ghost"
+            className="mb-8"
+            style={darkMode ? { color: '#94a3b8' } : {}}
+            onMouseEnter={e => { if (darkMode) (e.currentTarget as HTMLButtonElement).style.backgroundColor = '#1e293b'; (e.currentTarget as HTMLButtonElement).style.color = darkMode ? '#e2e8f0' : ''; }}
+            onMouseLeave={e => { if (darkMode) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'; (e.currentTarget as HTMLButtonElement).style.color = darkMode ? '#94a3b8' : ''; }}
+          >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back
           </Button>

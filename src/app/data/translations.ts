@@ -64,6 +64,7 @@ export interface Translations {
   fullAccessDesc: string;
   perMonthPerCategory: string;
   allQuestions: string;
+  examBanks: string;
   unlimitedAttempts: string;
   bothModes: string;
   progressTracking: string;
@@ -256,13 +257,13 @@ export const translations: Record<Language, Translations> = {
     partners: 'Partners',
 
     // Home Page
-    heroTitle: 'Master Your Maritime Certification',
-    heroSubtitle: 'Professional Yacht & Boat Exam Training',
-    heroDescription: 'Comprehensive online training platform for maritime certification exams. Practice with real exam questions and pass with confidence.',
+    heroTitle: 'Yacht & Boat Exam Training Online',
+    heroSubtitle: 'Official Bulgarian Maritime Exam Questions — MARAD',
+    heroDescription: 'Prepare for your Bulgarian maritime exam with official MARAD questions. Practice tests for jet ski, small boat, big boat, yacht (up to 50 tons) and navigation device. 40 questions, 60-minute timer.',
     getStarted: 'Get Started',
     learnMore: 'Learn More',
     examCategories: 'Exam Categories',
-    examCategoriesSubtitle: 'Choose your path',
+    examCategoriesSubtitle: 'Prepare for your Bulgarian maritime certification exam online',
     jetSki: 'Jet Ski',
     jetSkiDesc: 'Master personal watercraft operation',
     smallBoat: 'Small Boat',
@@ -303,12 +304,13 @@ export const translations: Record<Language, Translations> = {
     fullAccess: 'Full Access',
     fullAccessDesc: 'Complete training experience',
     perMonthPerCategory: '/month per category',
-    allQuestions: 'All 40 exam questions',
+    allQuestions: '40 exam questions per test',
+    examBanks: 'Exam banks of up to 1000 questions',
     unlimitedAttempts: 'Unlimited practice attempts',
-    bothModes: 'Both study & exam modes',
+    bothModes: 'Both study & (mock) exam modes',
     progressTracking: 'Detailed progress tracking',
     timedExams: '60-minute timed exams',
-    cancelAnytime: 'Cancel anytime',
+    cancelAnytime: 'Pay for one month, no worries about auto-renewal',
     getFullAccess: 'Get Full Access',
 
     // Contact Page
@@ -494,13 +496,13 @@ export const translations: Record<Language, Translations> = {
     partners: 'Партньори',
 
     // Home Page
-    heroTitle: 'Овладейте Морската Си Сертификация',
-    heroSubtitle: 'Професионално Обучение за Яхти и Лодки',
-    heroDescription: 'Цялостна онлайн платформа за обучение за морски сертификационни изпити. Практикувайте с реални изпитни въпроси и издържайте с увереност.',
+    heroTitle: 'Изпит яхта онлайн — Водач на кораб до 40 БТ',
+    heroSubtitle: 'Официални въпроси от ДАМТН. 40 въпроса, 60 мин. таймер.',
+    heroDescription: 'Подгответе се за изпит яхта, джет ски, малка лодка, голяма лодка и навигационен прибор онлайн. Официални въпроси от ДАМТН. Режим на обучение + незабавна обратна връзка.',
     getStarted: 'Започнете',
     learnMore: 'Научете Повече',
     examCategories: 'Категории Изпити',
-    examCategoriesSubtitle: 'Изберете вашия път',
+    examCategoriesSubtitle: 'Изберете вашата изпитна категория и започнете подготовка',
     jetSki: 'Джет Ски',
     jetSkiDesc: 'Овладейте управлението на личен воден скутер',
     smallBoat: 'Малка Лодка',
@@ -541,12 +543,13 @@ export const translations: Record<Language, Translations> = {
     fullAccess: 'Пълен Достъп',
     fullAccessDesc: 'Пълно обучително преживяване',
     perMonthPerCategory: '/месец на категория',
-    allQuestions: 'Всички 40 изпитни въпроса',
+    allQuestions: '40 изпитни въпроса на тест',
+    examBanks: 'Изпитни банки с до 1000 въпроса',
     unlimitedAttempts: 'Неограничени опити за практика',
-    bothModes: 'Двата режима на обучение и изпит',
+    bothModes: 'Двата режима на обучение и (пробен) изпит',
     progressTracking: 'Детайлно проследяване на напредъка',
     timedExams: '60-минутни изпити с време',
-    cancelAnytime: 'Отменете по всяко време',
+    cancelAnytime: 'Платете за един месец, без притеснения за автоматично подновяване',
     getFullAccess: 'Получете Пълен Достъп',
 
     // Contact Page
@@ -738,7 +741,7 @@ export const translations: Record<Language, Translations> = {
     getStarted: 'Comenzar',
     learnMore: 'Saber Más',
     examCategories: 'Categorías de Examen',
-    examCategoriesSubtitle: 'Elija su camino',
+    examCategoriesSubtitle: 'Elija su categoría de examen náutico',
     jetSki: 'Moto de Agua',
     jetSkiDesc: 'Domine la operación de motos acuáticas',
     smallBoat: 'Embarcación Pequeña',
@@ -779,12 +782,13 @@ export const translations: Record<Language, Translations> = {
     fullAccess: 'Acceso Completo',
     fullAccessDesc: 'Experiencia de capacitación completa',
     perMonthPerCategory: '/mes por categoría',
-    allQuestions: 'Las 40 preguntas del examen',
+    allQuestions: '40 preguntas de examen por prueba',
+    examBanks: 'Bancos de examen de hasta 1000 preguntas',
     unlimitedAttempts: 'Intentos de práctica ilimitados',
-    bothModes: 'Ambos modos de estudio y examen',
+    bothModes: 'Ambos modos de estudio y examen (simulacro)',
     progressTracking: 'Seguimiento detallado del progreso',
     timedExams: 'Exámenes cronometrados de 60 minutos',
-    cancelAnytime: 'Cancele en cualquier momento',
+    cancelAnytime: 'Pague un mes, sin preocupaciones por la renovación automática',
     getFullAccess: 'Obtener Acceso Completo',
 
     // Contact Page
@@ -976,7 +980,7 @@ export const translations: Record<Language, Translations> = {
     getStarted: 'Ξεκινήστε',
     learnMore: 'Μάθετε Περισσότερα',
     examCategories: 'Κατηγορίες Εξετάσεων',
-    examCategoriesSubtitle: 'Επιλέξτε το μονοπάτι σας',
+    examCategoriesSubtitle: 'Επιλέξτε την κατηγορία ναυτικής εξέτασής σας',
     jetSki: 'Τζετ Σκι',
     jetSkiDesc: 'Κατακτήστε τη λειτουργία προσωπικών θαλάσσιων οχημάτων',
     smallBoat: 'Μικρό Σκάφος',
@@ -1017,12 +1021,13 @@ export const translations: Record<Language, Translations> = {
     fullAccess: 'Πλήρης Πρόσβαση',
     fullAccessDesc: 'Πλήρης εμπειρία εκπαίδευσης',
     perMonthPerCategory: '/μήνα ανά κατηγορία',
-    allQuestions: 'Όλες οι 40 ερωτήσεις εξέτασης',
+    allQuestions: '40 ερωτήσεις εξέτασης ανά τεστ',
+    examBanks: 'Τράπεζες εξετάσεων με έως 1000 ερωτήσεις',
     unlimitedAttempts: 'Απεριόριστες προσπάθειες εξάσκησης',
-    bothModes: 'Και οι δύο λειτουργίες μελέτης και εξέτασης',
+    bothModes: 'Και οι δύο λειτουργίες μελέτης και (εικονικής) εξέτασης',
     progressTracking: 'Λεπτομερής παρακολούθηση προόδου',
     timedExams: 'Εξετάσεις 60 λεπτών με χρονόμετρο',
-    cancelAnytime: 'Ακύρωση ανά πάσα στιγμή',
+    cancelAnytime: 'Πληρώστε για έναν μήνα, χωρίς ανησυχίες για αυτόματη ανανέωση',
     getFullAccess: 'Αποκτήστε Πλήρη Πρόσβαση',
 
     // Contact Page
@@ -1214,7 +1219,7 @@ export const translations: Record<Language, Translations> = {
     getStarted: 'Inizia',
     learnMore: 'Scopri di Più',
     examCategories: 'Categorie di Esame',
-    examCategoriesSubtitle: 'Scegli il tuo percorso',
+    examCategoriesSubtitle: 'Scegli la tua categoria d\'esame nautico',
     jetSki: 'Moto d\'Acqua',
     jetSkiDesc: 'Padroneggia l\'uso della moto d\'acqua',
     smallBoat: 'Barca Piccola',
@@ -1255,12 +1260,13 @@ export const translations: Record<Language, Translations> = {
     fullAccess: 'Accesso Completo',
     fullAccessDesc: 'Esperienza di formazione completa',
     perMonthPerCategory: '/mese per categoria',
-    allQuestions: 'Tutte le 40 domande d\'esame',
+    allQuestions: '40 domande d\'esame per test',
+    examBanks: 'Banche di domande fino a 1000 domande',
     unlimitedAttempts: 'Tentativi di pratica illimitati',
-    bothModes: 'Entrambe le modalità studio ed esame',
+    bothModes: 'Entrambe le modalità studio ed esame (simulato)',
     progressTracking: 'Monitoraggio dettagliato dei progressi',
     timedExams: 'Esami cronometrati di 60 minuti',
-    cancelAnytime: 'Annulla in qualsiasi momento',
+    cancelAnytime: 'Paga per un mese, senza preoccupazioni per il rinnovo automatico',
     getFullAccess: 'Ottieni Accesso Completo',
 
     // Contact Page

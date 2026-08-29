@@ -1,16 +1,230 @@
+<!DOCTYPE html>
+<html lang="bg">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!DOCTYPE html>
-  <html lang="en">
-    <head>
-      <meta charset="UTF-8" />
-      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      <title>Boating Exam Training Website</title>
-      <style>html, body { height: 100%; margin: 0; } #root { height: 100%; }</style>
-    </head>
+    <!-- Favicons for all devices and browsers -->
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon-180.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/favicon-512.png" />
 
-    <body>
-      <div id="root"></div>
-      <script type="module" src="/src/main.tsx"></script>
-    </body>
-  </html>
-  
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- Theme color for browsers -->
+    <meta name="theme-color" content="#0ea5e9" />
+    <meta name="msapplication-TileColor" content="#0ea5e9" />
+
+    <!-- Primary Meta Tags -->
+    <title>Изпит яхта онлайн | Водач на кораб до 40 БТ — Black Sea Bulgaria</title>
+    <meta name="title" content="Изпит яхта онлайн | Водач на кораб до 40 БТ — Black Sea Bulgaria" />
+    <meta name="description" content="Подгответе се за изпит яхта и водач на кораб до 40 БТ онлайн. Официални въпроси от ДАМТН — 40 въпроса, 60 мин. таймер. Study mode + feedback. От €5." />
+    <meta name="keywords" content="изпит яхта, яхтен изпит, водач на кораб до 40 БТ, изпит лодка, джет ски изпит, лодкарски изпит онлайн, ДАМТН изпит, yacht exam Bulgaria, boat exam, jet ski license Bulgaria" />
+    <meta name="author" content="Black Sea Bulgaria" />
+    <meta name="robots" content="index, follow" />
+    <meta name="language" content="Bulgarian, English" />
+    <meta name="revisit-after" content="7 days" />
+
+    <!-- hreflang for multilingual SEO -->
+    <link rel="alternate" hreflang="en" href="https://blackseabulgaria.com/" />
+    <link rel="alternate" hreflang="bg" href="https://blackseabulgaria.com/" />
+    <link rel="alternate" hreflang="x-default" href="https://blackseabulgaria.com/" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://blackseabulgaria.com/" />
+    <meta property="og:title" content="Изпит яхта онлайн | Водач до 40 БТ — Black Sea Bulgaria" />
+    <meta property="og:description" content="Официални въпроси от ДАМТН за изпит яхта и водач на кораб до 40 БТ. 40 въпроса, 60 мин. таймер. От €5." />
+    <meta property="og:image" content="https://blackseabulgaria.com/favicon-512.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="512" />
+    <meta property="og:image:height" content="512" />
+    <meta property="og:locale" content="bg_BG" />
+    <meta property="og:locale:alternate" content="en_US" />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://blackseabulgaria.com/" />
+    <meta property="twitter:title" content="Изпит яхта онлайн | Водач до 40 БТ — Black Sea Bulgaria" />
+    <meta property="twitter:description" content="Официални въпроси от ДАМТН за изпит яхта и водач на кораб до 40 БТ. 40 въпроса, 60 мин. таймер. От €5." />
+    <meta property="twitter:image" content="https://blackseabulgaria.com/favicon-512.png" />
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://blackseabulgaria.com/" />
+
+    <!-- Geo Tags for Bulgaria/Black Sea -->
+    <meta name="geo.region" content="BG" />
+    <meta name="geo.placename" content="Bulgaria" />
+
+    <!-- Structured Data: Educational Organization -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "EducationalOrganization",
+      "name": "Black Sea Bulgaria",
+      "description": "Платформа за подготовка за яхтени изпити и изпити за водач на кораб в България. Professional yacht and boating exam training for Bulgarian maritime certifications.",
+      "url": "https://blackseabulgaria.com",
+      "logo": "https://blackseabulgaria.com/logo.png",
+      "image": "https://blackseabulgaria.com/logo.png",
+      "telephone": "+35987661015",
+      "email": "gramatikovbobby@gmail.com",
+      "foundingDate": "2024",
+      "areaServed": "Bulgaria",
+      "educationalCredentialAwarded": "Maritime Exam Preparation",
+      "availableLanguage": ["Bulgarian", "English"],
+      "inLanguage": "bg",
+      "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "BG",
+        "addressRegion": "Bulgaria"
+      },
+      "sameAs": ["https://www.blackseabulgaria.com"],
+      "offers": {
+        "@type": "Offer",
+        "category": "Maritime Training",
+        "price": "5.00",
+        "priceCurrency": "EUR",
+        "availability": "https://schema.org/InStock"
+      }
+    }
+    </script>
+
+    <!-- Structured Data: Course -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Course",
+      "name": "Изпит яхта онлайн — Водач на кораб до 40 БТ",
+      "description": "Подготовка за официалните изпити на ДАМТН: водач на кораб до 40 БТ, джет ски, малка лодка, голяма лодка и навигационен прибор. Официални въпроси, 40 въпроса, 60-минутен таймер.",
+      "provider": {
+        "@type": "Organization",
+        "name": "Black Sea Bulgaria",
+        "url": "https://blackseabulgaria.com",
+        "logo": "https://blackseabulgaria.com/logo.png"
+      },
+      "offers": {
+        "@type": "Offer",
+        "price": "5.00",
+        "priceCurrency": "EUR",
+        "category": "Monthly Subscription",
+        "availability": "https://schema.org/InStock"
+      },
+      "hasCourseInstance": [
+        { "@type": "CourseInstance", "name": "Водач на кораб до 40 БТ (Яхта)", "courseMode": "Online" },
+        { "@type": "CourseInstance", "name": "Джет ски — изпит за лиценз", "courseMode": "Online" },
+        { "@type": "CourseInstance", "name": "Малка лодка — изпит", "courseMode": "Online" },
+        { "@type": "CourseInstance", "name": "Голяма лодка — изпит", "courseMode": "Online" },
+        { "@type": "CourseInstance", "name": "Навигационен прибор — изпит", "courseMode": "Online" }
+      ]
+    }
+    </script>
+
+    <!-- Structured Data: FAQ -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Как да се подготвя за изпита за водач на кораб до 40 БТ?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Практикувайте с официалните въпроси от ДАМТН на нашата платформа. Предлагаме режим на обучение и режим на изпит с 40 въпроса и 60-минутен таймер. Незабавна обратна връзка след всеки въпрос."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Колко струва достъпът до изпитните въпроси?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Достъпът започва от €5 на месец за категория. Можете да практикувате безплатно с 10 въпроса преди покупка."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What boating licences can I prepare for with Black Sea Bulgaria?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "You can prepare for 5 Bulgarian maritime exams: Jet Ski, Small Boat, Big Boat, Yacht (up to 50 tons / Водач до 40 БТ), and Navigation Device certification."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Are the practice questions official Bulgarian Maritime Administration (MARAD/ДАМТН) questions?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Our practice questions are sourced from the official ДАМТН examination bank. We provide the interactive platform, study tools, and multilingual interface."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Do I get an official licence after passing on your platform?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. Our platform is a training tool only. To obtain an official Bulgarian boating licence, you must pass the official examination administered by ДАМТН."
+          }
+        }
+      ]
+    }
+    </script>
+
+    <style>html, body { height: 100%; margin: 0; } #root { height: 100%; }</style>
+  </head>
+
+  <body>
+    <!-- Noscript fallback for search engines and users without JS -->
+    <noscript>
+      <div style="padding: 20px; font-family: Arial, sans-serif; max-width: 1200px; margin: 0 auto;">
+        <h1>Изпит яхта онлайн | Водач на кораб до 40 БТ — Black Sea Bulgaria</h1>
+        <p>Подгответе се за официалния изпит по яхтеноводене с официалните въпроси от ДАМТН.
+           Практикувайте онлайн за водач на кораб до 40 БТ, джет ски, малка и голяма лодка.</p>
+
+        <h2>Категории изпити</h2>
+        <ul>
+          <li><strong>Водач на кораб до 40 БТ (Яхта)</strong> — Пълен изпит с 40 въпроса, 60-минутен таймер</li>
+          <li><strong>Джет ски</strong> — Изпит за джет ски лиценз</li>
+          <li><strong>Малка лодка</strong> — Изпит за малка лодка</li>
+          <li><strong>Голяма лодка</strong> — Изпит за голяма лодка</li>
+          <li><strong>Навигационен прибор</strong> — Изпит по навигация</li>
+        </ul>
+
+        <h2>Яхтен изпит онлайн — официални въпроси ДАМТН</h2>
+        <p>Въпросите са взети директно от официалния изпитен банк на ДАМТН (Държавна агенция за
+           метрологичен и технически надзор). Предлагаме режим на обучение с незабавна обратна
+           връзка и режим на изпит с таймер — точно като истинския изпит.</p>
+
+        <h2>Как да се подготвите за изпита за водач на кораб до 40 БТ?</h2>
+        <p>Изпитът за водач на кораб до 40 БТ включва въпроси по морска навигация, правила за
+           безопасност, морски закони и навигационни знаци. Практикувайте с нашите онлайн тестове
+           преди официалния изпит пред ДАМТН. 40 въпроса, 60-минутен таймер, незабавни резултати.</p>
+
+        <h2>Цени</h2>
+        <p>От €5 на месец за категория. Безплатна практика с 10 въпроса преди покупка.</p>
+
+        <hr />
+
+        <h2>Boat Exam Training — Black Sea Bulgaria</h2>
+        <p>Practice official Bulgarian boating exams online. Jet ski, small boat, yacht &amp; navigation
+           — 40 questions, 60-min timer. Study mode + instant feedback. From €5.</p>
+        <ul>
+          <li><strong>Jet Ski License</strong> — Practice exam, 40 questions, 60-minute timer</li>
+          <li><strong>Small Boat License</strong> — Comprehensive practice test</li>
+          <li><strong>Big Boat License</strong> — Professional exam preparation</li>
+          <li><strong>Yacht License (Up to 50 Tons / Водач до 40 БТ)</strong> — Advanced maritime certification</li>
+          <li><strong>Navigation Device Exam</strong> — Navigation equipment certification</li>
+        </ul>
+
+        <p><em>JavaScript is required for the full interactive platform. Please enable JavaScript in your browser.</em></p>
+      </div>
+    </noscript>
+
+    <!-- Main React App Container -->
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

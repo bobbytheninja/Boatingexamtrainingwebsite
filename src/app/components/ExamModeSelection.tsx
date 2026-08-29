@@ -307,7 +307,13 @@ export function ExamModeSelection() {
                       >
                         {t.fullAccessTitle}
                       </CardTitle>
-                      <Badge className="shadow-md bg-gradient-to-r from-amber-400 to-sky-500">PAID</Badge>
+                      {examCategory?.isFree ? (
+                        <Badge className="shadow-md bg-gradient-to-r from-green-500 to-emerald-600">
+                          {language === 'English' ? 'Currently Free' : 'Безплатно'}
+                        </Badge>
+                      ) : (
+                        <Badge className="shadow-md bg-gradient-to-r from-amber-400 to-sky-500">PAID</Badge>
+                      )}
                     </div>
                     <CardDescription 
                       className="transition-colors duration-[400ms]"

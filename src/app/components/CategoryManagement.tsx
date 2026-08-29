@@ -98,6 +98,7 @@ export interface ExamCategory {
   price?: number;
   order?: number;
   expiringSoon?: boolean;
+  isFree?: boolean;
 }
 
 interface CategoryManagementProps {
@@ -785,8 +786,25 @@ export function CategoryManagement({ accessToken }: CategoryManagementProps) {
                 </p>
               </div>
 
-              {/* Expiring Soon Flag */}
+              {/* Free Flag */}
               <div className="flex items-center space-x-2 pt-6">
+                <input
+                  type="checkbox"
+                  id="isFree"
+                  checked={formData.isFree || false}
+                  onChange={(e) => setFormData({ ...formData, isFree: e.target.checked })}
+                  className="w-4 h-4 text-green-600 rounded focus:ring-green-500"
+                />
+                <Label htmlFor="isFree" className="cursor-pointer">
+                  <span className="font-medium text-green-700 dark:text-green-400">Mark as "Free"</span>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    When enabled, all users get free access to this category — no payment required
+                  </p>
+                </Label>
+              </div>
+
+              {/* Expiring Soon Flag */}
+              <div className="flex items-center space-x-2 pt-4">
                 <input
                   type="checkbox"
                   id="expiringSoon"
@@ -889,6 +907,11 @@ export function CategoryManagement({ accessToken }: CategoryManagementProps) {
                     <Badge variant="secondary">
                       {category.type}
                     </Badge>
+                    {category.isFree && (
+                      <Badge className="bg-green-100 text-green-700 border border-green-300 dark:bg-green-900/40 dark:text-green-300 dark:border-green-700">
+                        Free
+                      </Badge>
+                    )}
                     {category.expiringSoon && (
                       <Badge variant="destructive" className="bg-orange-500 hover:bg-orange-600">
                         Expiring Soon
@@ -907,11 +930,15 @@ export function CategoryManagement({ accessToken }: CategoryManagementProps) {
                   <p className="text-sm text-gray-600 dark:text-gray-300 mt-1 line-clamp-2">
                     {category.description}
                   </p>
-                  {category.price && (
+                  {category.isFree ? (
+                    <p className="text-sm font-semibold mt-2 text-green-600 dark:text-green-400">
+                      Free access
+                    </p>
+                  ) : category.price ? (
                     <p className="text-sm font-semibold mt-2" style={{ color: darkMode ? '#60a5fa' : '#2563eb' }}>
                       €{category.price.toFixed(2)}/month
                     </p>
-                  )}
+                  ) : null}
                 </div>
                 <div className="flex gap-2">
                   <Button 

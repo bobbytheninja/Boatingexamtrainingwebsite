@@ -287,94 +287,104 @@ export function PartnerManagement({ accessToken }: PartnerManagementProps) {
         <CardContent>
           {/* Create/Edit Form */}
           {(isCreating || editingId) && (
-            <Card className="mb-6 bg-sky-50 dark:bg-sky-900/20 border-sky-200 dark:border-sky-800">
+            <Card className="mb-6" style={{
+              background: darkMode ? '#162032' : '#f0f9ff',
+              borderColor: darkMode ? '#1e4060' : '#bae6fd',
+            }}>
               <CardHeader>
-                <CardTitle className="text-lg">
+                <CardTitle className="text-lg" style={{ color: darkMode ? '#f1f5f9' : undefined }}>
                   {isCreating ? 'Create New Partner' : 'Edit Partner'}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <Label htmlFor="name">Name *</Label>
+                  <Label htmlFor="name" style={{ color: darkMode ? '#cbd5e1' : undefined }}>Name *</Label>
                   <Input
                     id="name"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     placeholder="Partner name"
+                    style={darkMode ? { background: '#1e293b', borderColor: '#334155', color: '#f1f5f9' } : undefined}
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="description">Description *</Label>
+                  <Label htmlFor="description" style={{ color: darkMode ? '#cbd5e1' : undefined }}>Description *</Label>
                   <Textarea
                     id="description"
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     placeholder="Partner description in English"
                     rows={4}
+                    style={darkMode ? { background: '#1e293b', borderColor: '#334155', color: '#f1f5f9' } : undefined}
                   />
-                  <p className="text-xs text-gray-500 mt-1">Enter description in English. It will be displayed in all languages.</p>
+                  <p className="text-xs mt-1" style={{ color: darkMode ? '#64748b' : '#6b7280' }}>Enter description in English. It will be displayed in all languages.</p>
                 </div>
 
                 <div>
-                  <Label htmlFor="specializations">Specializations</Label>
+                  <Label htmlFor="specializations" style={{ color: darkMode ? '#cbd5e1' : undefined }}>Specializations</Label>
                   <Textarea
                     id="specializations"
                     value={formData.specializations}
                     onChange={(e) => setFormData({ ...formData, specializations: e.target.value })}
                     placeholder="Comma separated: Training, Certification, Equipment"
                     rows={3}
+                    style={darkMode ? { background: '#1e293b', borderColor: '#334155', color: '#f1f5f9' } : undefined}
                   />
-                  <p className="text-xs text-gray-500 mt-1">Separate items with commas. Enter in English, displayed in all languages.</p>
+                  <p className="text-xs mt-1" style={{ color: darkMode ? '#64748b' : '#6b7280' }}>Separate items with commas. Enter in English, displayed in all languages.</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="website">Website URL *</Label>
+                    <Label htmlFor="website" style={{ color: darkMode ? '#cbd5e1' : undefined }}>Website URL *</Label>
                     <Input
                       id="website"
                       type="url"
                       value={formData.website}
                       onChange={(e) => setFormData({ ...formData, website: e.target.value })}
                       placeholder="https://example.com"
+                      style={darkMode ? { background: '#1e293b', borderColor: '#334155', color: '#f1f5f9' } : undefined}
                     />
                   </div>
                   <div>
-                    <Label htmlFor="classesLink">Classes/Services Link</Label>
+                    <Label htmlFor="classesLink" style={{ color: darkMode ? '#cbd5e1' : undefined }}>Classes/Services Link</Label>
                     <Input
                       id="classesLink"
                       type="url"
                       value={formData.classesLink}
                       onChange={(e) => setFormData({ ...formData, classesLink: e.target.value })}
                       placeholder="https://example.com/classes (optional)"
+                      style={darkMode ? { background: '#1e293b', borderColor: '#334155', color: '#f1f5f9' } : undefined}
                     />
                   </div>
                 </div>
 
                 <div>
-                  <Label htmlFor="image">Image URL</Label>
+                  <Label htmlFor="image" style={{ color: darkMode ? '#cbd5e1' : undefined }}>Image URL</Label>
                   <Input
                     id="image"
                     type="url"
                     value={formData.image}
                     onChange={(e) => setFormData({ ...formData, image: e.target.value })}
                     placeholder="https://images.unsplash.com/..."
+                    style={darkMode ? { background: '#1e293b', borderColor: '#334155', color: '#f1f5f9' } : undefined}
                   />
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs mt-1" style={{ color: darkMode ? '#64748b' : '#6b7280' }}>
                     Use Unsplash or other image hosting service
                   </p>
                 </div>
 
                 <div>
-                  <Label htmlFor="order">Display Order</Label>
+                  <Label htmlFor="order" style={{ color: darkMode ? '#cbd5e1' : undefined }}>Display Order</Label>
                   <Input
                     id="order"
                     type="number"
                     value={formData.order}
                     onChange={(e) => setFormData({ ...formData, order: parseInt(e.target.value) || 0 })}
                     placeholder="0"
+                    style={darkMode ? { background: '#1e293b', borderColor: '#334155', color: '#f1f5f9' } : undefined}
                   />
-                  <p className="text-xs text-gray-500 mt-1">Lower numbers appear first</p>
+                  <p className="text-xs mt-1" style={{ color: darkMode ? '#64748b' : '#6b7280' }}>Lower numbers appear first</p>
                 </div>
 
                 <div className="flex gap-2 justify-end pt-4">

@@ -339,15 +339,6 @@ export function PricingPage({ onNavigate, isLoggedIn, paidExams = [] }: PricingP
                 }}
               >{t.fullAccessDesc}</CardDescription>
               <div className="mt-3">
-                <p
-                  className="text-sm font-medium transition-colors duration-[400ms]"
-                  style={{
-                    color: darkMode ? '#9ca3af' : '#64748b',
-                    transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
-                  }}
-                >
-                  for prices close to
-                </p>
                 <div className="flex items-baseline gap-1.5">
                   <span
                     className="text-3xl font-bold transition-colors duration-[400ms]"
@@ -362,7 +353,7 @@ export function PricingPage({ onNavigate, isLoggedIn, paidExams = [] }: PricingP
                       color: darkMode ? '#9ca3af' : '#64748b',
                       transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
                     }}
-                  >a month</span>
+                  >{t.perMonth}</span>
                 </div>
               </div>
             </CardHeader>
@@ -384,11 +375,23 @@ export function PricingPage({ onNavigate, isLoggedIn, paidExams = [] }: PricingP
                   <div className="mt-0.5 p-0.5 bg-sky-100 rounded-full flex-shrink-0">
                     <Check className="w-2.5 h-2.5 text-sky-600" />
                   </div>
-                  <span 
+                  <span
                     className="text-xs font-medium transition-colors duration-[400ms]"
-                    style={{ 
+                    style={{
                       color: darkMode ? '#d1d5db' : '#475569',
-                      transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
+                      transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
+                    }}
+                  >{t.examBanks}</span>
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <div className="mt-0.5 p-0.5 bg-sky-100 rounded-full flex-shrink-0">
+                    <Check className="w-2.5 h-2.5 text-sky-600" />
+                  </div>
+                  <span
+                    className="text-xs font-medium transition-colors duration-[400ms]"
+                    style={{
+                      color: darkMode ? '#d1d5db' : '#475569',
+                      transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
                     }}
                   >{t.unlimitedAttempts}</span>
                 </li>

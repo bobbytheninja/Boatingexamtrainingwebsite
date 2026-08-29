@@ -113,10 +113,14 @@ export function LoginPage({ onLogin, onNavigate }: LoginPageProps) {
       setIsResetDialogOpen(false);
       setResetEmail('');
     } catch (error: any) {
-      console.error('Password reset error:', error);
+      const isRateLimit = error?.message?.toLowerCase().includes('rate') || error?.status === 429;
       toast.error(language === 'English'
-        ? 'Failed to send reset link. Please try again.'
-        : 'Неуспешно изпращане на линка. Моля, опитайте отново.');
+        ? isRateLimit
+          ? 'Too many reset attempts. Please wait a few minutes before trying again.'
+          : 'Failed to send reset link. Please try again.'
+        : isRateLimit
+          ? 'Твърде много опити. Моля, изчакайте няколко минути преди да опитате отново.'
+          : 'Неуспешно изпращане на линка. Моля, опитайте отново.');
     } finally {
       setIsResettingPassword(false);
     }
@@ -303,7 +307,7 @@ export function LoginPage({ onLogin, onNavigate }: LoginPageProps) {
                     {/* Forgot Password */}
                     <Dialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
                       <DialogTrigger asChild>
-                        <Button variant="link" className="w-full text-sm text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300">
+                        <Button type="button" variant="link" className="w-full text-sm text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300">
                           {language === 'English' ? 'Forgot password?' : 'Забравена парола?'}
                         </Button>
                       </DialogTrigger>

@@ -18,6 +18,9 @@ export function ImageUploader() {
   const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
   const [examTypes, setExamTypes] = useState<{ value: string; label: string }[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
+  const [removeQuestionNumbers, setRemoveQuestionNumbers] = useState('');
+  const [removing, setRemoving] = useState(false);
+  const [removeResult, setRemoveResult] = useState<{ success: boolean; message: string } | null>(null);
 
   // Load exam categories on mount
   useEffect(() => {
@@ -182,6 +185,43 @@ export function ImageUploader() {
       setResult({ success: false, message: error.message || 'Failed to upload images' });
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleRemoveImages = async () => {
+    if (!selectedExamType || !adminKey || !removeQuestionNumbers.trim()) return;
+    const numbers = removeQuestionNumbers
+      .split(/[\s,]+/)
+      .map(n => parseInt(n.trim()))
+      .filter(n => !isNaN(n) && n > 0);
+    if (numbers.length === 0) {
+      setRemoveResult({ success: false, message: 'Enter valid question number(s)' });
+      return;
+    }
+    setRemoving(true);
+    setRemoveResult(null);
+    try {
+      const { projectId } = await import('../utils/supabase/info');
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/questions/update-images`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            examType: selectedExamType,
+            adminKey,
+            imageLinks: numbers.map(n => ({ questionNumber: n, url: null })),
+          }),
+        }
+      );
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'Failed');
+      setRemoveResult({ success: true, message: `Removed image from ${data.updated} question(s).` });
+      setRemoveQuestionNumbers('');
+    } catch (err: any) {
+      setRemoveResult({ success: false, message: err.message || 'Error removing images' });
+    } finally {
+      setRemoving(false);
     }
   };
 
@@ -350,6 +390,37 @@ export function ImageUploader() {
             </div>
           </div>
         )}
+
+        {/* Remove Image Section */}
+        <div className="border border-red-200 dark:border-red-800 rounded-lg p-4">
+          <h3 className="text-base font-semibold text-red-700 dark:text-red-400 mb-3 flex items-center gap-2">
+            <X className="w-4 h-4" /> Remove Image from Question(s)
+          </h3>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={removeQuestionNumbers}
+              onChange={(e) => setRemoveQuestionNumbers(e.target.value)}
+              placeholder="e.g. 56  or  12, 34, 56"
+              className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-sm"
+            />
+            <button
+              onClick={handleRemoveImages}
+              disabled={removing || !adminKey || !selectedExamType || !removeQuestionNumbers.trim()}
+              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm whitespace-nowrap"
+            >
+              {removing ? <Loader2 className="w-4 h-4 animate-spin" /> : <X className="w-4 h-4" />}
+              Remove
+            </button>
+          </div>
+          <p className="text-xs text-gray-500 mt-1">Enter one or more question numbers separated by commas or spaces. Requires exam type and admin key above.</p>
+          {removeResult && (
+            <div className={`mt-2 p-2 rounded text-sm flex items-center gap-2 ${removeResult.success ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300' : 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300'}`}>
+              {removeResult.success ? <CheckCircle className="w-4 h-4 shrink-0" /> : <AlertCircle className="w-4 h-4 shrink-0" />}
+              {removeResult.message}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Instructions */}

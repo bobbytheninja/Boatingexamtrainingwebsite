@@ -26,6 +26,7 @@ interface ExamCategory {
   image: string;
   price?: number;
   expiringSoon?: boolean;
+  isFree?: boolean;
 }
 
 interface PaymentPageProps {
@@ -108,8 +109,14 @@ export function PaymentPage({ userEmail, onBack, onComplete, onNavigate }: Payme
       return;
     }
     
-    // Don't allow toggling expiring soon exams
     const category = categories.find(c => c.type === examType);
+
+    // Free categories are always accessible — no purchase needed
+    if (category?.isFree) {
+      return;
+    }
+
+    // Don't allow toggling expiring soon exams
     if (category?.expiringSoon) {
       toast.error('This category is expiring soon and cannot be purchased');
       return;
@@ -283,42 +290,38 @@ export function PaymentPage({ userEmail, onBack, onComplete, onNavigate }: Payme
                     examTypes.map((exam) => {
                       const isSubscribed = currentSubscriptions.includes(exam.type);
                       const category = categories.find(c => c.type === exam.type);
+                      const isFree = category?.isFree || false;
                       const isExpiringSoon = category?.expiringSoon || false;
                       
                       return (
                         <div
                           key={exam.type}
-                          className={`flex items-start space-x-3 p-4 rounded-lg border-2 transition-all duration-200 cursor-pointer ${ 
-                            isSubscribed
+                          className={`flex items-start space-x-3 p-4 rounded-lg border-2 transition-all duration-200 cursor-pointer ${
+                            isSubscribed || isFree
                               ? 'cursor-not-allowed opacity-75'
                               : selectedExams.includes(exam.type)
                               ? 'shadow-md scale-[1.01]'
                               : 'hover:shadow-md'
                           }`}
                           style={{
-                            backgroundColor: isSubscribed
+                            backgroundColor: isSubscribed || isFree
                               ? (darkMode ? 'rgba(20, 83, 45, 0.2)' : '#f0fdf4')
                               : selectedExams.includes(exam.type)
                               ? (darkMode ? 'rgba(30, 58, 138, 0.3)' : '#eff6ff')
                               : (darkMode ? '#334155' : '#ffffff'),
-                            borderColor: isSubscribed
+                            borderColor: isSubscribed || isFree
                               ? (darkMode ? '#16a34a' : '#4ade80')
                               : isExpiringSoon
                               ? (darkMode ? '#ef4444' : '#dc2626')
                               : selectedExams.includes(exam.type)
                               ? (darkMode ? '#60a5fa' : '#3b82f6')
                               : (darkMode ? '#475569' : '#e5e7eb'),
-                            ...(darkMode && !isSubscribed && !selectedExams.includes(exam.type) && {
-                              ':hover': {
-                                backgroundColor: '#475569'
-                              }
-                            })
                           }}
                           onClick={() => toggleExam(exam.type)}
                         >
                           <Checkbox
-                            checked={isSubscribed || selectedExams.includes(exam.type)}
-                            disabled={isSubscribed || isExpiringSoon}
+                            checked={isSubscribed || isFree || selectedExams.includes(exam.type)}
+                            disabled={isSubscribed || isFree || isExpiringSoon}
                             onCheckedChange={() => toggleExam(exam.type)}
                             className="mt-1"
                           />
@@ -326,8 +329,18 @@ export function PaymentPage({ userEmail, onBack, onComplete, onNavigate }: Payme
                             <div className="flex items-center justify-between gap-2 flex-wrap">
                               <h4 className="font-semibold transition-colors duration-[400ms]" style={{ color: darkMode ? '#f3f4f6' : '#0f172a' }}>{exam.title}</h4>
                               <div className="flex items-center gap-2">
-                                {isSubscribed ? (
-                                  <Badge 
+                                {isFree ? (
+                                  <Badge
+                                    style={{
+                                      backgroundColor: darkMode ? 'rgba(34, 197, 94, 0.2)' : '#dcfce7',
+                                      color: darkMode ? '#86efac' : '#166534',
+                                      border: darkMode ? '1px solid #16a34a' : '1px solid #86efac'
+                                    }}
+                                  >
+                                    ✓ Free
+                                  </Badge>
+                                ) : isSubscribed ? (
+                                  <Badge
                                     className="transition-colors duration-[400ms]"
                                     style={{
                                       backgroundColor: darkMode ? 'rgba(34, 197, 94, 0.2)' : '#dcfce7',
@@ -338,15 +351,15 @@ export function PaymentPage({ userEmail, onBack, onComplete, onNavigate }: Payme
                                     ✓ Active until {getExpiryDateString()}
                                   </Badge>
                                 ) : isExpiringSoon ? (
-                                  <Badge 
+                                  <Badge
                                     variant="destructive"
                                     className="bg-red-100 text-red-700 border-red-300 dark:bg-red-900/30 dark:text-red-400 dark:border-red-700"
                                   >
                                     ⚠️ Expiring Soon - Not Available
                                   </Badge>
                                 ) : (
-                                  <Badge 
-                                    variant="secondary" 
+                                  <Badge
+                                    variant="secondary"
                                     style={{
                                       backgroundColor: darkMode ? '#475569' : '#f1f5f9',
                                       color: darkMode ? '#e5e7eb' : '#475569',
@@ -361,9 +374,9 @@ export function PaymentPage({ userEmail, onBack, onComplete, onNavigate }: Payme
                             <p className="text-sm mt-1 transition-colors duration-[400ms]" style={{ color: darkMode ? '#d1d5db' : '#475569' }}>{exam.description}</p>
                             {!isSubscribed && (
                               <div className="flex gap-2 mt-2 text-xs transition-colors duration-[400ms]" style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>
-                                <span>• 40 Questions</span>
+                                <span>• 40 Questions per Test</span>
                                 <span>• Unlimited Attempts</span>
-                                <span>• Study & Exam Modes</span>
+                                <span>• Study & (Mock) Exam Modes</span>
                               </div>
                             )}
                           </div>
@@ -494,7 +507,11 @@ export function PaymentPage({ userEmail, onBack, onComplete, onNavigate }: Payme
                         <ul className="text-xs space-y-1" style={{ color: darkMode ? '#bfdbfe' : '#1e40af' }}>
                           <li className="flex items-start gap-2">
                             <Check className="w-3 h-3 mt-0.5 flex-shrink-0" />
-                            <span>Full access to all questions</span>
+                            <span>40 exam questions per test</span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <Check className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                            <span>Exam banks of up to 1000 questions</span>
                           </li>
                           <li className="flex items-start gap-2">
                             <Check className="w-3 h-3 mt-0.5 flex-shrink-0" />
@@ -502,7 +519,7 @@ export function PaymentPage({ userEmail, onBack, onComplete, onNavigate }: Payme
                           </li>
                           <li className="flex items-start gap-2">
                             <Check className="w-3 h-3 mt-0.5 flex-shrink-0" />
-                            <span>Study and exam modes</span>
+                            <span>Study and (mock) exam modes</span>
                           </li>
                           <li className="flex items-start gap-2">
                             <Check className="w-3 h-3 mt-0.5 flex-shrink-0" />

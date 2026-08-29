@@ -100,12 +100,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  // Sync active_session in KV with the current JWT so backend verifyUser never mismatches
+  const syncActiveSession = async (token: string) => {
+    try {
+      await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/invalidate-sessions`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        }
+      );
+    } catch {
+      // Non-critical — backend will still accept valid Supabase JWTs
+    }
+  };
+
   // Load user session on mount
   useEffect(() => {
     const loadSession = async () => {
       try {
         const { data: { session }, error } = await supabaseClient.auth.getSession();
-        
+
         if (error) {
           console.error('[YachtExam App] Error loading session:', error);
           setLoading(false);
@@ -114,6 +129,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (session?.user) {
           const token = session.access_token;
+
+          // Sync active_session FIRST so subscription fetch succeeds
+          await syncActiveSession(token);
+
           const { subscriptions, expiresAt, perExamExpiry } = await fetchSubscriptions(session.user.id, token);
 
           const isAdmin = session.user.user_metadata?.role === 'admin' || false;
@@ -147,7 +166,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session?.user) {
         const token = session.access_token;
 
-        // Try to fetch subscriptions, but don't fail if backend is down
+        // Always sync active_session before fetching subscriptions
+        await syncActiveSession(token);
+
         let subscriptions: ExamType[] = [];
         let expiresAt: number | null = null;
         let perExamExpiry: Record<string, number> = {};
@@ -158,7 +179,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           expiresAt = result.expiresAt;
           perExamExpiry = result.perExamExpiry;
         } catch (subError) {
-          console.warn('Could not fetch subscriptions on auth change, continuing with empty subscriptions:', subError);
+          console.warn('Could not fetch subscriptions on auth change:', subError);
         }
 
         const isAdmin = session.user.user_metadata?.role === 'admin' || false;
@@ -175,10 +196,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
         setAccessToken(token);
       } else if (event === 'TOKEN_REFRESHED' && session?.user) {
-        // Token was silently refreshed (e.g., after laptop sleep/wake).
-        // Update the access token so all API calls use the fresh token.
+        // Supabase silently refreshed the JWT — sync active_session with the new token
         const token = session.access_token;
         setAccessToken(token);
+        await syncActiveSession(token);
 
         try {
           const result = await fetchSubscriptions(session.user.id, token);
@@ -394,15 +415,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const resetPassword = async (email: string) => {
-    try {
-      const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin + '/reset-password',
-      });
-      
-      if (error) throw error;
-    } catch (error: any) {
-      console.error('Password reset error:', error);
-      throw error;
+    const response = await fetch(
+      `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/send-reset-email`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      }
+    );
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      throw new Error(data.message || 'Failed to send reset email');
     }
   };
 

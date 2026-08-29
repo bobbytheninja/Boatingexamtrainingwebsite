@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { ScrollArea } from './ui/scroll-area';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { Input } from './ui/input';
-import { Users, Calendar, CheckCircle, XCircle, Shield, Search, ChevronLeft, ChevronRight, ShieldCheck, ShieldOff, AlertTriangle } from 'lucide-react';
+import { Users, Calendar, CheckCircle, XCircle, Shield, Search, ChevronLeft, ChevronRight, ShieldCheck, ShieldOff, AlertTriangle, Receipt } from 'lucide-react';
 import { toast } from 'sonner';
 import { ButtonSpinner } from './LoadingSpinner';
 import { projectId } from '../utils/supabase/info';
@@ -38,6 +38,9 @@ export function UserManagement() {
   const [processingUsers, setProcessingUsers] = useState<Set<string>>(new Set());
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [examTypes, setExamTypes] = useState<{ value: string; label: string; short: string }[]>([]);
+  const [expandedPaymentUserId, setExpandedPaymentUserId] = useState<string | null>(null);
+  const [userPaymentsCache, setUserPaymentsCache] = useState<Record<string, any[]>>({});
+  const [loadingPayments, setLoadingPayments] = useState<Set<string>>(new Set());
 
   // Load exam categories on mount
   useEffect(() => {
@@ -341,6 +344,44 @@ export function UserManagement() {
     }
   };
 
+  const togglePaymentHistory = async (userId: string) => {
+    if (expandedPaymentUserId === userId) {
+      setExpandedPaymentUserId(null);
+      return;
+    }
+    setExpandedPaymentUserId(userId);
+    if (userPaymentsCache[userId]) return;
+
+    setLoadingPayments(prev => new Set(prev).add(userId));
+    try {
+      const { createClient } = await import('../utils/supabase/client');
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error('No active session');
+
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/admin/payments/${userId}`,
+        { headers: { 'Authorization': `Bearer ${session.access_token}` } }
+      );
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to fetch payments');
+      }
+      const data = await response.json();
+      setUserPaymentsCache(prev => ({ ...prev, [userId]: data.payments || [] }));
+    } catch (error: any) {
+      console.error('Error fetching payment history:', error);
+      toast.error(`Failed to load payment history: ${error.message}`);
+      setExpandedPaymentUserId(null);
+    } finally {
+      setLoadingPayments(prev => {
+        const next = new Set(prev);
+        next.delete(userId);
+        return next;
+      });
+    }
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -467,7 +508,8 @@ export function UserManagement() {
                 const hasSubscriptions = user.subscriptions.length > 0;
 
                 return (
-                  <TableRow key={user.id} style={{ borderColor: darkMode ? '#334155' : '#e2e8f0' }}>
+                  <React.Fragment key={user.id}>
+                  <TableRow style={{ borderColor: darkMode ? '#334155' : '#e2e8f0' }}>
                     <TableCell>
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
@@ -634,9 +676,76 @@ export function UserManagement() {
                             <CheckCircle className="w-4 h-4" />
                           )}
                         </Button>
+                        <Button
+                          onClick={() => togglePaymentHistory(user.id)}
+                          variant="outline"
+                          size="sm"
+                          className="h-8"
+                          aria-label="View payment history"
+                          title="Payment history"
+                          style={{
+                            borderColor: expandedPaymentUserId === user.id ? (darkMode ? '#0d9488' : '#0d9488') : (darkMode ? '#475569' : '#cbd5e1'),
+                            color: expandedPaymentUserId === user.id ? '#0d9488' : (darkMode ? '#94a3b8' : '#6b7280'),
+                          }}
+                        >
+                          {loadingPayments.has(user.id) ? (
+                            <ButtonSpinner className="w-4 h-4" />
+                          ) : (
+                            <Receipt className="w-4 h-4" />
+                          )}
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
+                  {expandedPaymentUserId === user.id && (
+                    <TableRow key={`payments-${user.id}`} style={{ borderColor: darkMode ? '#334155' : '#e2e8f0' }}>
+                      <TableCell colSpan={4} style={{ padding: '0 16px 12px' }}>
+                        <div
+                          className="rounded-lg p-3"
+                          style={{
+                            background: darkMode ? 'rgba(13,148,136,0.08)' : '#f0fdfa',
+                            border: `1px solid ${darkMode ? '#134e4a' : '#99f6e4'}`,
+                          }}
+                        >
+                          <div className="flex items-center gap-2 mb-2" style={{ color: darkMode ? '#2dd4bf' : '#0f766e' }}>
+                            <Receipt className="w-4 h-4" />
+                            <span className="text-sm font-medium">Payment History — {user.email}</span>
+                          </div>
+                          {(userPaymentsCache[user.id] || []).length === 0 ? (
+                            <p className="text-xs italic" style={{ color: darkMode ? '#6b7280' : '#9ca3af' }}>No payment records found.</p>
+                          ) : (
+                            <table className="w-full text-xs">
+                              <thead>
+                                <tr style={{ color: darkMode ? '#94a3b8' : '#6b7280' }}>
+                                  <th className="text-left py-1 pr-4 font-medium">Date</th>
+                                  <th className="text-left py-1 pr-4 font-medium">Exams</th>
+                                  <th className="text-left py-1 font-medium">Amount</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {(userPaymentsCache[user.id] || []).map((p: any) => (
+                                  <tr key={p.stripeSessionId} style={{ borderTop: `1px solid ${darkMode ? '#1e3a3a' : '#ccfbf1'}` }}>
+                                    <td className="py-1 pr-4" style={{ color: darkMode ? '#e2e8f0' : '#374151' }}>
+                                      {new Date(p.paidAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                    </td>
+                                    <td className="py-1 pr-4" style={{ color: darkMode ? '#e2e8f0' : '#374151' }}>
+                                      {Array.isArray(p.examTypes) ? p.examTypes.join(', ') : p.examTypes}
+                                    </td>
+                                    <td className="py-1 font-medium" style={{ color: darkMode ? '#2dd4bf' : '#0f766e' }}>
+                                      {p.amountTotal != null
+                                        ? `${(p.amountTotal / 100).toFixed(2)} ${(p.currency || 'eur').toUpperCase()}`
+                                        : '—'}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  </React.Fragment>
                 );
               })}
             </TableBody>

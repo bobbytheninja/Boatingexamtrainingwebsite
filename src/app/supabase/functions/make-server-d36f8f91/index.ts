@@ -2225,13 +2225,18 @@ app.post("/make-server-d36f8f91/questions/update-images", async (c) => {
       const existingQuestion = await kv.get(questionId);
       
       if (existingQuestion) {
-        // Update with image URL
-        await kv.set(questionId, {
-          ...existingQuestion,
-          imageUrl: url,
-        });
+        // Update or clear image URL (null/empty string removes it)
+        const updatedQuestion = { ...existingQuestion };
+        if (url) {
+          updatedQuestion.imageUrl = url;
+        } else {
+          delete updatedQuestion.imageUrl;
+        }
+        await kv.set(questionId, updatedQuestion);
         updatedCount++;
-        console.log(`  ✅ Updated question ${questionNumber} with image: ${url}`);
+        console.log(url
+          ? `  ✅ Updated question ${questionNumber} with image: ${url}`
+          : `  🗑️ Cleared image from question ${questionNumber}`);
       } else {
         console.warn(`  ⚠️ Question ${questionNumber} (${questionId}) not found - skipping`);
       }

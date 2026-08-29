@@ -88,10 +88,12 @@ export function Navigation({
             : 'backdrop-blur-xl border-b-2 border-gray-200/70 dark:border-gray-600/70 shadow-sm'
         }`}
         style={transparent ? {
-          background: 'linear-gradient(to bottom, rgba(107, 114, 128, 0.05), rgba(107, 114, 128, 0.05)), linear-gradient(to bottom, rgba(30, 58, 138, 0.05), rgba(30, 58, 138, 0.05))'
+          background: 'linear-gradient(to bottom, rgba(107, 114, 128, 0.05), rgba(107, 114, 128, 0.05)), linear-gradient(to bottom, rgba(30, 58, 138, 0.05), rgba(30, 58, 138, 0.05))',
+          paddingTop: 'env(safe-area-inset-top)',
         } : {
           backgroundColor: darkMode ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-          transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
+          transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)',
+          paddingTop: 'env(safe-area-inset-top)',
         }}
       >
         <div className="container mx-auto px-4 md:px-6 lg:px-8 py-4">
@@ -101,27 +103,28 @@ export function Navigation({
               onClick={() => onNavigate('home')}
               className="flex items-center gap-3 hover:opacity-90 transition-all group flex-shrink-0"
             >
-              <div className="relative">
-                {/* Fancy Yacht Logo */}
-                <div className={`absolute inset-0 ${
-                  transparent 
-                    ? 'bg-cyan-400/40'
-                    : 'bg-gradient-to-r from-sky-400 to-cyan-500'
-                } rounded-2xl blur-lg opacity-75 group-hover:opacity-100 transition-opacity`}></div>
-                <div className={`relative ${
-                  transparent 
-                    ? 'bg-gradient-to-br from-cyan-400/30 to-teal-500/30 backdrop-blur-md border-2 border-cyan-300/40'
-                    : 'bg-gradient-to-br from-sky-500 via-cyan-500 to-teal-600'
-                } p-3 rounded-2xl shadow-2xl transform group-hover:scale-105 transition-transform`}>
+              <div className="relative" style={{ transform: 'translateZ(0)' }}>
+                <div
+                  className={`relative ${
+                    transparent
+                      ? 'bg-gradient-to-br from-cyan-400/30 to-teal-500/30 backdrop-blur-md border-2 border-cyan-300/40'
+                      : 'bg-gradient-to-br from-sky-500 via-cyan-500 to-teal-600'
+                  } p-3 rounded-2xl shadow-2xl transform group-hover:scale-105 transition-transform`}
+                  style={{
+                    boxShadow: transparent
+                      ? '0 6px 16px 2px rgba(34,211,238,0.45)'
+                      : '0 6px 16px 2px rgba(6,182,212,0.55)',
+                  }}
+                >
                   <div className="relative">
                     <Anchor className={`w-7 h-7 ${transparent ? 'text-white drop-shadow-lg' : 'text-white'} transform -rotate-12`} />
                     <div className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-300 rounded-full shadow-lg"></div>
                   </div>
                 </div>
               </div>
-              <div className="text-left hidden lg:block">
-                <h1 
-                  className={`text-lg font-bold tracking-tight transition-colors duration-[400ms] ${
+              <div className="text-left block">
+                <h1
+                  className={`text-base lg:text-lg font-bold tracking-tight transition-colors duration-[400ms] ${
                     transparent ? 'text-white drop-shadow-lg' : ''
                   }`}
                   style={!transparent ? {
@@ -131,7 +134,7 @@ export function Navigation({
                 >
                   Yacht Exam Trainer
                 </h1>
-                <p 
+                <p
                   className={`text-xs transition-colors duration-[400ms] ${
                     transparent ? 'text-white/80 drop-shadow' : ''
                   }`}

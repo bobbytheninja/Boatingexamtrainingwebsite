@@ -31,58 +31,73 @@ export function ResetPasswordPage({ onNavigate }: ResetPasswordPageProps) {
     publicAnonKey
   );
 
-  // Security: Verify the recovery token from the URL on mount
+  // Verify the recovery token from the URL on mount
   useEffect(() => {
-    const verifyRecoveryToken = async () => {
-      try {
-        console.log('[ResetPassword] Verifying recovery session...');
-        
-        // Check if there's a hash in the URL (Supabase sends token in URL hash)
-        const hashParams = new URLSearchParams(window.location.hash.substring(1));
-        const accessToken = hashParams.get('access_token');
-        const type = hashParams.get('type');
+    let resolved = false;
+    let fallbackTimer: ReturnType<typeof setTimeout>;
 
-        console.log('[ResetPassword] URL hash params:', { 
-          hasAccessToken: !!accessToken, 
-          type 
-        });
-
-        // Verify this is a recovery/password reset session
-        if (type !== 'recovery') {
-          console.error('[ResetPassword] Invalid recovery type:', type);
-          setError(language === 'English' 
-            ? 'Invalid password reset link. Please request a new one.' 
-            : 'Невалиден линк за нулиране на парола. Моля, поискайте нов.');
-          setIsVerifying(false);
-          return;
-        }
-
-        // Get the current session to verify the token is valid
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-
-        if (sessionError || !session) {
-          console.error('[ResetPassword] Session error:', sessionError);
-          setError(language === 'English' 
-            ? 'Your password reset link has expired or is invalid. Please request a new one.' 
-            : 'Вашият линк за нулиране на паролата е изтекъл или е невалиден. Моля, поискайте нов.');
-          setIsVerifying(false);
-          return;
-        }
-
-        console.log('[ResetPassword] Valid recovery session found for user:', session.user.email);
+    const resolve = (valid: boolean, errMsg?: string) => {
+      if (resolved) return;
+      resolved = true;
+      clearTimeout(fallbackTimer);
+      if (valid) {
         setHasValidSession(true);
-        setIsVerifying(false);
+      } else {
+        setError(errMsg || (language === 'English'
+          ? 'Invalid password reset link. Please request a new one.'
+          : 'Невалиден линк за нулиране на парола. Моля, поискайте нов.'));
+      }
+      setIsVerifying(false);
+    };
 
-      } catch (error: any) {
-        console.error('[ResetPassword] Token verification error:', error);
-        setError(language === 'English' 
-          ? 'Failed to verify reset link. Please try again.' 
+    // Listen for PASSWORD_RECOVERY event — fires when the Supabase SDK auto-exchanges the ?code=
+    const { data: { subscription: authSub } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY' && session) {
+        resolve(true);
+      }
+    });
+
+    const checkSession = async () => {
+      try {
+        // Check if a session already exists (SDK may have auto-exchanged ?code= before mount)
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          resolve(true);
+          return;
+        }
+
+        // No session yet — check URL for valid recovery indicators
+        const searchParams = new URLSearchParams(window.location.search);
+        const hasCode = !!searchParams.get('code');
+        const hashType = new URLSearchParams(window.location.hash.substring(1)).get('type');
+        const isLegacyRecovery = hashType === 'recovery';
+
+        if (!hasCode && !isLegacyRecovery) {
+          // No session AND no URL indicators → truly invalid link
+          resolve(false);
+          return;
+        }
+
+        // Code exists but exchange not complete yet — wait for PASSWORD_RECOVERY event.
+        // Fallback: show error if it takes too long (expired/invalid code)
+        fallbackTimer = setTimeout(() => {
+          resolve(false, language === 'English'
+            ? 'Your password reset link has expired or is invalid. Please request a new one.'
+            : 'Вашият линк за нулиране на паролата е изтекъл или е невалиден. Моля, поискайте нов.');
+        }, 10000);
+      } catch {
+        resolve(false, language === 'English'
+          ? 'Failed to verify reset link. Please try again.'
           : 'Неуспешна проверка на линка. Моля, опитайте отново.');
-        setIsVerifying(false);
       }
     };
 
-    verifyRecoveryToken();
+    checkSession();
+
+    return () => {
+      authSub.unsubscribe();
+      clearTimeout(fallbackTimer);
+    };
   }, [language]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -128,11 +143,21 @@ export function ResetPasswordPage({ onNavigate }: ResetPasswordPageProps) {
         throw updateError;
       }
 
-      console.log('[ResetPassword] Password updated successfully');
       setIsSuccess(true);
-      toast.success(language === 'English' 
-        ? 'Password updated successfully!' 
+      toast.success(language === 'English'
+        ? 'Password updated successfully!'
         : 'Паролата е актуализирана успешно!');
+
+      // Clear the backend active_session so subscription fetches work on next login
+      try {
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        if (currentSession?.access_token) {
+          await fetch(
+            `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/logout`,
+            { method: 'POST', headers: { Authorization: `Bearer ${currentSession.access_token}` } }
+          );
+        }
+      } catch { /* non-critical */ }
 
       // Sign out to ensure clean state
       await supabase.auth.signOut();

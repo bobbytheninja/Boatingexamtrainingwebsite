@@ -77,6 +77,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
   const [answeredQuestions, setAnsweredQuestions] = useState<Record<number, AnswerData>>({});
   const [showResults, setShowResults] = useState(false);
   const [showReview, setShowReview] = useState(false);
+  const [reviewFilter, setReviewFilter] = useState<'all' | 'correct' | 'wrong'>('all');
   const [timeRemaining, setTimeRemaining] = useState(60 * 60); // 60 minutes in seconds
   const [showAnswerFeedback, setShowAnswerFeedback] = useState(false);
   const [examStarted, setExamStarted] = useState(false);
@@ -242,7 +243,8 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
   const MAX_WRONG_ANSWERS = 2;
   
   // Early safety check - must happen before using currentQuestion
-  const hasValidQuestion = examQuestions && examQuestions.length > 0 && currentQuestion;
+  // Include loadingQuestions so we don't flash "not found" while re-fetching for a new exam
+  const hasValidQuestion = (examQuestions && examQuestions.length > 0 && currentQuestion) || loadingQuestions;
   
   const isMultipleChoice = currentQuestion?.correctAnswers && currentQuestion.correctAnswers.length > 1;
 
@@ -666,6 +668,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                     setTimeRemaining(60 * 60);
                     setShowAnswerFeedback(false);
                     setExamStarted(false);
+                    setReviewFilter('all');
                     setExamQuestions([]); // Clear so loadQuestions fetches a fresh random set
                     // Clear localStorage
                     const storageKey = `exam_progress_${examType}_${mode}_${tier}`;
@@ -729,27 +732,61 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
           }}
         >
         <div className="container mx-auto max-w-4xl">
-          <div className="mb-6 flex items-center justify-between">
-            <h2 
+          <div className="mb-6 flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
+            <h2
               className="text-2xl font-bold transition-colors duration-[400ms]"
-              style={{ 
+              style={{
                 color: darkMode ? '#f3f4f6' : '#111827',
                 transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
               }}
             >{t.reviewAnswers}</h2>
-            <Button 
-              onClick={onBackToHome} 
-              variant="outline"
-              className="transition-all duration-300"
-              style={{
-                backgroundColor: darkMode ? '#334155' : '#ffffff',
-                borderColor: darkMode ? '#64748b' : '#e5e7eb',
-                color: darkMode ? '#e2e8f0' : '#1f2937'
-              }}
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              {t.backToExams}
-            </Button>
+            <div className="flex items-center gap-2 flex-wrap">
+              {/* Review filter buttons */}
+              {(['all', 'correct', 'wrong'] as const).map(f => (
+                <button
+                  key={f}
+                  onClick={() => setReviewFilter(f)}
+                  style={{
+                    padding: '6px 14px',
+                    borderRadius: 8,
+                    border: `2px solid ${
+                      reviewFilter === f
+                        ? f === 'wrong' ? '#dc2626' : f === 'correct' ? '#16a34a' : (darkMode ? '#60a5fa' : '#2563eb')
+                        : darkMode ? '#475569' : '#e5e7eb'
+                    }`,
+                    backgroundColor: reviewFilter === f
+                      ? f === 'wrong' ? (darkMode ? '#450a0a' : '#fee2e2')
+                        : f === 'correct' ? (darkMode ? '#052e16' : '#dcfce7')
+                        : (darkMode ? '#1e3a8a' : '#dbeafe')
+                      : darkMode ? '#334155' : '#ffffff',
+                    color: reviewFilter === f
+                      ? f === 'wrong' ? (darkMode ? '#fca5a5' : '#991b1b')
+                        : f === 'correct' ? (darkMode ? '#86efac' : '#166534')
+                        : (darkMode ? '#93c5fd' : '#1e40af')
+                      : darkMode ? '#cbd5e1' : '#374151',
+                    fontWeight: 600,
+                    fontSize: 13,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  {f === 'all' ? `All (${examQuestions.length})` : f === 'correct' ? `✓ Correct (${Object.values(answeredQuestions).filter(a => a.isCorrect).length})` : `✗ Wrong (${Object.values(answeredQuestions).filter(a => !a.isCorrect).length})`}
+                </button>
+              ))}
+              <Button
+                onClick={onBackToHome}
+                variant="outline"
+                className="transition-all duration-300"
+                style={{
+                  backgroundColor: darkMode ? '#334155' : '#ffffff',
+                  borderColor: darkMode ? '#64748b' : '#e5e7eb',
+                  color: darkMode ? '#e2e8f0' : '#1f2937'
+                }}
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                {t.backToExams}
+              </Button>
+            </div>
           </div>
           
           <div className="mb-6">
@@ -788,9 +825,12 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
           <div className="space-y-4">
             {examQuestions.map((question, index) => {
               const answer = answeredQuestions[index];
+              const isCorrect = answer?.isCorrect ?? false;
+              // Apply filter
+              if (reviewFilter === 'correct' && !isCorrect) return null;
+              if (reviewFilter === 'wrong' && isCorrect) return null;
               const isMultiQuestion = question.correctAnswers && question.correctAnswers.length > 1;
               const userAnswer = answer?.answer;
-              const isCorrect = answer?.isCorrect ?? false;
               
               return (
                 <Card 

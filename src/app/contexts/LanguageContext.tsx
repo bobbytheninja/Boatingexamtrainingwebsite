@@ -10,9 +10,12 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<Language>(() => {
-    // Get language from localStorage or default to English
     const saved = localStorage.getItem('yacht-exam-language');
-    return (saved as Language) || 'English';
+    if (saved) return saved as Language;
+    // Auto-detect Bulgarian browser on first visit
+    const lang = (navigator.language || (navigator.languages && navigator.languages[0]) || '').toLowerCase();
+    if (lang.startsWith('bg')) return 'Bulgarian';
+    return 'Bulgarian'; // Default to Bulgarian — primary market; Google crawler gets Bulgarian content
   });
 
   // Save to localStorage whenever language changes

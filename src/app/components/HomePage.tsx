@@ -51,16 +51,22 @@ interface ExamCategory {
   image: string;
   country?: string;
   language?: string;
+  price?: number;
+  isFree?: boolean;
 }
 
 export function HomePage() {
-  usePageTitle('Black Sea Bulgaria — Maritime Exam Training Online');
   const navigate = useNavigate();
   const { user } = useAuth();
   const { darkMode } = useDarkMode();
   const { language } = useLanguage();
   const { region } = useRegion();
   const t = getTranslation(language);
+  usePageTitle(
+    language === 'Bulgarian'
+      ? 'Изпит яхта онлайн | Водач до 40 БТ — Black Sea Bulgaria'
+      : 'Yacht & Boat Exam Training Online — Black Sea Bulgaria'
+  );
   const isLoggedIn = !!user;
   const [categories, setCategories] = useState<ExamCategory[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
@@ -130,6 +136,8 @@ export function HomePage() {
       image: cat.image,
       country: cat.country,
       language: cat.language,
+      price: cat.price,
+      isFree: cat.isFree,
     }));
 
   const handleNavigate = (page: string) => {
@@ -162,10 +170,11 @@ export function HomePage() {
         {/* Hero Image - Navigation bar overlays this */}
         <div className="relative h-[77vh] md:h-[81vh] overflow-hidden">
           <ImageWithFallback
-            src="https://upload.wikimedia.org/wikipedia/commons/e/ef/Bavaria_Cruiser_45.jpg"
+            src="/hero-yacht.jpg"
             alt="Bavaria Cruiser 45 yacht"
             className="w-full h-full object-cover"
             style={{ objectPosition: 'center 70%' }}
+            fetchPriority="high"
           />
           <div
             className="absolute bottom-0 left-0 right-0 h-[20%] duration-[400ms]"
@@ -200,7 +209,7 @@ export function HomePage() {
         >
           <div className="container mx-auto px-4 md:px-6 lg:px-8">
             <div className="text-center mb-12 max-w-3xl mx-auto pt-16">
-              <h2
+              <h1
                 className="text-gray-900 dark:text-gray-100 mb-2 tracking-wide transition-colors duration-[400ms]"
                 style={{
                   fontSize: 'clamp(1.75rem, 4vw, 2.25rem)',
@@ -210,7 +219,7 @@ export function HomePage() {
                 }}
               >
                 {t.examCategories}
-              </h2>
+              </h1>
               <div className="flex items-center justify-center mb-3">
                 <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium transition-colors duration-[400ms] ${darkMode ? 'bg-sky-900/50 text-sky-300 border border-sky-700' : 'bg-sky-100 text-sky-700 border border-sky-200'}`}>
                   For: {region}
@@ -268,7 +277,7 @@ export function HomePage() {
                 return (
                   <Card
                     key={exam.type}
-                    className="group overflow-hidden hover:shadow-2xl border border-gray-200/50 dark:border-gray-700/50 bg-white dark:bg-slate-700 backdrop-blur-sm hover:-translate-y-2 transition-all duration-[400ms]"
+                    className="group overflow-hidden hover:shadow-2xl border border-gray-200/50 dark:border-gray-700/50 bg-white dark:bg-slate-700 backdrop-blur-sm hover:-translate-y-2 transition-all duration-[400ms] flex flex-col"
                     style={{
                       animationDelay: `${index * 100}ms`,
                       backgroundColor: darkMode ? '#334155' : '#ffffff',
@@ -276,7 +285,7 @@ export function HomePage() {
                       transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
                     }}
                   >
-                    <div className="relative h-32 md:h-40 overflow-hidden">
+                    <div className="relative h-32 md:h-40 overflow-hidden flex-shrink-0">
                       <ImageWithFallback
                         src={exam.image}
                         alt={displayTitle}
@@ -284,13 +293,18 @@ export function HomePage() {
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
                       <div className="absolute inset-0 bg-gradient-to-br from-sky-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                      <div className="relative h-full flex items-end p-3 md:p-4">
-                        <div className={`absolute top-3 right-3 md:top-4 md:right-4 ${exam.color} p-2 md:p-2.5 rounded-xl shadow-2xl group-hover:scale-110 transition-transform duration-300`}>
-                          <Icon className="w-4 h-4 md:w-5 md:h-5 text-white" />
-                        </div>
+                      <div className={`absolute top-3 right-3 md:top-4 md:right-4 z-10 ${exam.color} p-2 md:p-2.5 rounded-xl shadow-2xl group-hover:scale-110 transition-transform duration-300`}>
+                        <Icon className="w-4 h-4 md:w-5 md:h-5 text-white" />
                       </div>
+                      {exam.isFree && (
+                        <div className="absolute top-3 left-3 md:top-4 md:left-4 z-10">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-green-500 text-white shadow-md">
+                            Free
+                          </span>
+                        </div>
+                      )}
                     </div>
-                    <CardHeader className="pb-1 pt-2 px-3 md:px-6">
+                    <CardHeader className="pb-1 pt-2 px-3 md:px-6 flex-1">
                       <CardTitle
                         className="text-base md:text-lg font-bold text-gray-900 dark:text-gray-100 group-hover:text-sky-700 dark:group-hover:text-sky-400 transition-colors duration-[400ms]"
                         style={{
@@ -322,7 +336,7 @@ export function HomePage() {
                         )}
                       </div>
                     </CardHeader>
-                    <CardContent className="pt-0 pb-3 px-3 md:px-6">
+                    <CardContent className="pt-0 pb-3 px-3 md:px-6 mt-auto">
                       {(exam.country || exam.language) && (
                         <div className="flex flex-wrap gap-1.5 mb-3">
                           {exam.country && (
