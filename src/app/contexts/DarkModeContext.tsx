@@ -23,19 +23,32 @@ export function DarkModeProvider({ children }: { children: React.ReactNode }) {
       return false; // Default to light mode on error
     }
   });
+  const [isAnimating, setIsAnimating] = useState(false);
 
   // Apply dark mode class to document element immediately on init
   useEffect(() => {
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('[DarkModeContext] 🎨 APPLYING DARK MODE');
+    console.log('[DarkModeContext] darkMode state:', darkMode);
+    console.log('[DarkModeContext] document.documentElement:', document.documentElement);
+    console.log('[DarkModeContext] Current classes BEFORE:', document.documentElement.className);
+    
     if (darkMode) {
       document.documentElement.classList.add('dark');
+      console.log('[DarkModeContext] ✅ ADDED "dark" class');
+      // Force style update by setting attribute as well
       document.documentElement.setAttribute('data-theme', 'dark');
+      document.body.style.backgroundColor = '#1e293b'; // slate-800 (lighter)
     } else {
       document.documentElement.classList.remove('dark');
+      console.log('[DarkModeContext] ❌ REMOVED "dark" class');
       document.documentElement.removeAttribute('data-theme');
+      document.body.style.backgroundColor = '#ffffff'; // white
     }
-    // Let CSS custom properties handle body/html background — no direct style assignment
-    // so the .dark-transitioning rule can animate it uniformly.
-    document.body.style.backgroundColor = '';
+    
+    console.log('[DarkModeContext] Current classes AFTER:', document.documentElement.className);
+    console.log('[DarkModeContext] Has "dark" class?:', document.documentElement.classList.contains('dark'));
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   }, [darkMode]);
 
   // Persist dark mode to localStorage whenever it changes
@@ -48,14 +61,9 @@ export function DarkModeProvider({ children }: { children: React.ReactNode }) {
     }
   }, [darkMode]);
 
-  const TRANSITION_MS = 350;
-
   const toggleDarkMode = () => {
-    document.documentElement.classList.add('dark-transitioning');
+    console.log('[DarkModeContext] 🌓 Toggle called! Current:', darkMode, '-> New:', !darkMode);
     setDarkModeState(prev => !prev);
-    setTimeout(() => {
-      document.documentElement.classList.remove('dark-transitioning');
-    }, TRANSITION_MS);
   };
 
   const setDarkMode = (value: boolean) => {
