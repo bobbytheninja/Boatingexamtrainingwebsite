@@ -74,11 +74,24 @@
     font-size: var(--font-size);
     min-height: 100vh;
   }
-  
+
   html {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
   }
+}
+
+/* Dark mode synchronized transition — applied globally only during the toggle */
+.dark-transitioning *,
+.dark-transitioning *::before,
+.dark-transitioning *::after {
+  transition-property: background-color, color, border-color, fill, stroke, box-shadow, opacity !important;
+  transition-duration: 350ms !important;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important;
+  transition-delay: 0ms !important;
+}
+
+@layer base {
 
   h1, h2, h3, h4, h5, h6 {
     font-weight: var(--font-weight-bold);
