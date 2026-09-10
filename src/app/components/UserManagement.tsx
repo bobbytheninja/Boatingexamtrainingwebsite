@@ -24,6 +24,11 @@ interface User {
   subscriptions: string[];
   expiresAt: number | null;
   language: string;
+  lastLoginAt: string | null;
+  loginCount: number;
+  totalTimeSpent: number; // seconds
+  lastSessionDuration: number; // seconds
+  examsUsed: Record<string, number>; // examType → access count
 }
 
 const USERS_PER_PAGE = 20;
@@ -390,6 +395,22 @@ export function UserManagement() {
     });
   };
 
+  const formatDateTime = (iso: string | null) => {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) +
+      ' ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const formatDuration = (seconds: number) => {
+    if (!seconds) return '—';
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    if (h > 0) return `${h}h ${m}m`;
+    if (m > 0) return `${m}m`;
+    return `${seconds}s`;
+  };
+
   // Filter and paginate users
   const filteredUsers = users.filter(user =>
     user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -498,6 +519,7 @@ export function UserManagement() {
               <TableRow style={{ borderColor: darkMode ? '#334155' : '#e2e8f0' }}>
                 <TableHead style={{ color: darkMode ? '#94a3b8' : '#6b7280' }}>User</TableHead>
                 <TableHead style={{ color: darkMode ? '#94a3b8' : '#6b7280' }}>Admin Status</TableHead>
+                <TableHead style={{ color: darkMode ? '#94a3b8' : '#6b7280' }}>Activity</TableHead>
                 <TableHead style={{ color: darkMode ? '#94a3b8' : '#6b7280' }}>Licenses</TableHead>
                 <TableHead style={{ color: darkMode ? '#94a3b8' : '#6b7280' }}>Actions</TableHead>
               </TableRow>
@@ -602,6 +624,41 @@ export function UserManagement() {
                         )}
                       </div>
                     </TableCell>
+                    {/* Activity column */}
+                    <TableCell>
+                      <div className="space-y-1 text-xs" style={{ color: darkMode ? '#94a3b8' : '#6b7280' }}>
+                        <div>
+                          <span style={{ color: darkMode ? '#64748b' : '#9ca3af' }}>Last login: </span>
+                          <span style={{ color: darkMode ? '#e2e8f0' : '#374151' }}>{formatDateTime(user.lastLoginAt)}</span>
+                        </div>
+                        <div>
+                          <span style={{ color: darkMode ? '#64748b' : '#9ca3af' }}>Logins: </span>
+                          <span style={{ color: darkMode ? '#e2e8f0' : '#374151' }}>{user.loginCount || '—'}</span>
+                        </div>
+                        <div>
+                          <span style={{ color: darkMode ? '#64748b' : '#9ca3af' }}>Total time: </span>
+                          <span style={{ color: darkMode ? '#e2e8f0' : '#374151' }}>{formatDuration(user.totalTimeSpent)}</span>
+                        </div>
+                        <div>
+                          <span style={{ color: darkMode ? '#64748b' : '#9ca3af' }}>Last session: </span>
+                          <span style={{ color: darkMode ? '#e2e8f0' : '#374151' }}>{formatDuration(user.lastSessionDuration)}</span>
+                        </div>
+                        {Object.keys(user.examsUsed || {}).length > 0 && (
+                          <div className="pt-1 flex flex-wrap gap-1">
+                            {Object.entries(user.examsUsed).map(([exam, count]) => (
+                              <span
+                                key={exam}
+                                className="inline-flex items-center px-1.5 py-0.5 rounded text-xs"
+                                style={{ background: darkMode ? '#1e3a5f' : '#dbeafe', color: darkMode ? '#93c5fd' : '#1d4ed8' }}
+                                title={`${exam} — accessed ${count}×`}
+                              >
+                                {exam.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/(\d+)/g, ' $1').trim()} ×{count}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell>
                       {hasSubscriptions ? (
                         <div className="flex flex-wrap gap-1">
@@ -699,7 +756,7 @@ export function UserManagement() {
                   </TableRow>
                   {expandedPaymentUserId === user.id && (
                     <TableRow key={`payments-${user.id}`} style={{ borderColor: darkMode ? '#334155' : '#e2e8f0' }}>
-                      <TableCell colSpan={4} style={{ padding: '0 16px 12px' }}>
+                      <TableCell colSpan={5} style={{ padding: '0 16px 12px' }}>
                         <div
                           className="rounded-lg p-3"
                           style={{

@@ -738,6 +738,22 @@ app.post("/make-server-d36f8f91/invalidate-sessions", async (c) => {
 
     console.log(`[Session Invalidation] ✅ Set active session for user ${user.id}`);
     console.log(`[Session Invalidation] ℹ️ All other devices will be logged out when they try to access protected routes`);
+
+    // Record login activity
+    const activityKey = `activity:${user.id}`;
+    const prevActivity = (await kv.get(activityKey)) || {};
+    // If there was a session that never got a logout (e.g. browser closed), estimate its duration
+    let totalTimeSpent = prevActivity.totalTimeSpent || 0;
+    if (prevActivity.sessionStart) {
+      totalTimeSpent += Math.floor((Date.now() - prevActivity.sessionStart) / 1000);
+    }
+    await kv.set(activityKey, {
+      ...prevActivity,
+      loginCount: (prevActivity.loginCount || 0) + 1,
+      lastLoginAt: new Date().toISOString(),
+      sessionStart: Date.now(),
+      totalTimeSpent,
+    });
     
     return c.json({ 
       message: 'All other sessions invalidated successfully',
@@ -769,6 +785,19 @@ app.post("/make-server-d36f8f91/logout", async (c) => {
     }
 
     console.log(`[Logout] 🚪 Logging out user ${user.id} (${user.email})`);
+
+    // Finalize session duration in activity record
+    const activityKey = `activity:${user.id}`;
+    const activity = (await kv.get(activityKey)) || {};
+    if (activity.sessionStart) {
+      const duration = Math.floor((Date.now() - activity.sessionStart) / 1000);
+      await kv.set(activityKey, {
+        ...activity,
+        sessionStart: null,
+        lastSessionDuration: duration,
+        totalTimeSpent: (activity.totalTimeSpent || 0) + duration,
+      });
+    }
 
     // Delete the active session from KV store
     const sessionKey = `active_session:${user.id}`;
@@ -1640,9 +1669,12 @@ app.get("/make-server-d36f8f91/admin/users", async (c) => {
     // Get subscription data for each user
     const usersWithSubscriptions = await Promise.all(
       users.map(async (u) => {
-        const subscription = await kv.get(`subscription:${u.id}`);
-        const preferences = await kv.get(`preferences:${u.id}`);
-        
+        const [subscription, preferences, activity] = await Promise.all([
+          kv.get(`subscription:${u.id}`),
+          kv.get(`preferences:${u.id}`),
+          kv.get(`activity:${u.id}`),
+        ]);
+
         return {
           id: u.id,
           email: u.email,
@@ -1652,6 +1684,11 @@ app.get("/make-server-d36f8f91/admin/users", async (c) => {
           subscriptions: subscription?.examTypes || [],
           expiresAt: subscription?.expiresAt || null,
           language: preferences?.language || 'English',
+          lastLoginAt: activity?.lastLoginAt || null,
+          loginCount: activity?.loginCount || 0,
+          totalTimeSpent: activity?.totalTimeSpent || 0,
+          lastSessionDuration: activity?.lastSessionDuration || 0,
+          examsUsed: activity?.examsUsed || {},
         };
       })
     );
@@ -2085,6 +2122,17 @@ app.get("/make-server-d36f8f91/questions/:examType", async (c) => {
       console.log(`[Questions API] No questions found in database for ${examType}`);
       return c.json({ message: 'No questions available for this exam type' }, 404);
     }
+
+    // Record which exam this user accessed (fire-and-forget)
+    (async () => {
+      try {
+        const activityKey = `activity:${user.id}`;
+        const act = (await kv.get(activityKey)) || {};
+        const examsUsed: Record<string, number> = act.examsUsed || {};
+        examsUsed[examType] = (examsUsed[examType] || 0) + 1;
+        await kv.set(activityKey, { ...act, examsUsed });
+      } catch {}
+    })();
 
     return c.json({ questions: examQuestions });
   } catch (error: any) {
