@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import * as XLSX from 'xlsx';
 import { useDarkMode } from '../contexts/DarkModeContext';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
@@ -7,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { ScrollArea } from './ui/scroll-area';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { Input } from './ui/input';
-import { Users, Calendar, CheckCircle, XCircle, Shield, Search, ChevronLeft, ChevronRight, ShieldCheck, ShieldOff, AlertTriangle, Receipt } from 'lucide-react';
+import { Users, Calendar, CheckCircle, XCircle, Shield, Search, ChevronLeft, ChevronRight, ShieldCheck, ShieldOff, AlertTriangle, Receipt, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import { ButtonSpinner } from './LoadingSpinner';
 import { projectId } from '../utils/supabase/info';
@@ -411,6 +412,27 @@ export function UserManagement() {
     return `${seconds}s`;
   };
 
+  const exportToExcel = () => {
+    const rows = users.map(u => ({
+      'Email': u.email,
+      'Name': u.name,
+      'Role': u.role,
+      'Joined': formatDate(u.createdAt),
+      'Last Login': formatDateTime(u.lastLoginAt),
+      'Login Count': u.loginCount || 0,
+      'Total Time Spent': formatDuration(u.totalTimeSpent),
+      'Last Session Duration': formatDuration(u.lastSessionDuration),
+      'Exams Used': Object.entries(u.examsUsed || {}).map(([e, c]) => `${e}×${c}`).join(', '),
+      'Subscriptions': (u.subscriptions || []).join(', '),
+      'Subscription Expires': u.expiresAt ? new Date(u.expiresAt).toLocaleDateString('en-US') : '—',
+      'Language': u.language,
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Users');
+    XLSX.writeFile(wb, `users-${new Date().toISOString().slice(0, 10)}.xlsx`);
+  };
+
   // Filter and paginate users
   const filteredUsers = users.filter(user =>
     user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -496,9 +518,22 @@ export function UserManagement() {
             <Users className="w-5 h-5" />
             User Management
           </CardTitle>
-          <Badge variant="outline" style={{ borderColor: darkMode ? '#64748b' : '#cbd5e1', color: darkMode ? '#cbd5e1' : '#374151' }}>
-            {filteredUsers.length} {filteredUsers.length === 1 ? 'user' : 'users'}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" style={{ borderColor: darkMode ? '#64748b' : '#cbd5e1', color: darkMode ? '#cbd5e1' : '#374151' }}>
+              {filteredUsers.length} {filteredUsers.length === 1 ? 'user' : 'users'}
+            </Badge>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={exportToExcel}
+              disabled={users.length === 0}
+              className="h-7 text-xs gap-1.5"
+              style={{ borderColor: darkMode ? '#475569' : '#d1d5db', color: darkMode ? '#e2e8f0' : '#374151' }}
+            >
+              <Download className="w-3.5 h-3.5" />
+              Export Excel
+            </Button>
+          </div>
         </div>
         <div className="relative mt-4">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
