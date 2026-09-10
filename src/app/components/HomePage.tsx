@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Waves, Ship, Sailboat, Anchor as AnchorIcon, Compass, Users, BookOpen, Award, LucideIcon } from 'lucide-react';
+import { Waves, Ship, Sailboat, Anchor as AnchorIcon, Compass, Users, Fish, Sunset, BookOpen, Award, LucideIcon } from 'lucide-react';
 import { ExamType } from '../data/examQuestions';
 import { getTranslation } from '../data/translations';
 import { Navigation } from './Navigation';
@@ -23,6 +23,9 @@ const ICON_MAP: Record<string, LucideIcon> = {
   'Anchor': AnchorIcon,
   'Sailboat': Sailboat,
   'Compass': Compass,
+  'Fish': Fish,
+  'Coastal': Sunset,
+  'People': Users,
 };
 
 const LANGUAGE_NAMES: Record<string, string> = {
