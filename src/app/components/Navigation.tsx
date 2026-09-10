@@ -96,7 +96,7 @@ export function Navigation({
           paddingTop: 'env(safe-area-inset-top)',
         }}
       >
-        <div className="container mx-auto px-4 md:px-6 lg:px-8 py-[1.05rem]">
+        <div className="container mx-auto px-4 md:px-6 lg:px-8 py-[1.02rem]" style={{ fontSize: '1.02em' }}>
           <div className="flex items-center justify-between gap-2">
             {/* Logo */}
             <button 
@@ -117,14 +117,14 @@ export function Navigation({
                   }}
                 >
                   <div className="relative">
-                    <Anchor className={`w-[1.85rem] h-[1.85rem] ${transparent ? 'text-white drop-shadow-lg' : 'text-white'} transform -rotate-12`} />
+                    <Anchor style={{ width: '1.785rem', height: '1.785rem' }} className={`${transparent ? 'text-white drop-shadow-lg' : 'text-white'} transform -rotate-12`} />
                     <div className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-300 rounded-full shadow-lg"></div>
                   </div>
                 </div>
               </div>
               <div className="text-left block">
                 <h1
-                  className={`text-[1.05rem] lg:text-[1.155rem] font-bold tracking-tight transition-colors duration-[400ms] ${
+                  className={`text-[1.02rem] lg:text-[1.1475rem] font-bold tracking-tight transition-colors duration-[400ms] ${
                     transparent ? 'text-white drop-shadow-lg' : ''
                   }`}
                   style={!transparent ? {
@@ -197,7 +197,7 @@ export function Navigation({
                 } px-2 flex-shrink-0 transition-all`}
                 style={{ willChange: 'auto' }}
               >
-                {darkMode ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+                {darkMode ? <Moon style={{ width: '1.02rem', height: '1.02rem' }} /> : <Sun style={{ width: '1.02rem', height: '1.02rem' }} />}
               </Button>
               
               {/* Language Dropdown - Desktop */}
@@ -216,9 +216,9 @@ export function Navigation({
                       color: transparent ? undefined : (darkMode ? '#e5e7eb' : '#1f2937')
                     }}
                   >
-                    <Globe className="w-4 h-4 flex-shrink-0" />
+                    <Globe style={{ width: '1.02rem', height: '1.02rem' }} className="flex-shrink-0" />
                     <span className="hidden sm:inline truncate flex-1 text-left">{language}</span>
-                    <ChevronDown className="w-3 h-3 flex-shrink-0" />
+                    <ChevronDown style={{ width: '0.765rem', height: '0.765rem' }} className="flex-shrink-0" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl border-gray-200 dark:border-gray-600 w-[130px]">
@@ -255,9 +255,9 @@ export function Navigation({
                       color: transparent ? undefined : (darkMode ? '#e5e7eb' : '#1f2937')
                     }}
                   >
-                    <MapPin className="w-4 h-4 flex-shrink-0" />
+                    <MapPin style={{ width: '1.02rem', height: '1.02rem' }} className="flex-shrink-0" />
                     <span className="hidden sm:inline truncate flex-1 text-left">{region}</span>
-                    <ChevronDown className="w-3 h-3 flex-shrink-0" />
+                    <ChevronDown style={{ width: '0.765rem', height: '0.765rem' }} className="flex-shrink-0" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl border-gray-200 dark:border-gray-600 w-[130px]">
@@ -322,7 +322,7 @@ export function Navigation({
                         : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'
                     } px-2`}
                   >
-                    <Menu className="w-5 h-5" />
+                    <Menu style={{ width: '1.275rem', height: '1.275rem' }} />
                   </Button>
                 </SheetTrigger>
                 <SheetContent
