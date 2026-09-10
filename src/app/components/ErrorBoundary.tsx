@@ -19,6 +19,19 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   static getDerivedStateFromError(error: Error): State {
+    const msg = error.message || '';
+    const isChunkError =
+      msg.includes('Importing a module script failed') ||
+      msg.includes('Failed to fetch dynamically imported module') ||
+      msg.includes('error loading dynamically imported module') ||
+      msg.includes('Unable to preload CSS') ||
+      error.name === 'ChunkLoadError';
+
+    if (isChunkError) {
+      window.location.reload();
+      return { hasError: false, error: null };
+    }
+
     return { hasError: true, error };
   }
 
