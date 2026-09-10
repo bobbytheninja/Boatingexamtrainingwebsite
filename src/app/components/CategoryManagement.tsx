@@ -32,6 +32,15 @@ import { projectId } from '../utils/supabase/info';
 import { LoadingSpinner } from './LoadingSpinner';
 import { useDarkMode } from '../contexts/DarkModeContext';
 
+const JetSkiIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+    fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M2 18 L3 14 L10 13 L18 13 Q21 13 22 15 L20 18 Q11 20 2 18Z" />
+    <line x1="15" y1="13" x2="15" y2="10" />
+    <line x1="12" y1="10" x2="18" y2="10" />
+  </svg>
+);
+
 // Available icons for categories
 const AVAILABLE_ICONS = [
   { name: 'Waves', component: Waves },
@@ -42,6 +51,7 @@ const AVAILABLE_ICONS = [
   { name: 'Fish', component: Fish },
   { name: 'Coastal', component: Sunset },
   { name: 'People', component: Users },
+  { name: 'JetSki', component: JetSkiIcon },
 ];
 
 // Available languages for exam categories

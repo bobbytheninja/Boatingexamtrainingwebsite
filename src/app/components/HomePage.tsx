@@ -5,6 +5,16 @@ import { ImageWithFallback } from './figma/ImageWithFallback';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Waves, Ship, Sailboat, Anchor as AnchorIcon, Compass, Users, Fish, Sunset, BookOpen, Award, LucideIcon } from 'lucide-react';
+import React from 'react';
+
+const JetSkiIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+    fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M2 18 L3 14 L10 13 L18 13 Q21 13 22 15 L20 18 Q11 20 2 18Z" />
+    <line x1="15" y1="13" x2="15" y2="10" />
+    <line x1="12" y1="10" x2="18" y2="10" />
+  </svg>
+);
 import { ExamType } from '../data/examQuestions';
 import { getTranslation } from '../data/translations';
 import { Navigation } from './Navigation';
@@ -17,7 +27,7 @@ import { AnimatedStatCard } from './AnimatedCounter';
 import { projectId, publicAnonKey } from '../utils/supabase/info';
 
 // Icon mapping - maps icon names from database to actual icon components
-const ICON_MAP: Record<string, LucideIcon> = {
+const ICON_MAP: Record<string, React.ComponentType<React.SVGProps<SVGSVGElement>>> = {
   'Waves': Waves,
   'Ship': Ship,
   'Anchor': AnchorIcon,
@@ -26,6 +36,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   'Fish': Fish,
   'Coastal': Sunset,
   'People': Users,
+  'JetSki': JetSkiIcon,
 };
 
 const LANGUAGE_NAMES: Record<string, string> = {
