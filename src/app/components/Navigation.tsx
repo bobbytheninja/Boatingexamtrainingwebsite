@@ -96,7 +96,7 @@ export function Navigation({
           paddingTop: 'env(safe-area-inset-top)',
         }}
       >
-        <div className="container mx-auto px-4 md:px-6 lg:px-8 py-4">
+        <div className="container mx-auto px-4 md:px-6 lg:px-8 py-[1.05rem]">
           <div className="flex items-center justify-between gap-2">
             {/* Logo */}
             <button 
@@ -117,14 +117,14 @@ export function Navigation({
                   }}
                 >
                   <div className="relative">
-                    <Anchor className={`w-7 h-7 ${transparent ? 'text-white drop-shadow-lg' : 'text-white'} transform -rotate-12`} />
+                    <Anchor className={`w-[1.85rem] h-[1.85rem] ${transparent ? 'text-white drop-shadow-lg' : 'text-white'} transform -rotate-12`} />
                     <div className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-300 rounded-full shadow-lg"></div>
                   </div>
                 </div>
               </div>
               <div className="text-left block">
                 <h1
-                  className={`text-base lg:text-lg font-bold tracking-tight transition-colors duration-[400ms] ${
+                  className={`text-[1.05rem] lg:text-[1.155rem] font-bold tracking-tight transition-colors duration-[400ms] ${
                     transparent ? 'text-white drop-shadow-lg' : ''
                   }`}
                   style={!transparent ? {
