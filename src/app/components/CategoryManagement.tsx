@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -22,7 +22,10 @@ import {
   Upload,
   ArrowUp,
   ArrowDown,
-  GripVertical
+  GripVertical,
+  Fish,
+  Sunset,
+  Users
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { projectId } from '../utils/supabase/info';
@@ -36,6 +39,9 @@ const AVAILABLE_ICONS = [
   { name: 'Anchor', component: AnchorIcon },
   { name: 'Sailboat', component: Sailboat },
   { name: 'Compass', component: Compass },
+  { name: 'Fish', component: Fish },
+  { name: 'Coastal', component: Sunset },
+  { name: 'People', component: Users },
 ];
 
 // Available languages for exam categories
@@ -118,6 +124,8 @@ export function CategoryManagement({ accessToken }: CategoryManagementProps) {
   const [resettingDefaults, setResettingDefaults] = useState(false);
   const [reorderMode, setReorderMode] = useState(false);
   const [savingOrder, setSavingOrder] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, boolean>>({});
+  const formRef = useRef<HTMLDivElement>(null);
   const [overallPrice, setOverallPrice] = useState<number>(5);
   const [savingPrice, setSavingPrice] = useState(false);
   const [loadingPrice, setLoadingPrice] = useState(true);
@@ -146,6 +154,12 @@ export function CategoryManagement({ accessToken }: CategoryManagementProps) {
     loadPricingSettings();
     loadRegions();
   }, []);
+
+  useEffect(() => {
+    if (isAddingNew || editingCategory) {
+      formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [isAddingNew, editingCategory]);
 
   const loadCategories = async () => {
     setLoading(true);
@@ -297,12 +311,14 @@ export function CategoryManagement({ accessToken }: CategoryManagementProps) {
       language: '',
       price: 5,
     });
+    setFieldErrors({});
     setIsAddingNew(true);
     setEditingCategory(null);
   };
 
   const handleEdit = (category: ExamCategory) => {
     setFormData({ ...category });
+    setFieldErrors({});
     setEditingCategory(category);
     setIsAddingNew(false);
   };
@@ -310,6 +326,7 @@ export function CategoryManagement({ accessToken }: CategoryManagementProps) {
   const handleCancel = () => {
     setIsAddingNew(false);
     setEditingCategory(null);
+    setFieldErrors({});
     setFormData({
       type: '',
       title: '',
@@ -325,10 +342,17 @@ export function CategoryManagement({ accessToken }: CategoryManagementProps) {
 
   const handleSave = async () => {
     // Validation
-    if (!formData.type || !formData.title || !formData.description || !formData.country) {
-      toast.error('Please fill in all required fields including Country');
+    const errors: Record<string, boolean> = {};
+    if (!formData.type) errors.type = true;
+    if (!formData.title) errors.title = true;
+    if (!formData.description) errors.description = true;
+    if (!formData.country) errors.country = true;
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      toast.error('Please fill in the highlighted fields');
       return;
     }
+    setFieldErrors({});
 
     // Type must be alphanumeric and lowercase
     const typeRegex = /^[a-z0-9]+$/;
@@ -686,6 +710,7 @@ export function CategoryManagement({ accessToken }: CategoryManagementProps) {
 
       {/* Add/Edit Form */}
       {(isAddingNew || editingCategory) && (
+        <div ref={formRef}>
         <Card className="border-2 border-blue-500" style={{ background: darkMode ? '#1e293b' : undefined }}>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -703,10 +728,11 @@ export function CategoryManagement({ accessToken }: CategoryManagementProps) {
                 <Input
                   id="type"
                   value={formData.type}
-                  onChange={(e) => setFormData({ ...formData, type: e.target.value.toLowerCase() })}
+                  onChange={(e) => { setFormData({ ...formData, type: e.target.value.toLowerCase() }); if (fieldErrors.type) setFieldErrors(prev => ({ ...prev, type: false })); }}
                   placeholder="e.g., jet, small, yacht"
                   disabled={!isAddingNew}
                   className="mt-1"
+                  style={fieldErrors.type ? { borderColor: '#ef4444', boxShadow: '0 0 0 1px #ef4444' } : undefined}
                 />
                 <p className="text-xs text-gray-500 mt-1">
                   Lowercase alphanumeric only. Cannot be changed after creation.
@@ -739,9 +765,10 @@ export function CategoryManagement({ accessToken }: CategoryManagementProps) {
                 <Input
                   id="title"
                   value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  onChange={(e) => { setFormData({ ...formData, title: e.target.value }); if (fieldErrors.title) setFieldErrors(prev => ({ ...prev, title: false })); }}
                   placeholder="e.g., Jet Ski License"
                   className="mt-1"
+                  style={fieldErrors.title ? { borderColor: '#ef4444', boxShadow: '0 0 0 1px #ef4444' } : undefined}
                 />
               </div>
 
@@ -753,9 +780,9 @@ export function CategoryManagement({ accessToken }: CategoryManagementProps) {
                 <select
                   id="country"
                   value={formData.country || ''}
-                  onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                  onChange={(e) => { setFormData({ ...formData, country: e.target.value }); if (fieldErrors.country) setFieldErrors(prev => ({ ...prev, country: false })); }}
                   className="w-full mt-1 px-3 py-2 border rounded-md"
-                  style={{ backgroundColor: darkMode ? '#374151' : '#ffffff', color: darkMode ? '#f3f4f6' : '#111827', borderColor: darkMode ? '#4b5563' : '#d1d5db' }}
+                  style={{ backgroundColor: darkMode ? '#374151' : '#ffffff', color: darkMode ? '#f3f4f6' : '#111827', borderColor: fieldErrors.country ? '#ef4444' : (darkMode ? '#4b5563' : '#d1d5db'), boxShadow: fieldErrors.country ? '0 0 0 1px #ef4444' : undefined }}
                 >
                   <option value="" disabled>Select a country...</option>
                   {WORLD_COUNTRIES.map((c) => (
@@ -899,10 +926,11 @@ export function CategoryManagement({ accessToken }: CategoryManagementProps) {
               <Textarea
                 id="description"
                 value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                onChange={(e) => { setFormData({ ...formData, description: e.target.value }); if (fieldErrors.description) setFieldErrors(prev => ({ ...prev, description: false })); }}
                 placeholder="e.g., Master jet ski operation and safety procedures"
                 className="mt-1"
                 rows={3}
+                style={fieldErrors.description ? { borderColor: '#ef4444', boxShadow: '0 0 0 1px #ef4444' } : undefined}
               />
             </div>
 
@@ -950,6 +978,7 @@ export function CategoryManagement({ accessToken }: CategoryManagementProps) {
             </div>
           </CardContent>
         </Card>
+        </div>
       )}
 
       {/* Categories List */}
