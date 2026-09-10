@@ -3293,6 +3293,28 @@ app.delete("/make-server-d36f8f91/categories/:type", async (c) => {
   }
 });
 
+// Reorder categories (admin only)
+app.put("/make-server-d36f8f91/categories/reorder", async (c) => {
+  const { error, user, isAdmin: adminStatus } = await verifyAdmin(c.req.header('Authorization'));
+  if (error || !user || !adminStatus) return c.json({ message: 'Admin required' }, 403);
+
+  try {
+    const { order } = await c.req.json(); // order: string[] of category types
+    if (!Array.isArray(order)) return c.json({ message: 'order must be an array' }, 400);
+
+    const categories = await kv.get('exam_categories') || [];
+    const map = new Map(categories.map((cat: any) => [cat.type, cat]));
+    const reordered = order.map((type: string) => map.get(type)).filter(Boolean);
+    // Append any categories not included in order (safety net)
+    categories.forEach((cat: any) => { if (!order.includes(cat.type)) reordered.push(cat); });
+
+    await kv.set('exam_categories', reordered);
+    return c.json({ success: true, categories: reordered });
+  } catch (err: any) {
+    return c.json({ message: err.message }, 500);
+  }
+});
+
 // ============== REGIONS ==============
 
 // Get all regions

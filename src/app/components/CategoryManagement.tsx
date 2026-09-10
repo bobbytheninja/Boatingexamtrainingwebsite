@@ -6,20 +6,23 @@ import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { Alert, AlertDescription } from './ui/alert';
 import { Badge } from './ui/badge';
-import { 
-  Plus, 
-  Edit2, 
-  Trash2, 
-  Save, 
-  X, 
-  AlertCircle, 
+import {
+  Plus,
+  Edit2,
+  Trash2,
+  Save,
+  X,
+  AlertCircle,
   CheckCircle,
   Waves,
   Ship,
   AnchorIcon,
   Sailboat,
   Compass,
-  Upload
+  Upload,
+  ArrowUp,
+  ArrowDown,
+  GripVertical
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { projectId } from '../utils/supabase/info';
@@ -113,6 +116,8 @@ export function CategoryManagement({ accessToken }: CategoryManagementProps) {
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [savingCategory, setSavingCategory] = useState(false);
   const [resettingDefaults, setResettingDefaults] = useState(false);
+  const [reorderMode, setReorderMode] = useState(false);
+  const [savingOrder, setSavingOrder] = useState(false);
   const [overallPrice, setOverallPrice] = useState<number>(5);
   const [savingPrice, setSavingPrice] = useState(false);
   const [loadingPrice, setLoadingPrice] = useState(true);
@@ -481,6 +486,38 @@ export function CategoryManagement({ accessToken }: CategoryManagementProps) {
     }
   };
 
+  const moveCategory = (index: number, direction: 'up' | 'down') => {
+    const next = [...categories];
+    const swap = direction === 'up' ? index - 1 : index + 1;
+    if (swap < 0 || swap >= next.length) return;
+    [next[index], next[swap]] = [next[swap], next[index]];
+    setCategories(next);
+  };
+
+  const handleSaveOrder = async () => {
+    setSavingOrder(true);
+    try {
+      const res = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/categories/reorder`,
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+          body: JSON.stringify({ order: categories.map(c => c.type) }),
+        }
+      );
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || `Error ${res.status}`);
+      }
+      toast.success('Category order saved');
+      setReorderMode(false);
+    } catch (err: any) {
+      toast.error(`Failed to save order: ${err.message}`);
+    } finally {
+      setSavingOrder(false);
+    }
+  };
+
   const handleSavePricing = async () => {
     // Validate that a price has been entered
     if (overallPrice === undefined || overallPrice === null || overallPrice === '') {
@@ -604,10 +641,43 @@ export function CategoryManagement({ accessToken }: CategoryManagementProps) {
                     </>
                   )}
                 </Button>
-                <Button onClick={handleAddNew} className="flex items-center gap-2">
-                  <Plus className="w-4 h-4" />
-                  Add Category
-                </Button>
+                {reorderMode ? (
+                  <>
+                    <Button
+                      variant="outline"
+                      onClick={() => { setReorderMode(false); }}
+                      className="flex items-center gap-2"
+                      style={{ borderColor: darkMode ? '#475569' : undefined }}
+                    >
+                      <X className="w-4 h-4" />
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleSaveOrder}
+                      disabled={savingOrder}
+                      className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white"
+                    >
+                      <Save className="w-4 h-4" />
+                      {savingOrder ? 'Saving…' : 'Save Order'}
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      variant="outline"
+                      onClick={() => setReorderMode(true)}
+                      className="flex items-center gap-2"
+                      style={{ borderColor: darkMode ? '#475569' : undefined, color: darkMode ? '#e2e8f0' : undefined }}
+                    >
+                      <GripVertical className="w-4 h-4" />
+                      Reorder
+                    </Button>
+                    <Button onClick={handleAddNew} className="flex items-center gap-2">
+                      <Plus className="w-4 h-4" />
+                      Add Category
+                    </Button>
+                  </>
+                )}
               </div>
             )}
           </div>
@@ -883,13 +953,38 @@ export function CategoryManagement({ accessToken }: CategoryManagementProps) {
       )}
 
       {/* Categories List */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {categories.map((category) => {
+      <div className={reorderMode ? 'flex flex-col gap-3' : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'}>
+        {categories.map((category, index) => {
           const Icon = AVAILABLE_ICONS.find(i => i.name === category.icon)?.component || Waves;
-          
+
           return (
-            <Card key={category.type} className="overflow-hidden" style={{ background: darkMode ? '#1e293b' : undefined, borderColor: darkMode ? '#334155' : undefined }}>
-              <div className={`h-32 ${category.color} relative`}>
+            <Card key={category.type} className="overflow-hidden" style={{ background: darkMode ? '#1e293b' : undefined, borderColor: reorderMode ? (darkMode ? '#0ea5e9' : '#38bdf8') : (darkMode ? '#334155' : undefined), borderWidth: reorderMode ? 2 : undefined }}>
+              {reorderMode && (
+                <div className="flex items-center gap-3 px-4 py-2 border-b" style={{ borderColor: darkMode ? '#334155' : '#e2e8f0' }}>
+                  <GripVertical className="w-4 h-4 shrink-0" style={{ color: darkMode ? '#64748b' : '#9ca3af' }} />
+                  <span className="text-xs font-bold w-5 text-center" style={{ color: darkMode ? '#64748b' : '#9ca3af' }}>#{index + 1}</span>
+                  <span className="flex-1 text-sm font-medium truncate" style={{ color: darkMode ? '#e2e8f0' : '#374151' }}>{category.title}</span>
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => moveCategory(index, 'up')}
+                      disabled={index === 0}
+                      className="p-1 rounded hover:opacity-70 disabled:opacity-20"
+                      title="Move up"
+                    >
+                      <ArrowUp className="w-4 h-4" style={{ color: darkMode ? '#94a3b8' : '#6b7280' }} />
+                    </button>
+                    <button
+                      onClick={() => moveCategory(index, 'down')}
+                      disabled={index === categories.length - 1}
+                      className="p-1 rounded hover:opacity-70 disabled:opacity-20"
+                      title="Move down"
+                    >
+                      <ArrowDown className="w-4 h-4" style={{ color: darkMode ? '#94a3b8' : '#6b7280' }} />
+                    </button>
+                  </div>
+                </div>
+              )}
+              <div className={`${reorderMode ? 'h-16' : 'h-32'} ${category.color} relative`}>
                 {category.image && (
                   <img 
                     src={category.image} 
