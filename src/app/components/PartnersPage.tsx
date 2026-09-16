@@ -180,15 +180,6 @@ export function PartnersPage({ onNavigate, selectedPartnerIndex = 0, isLoggedIn 
             >
               {t.partnersTitle}
             </h2>
-            <p
-              className="max-w-2xl mx-auto text-sm md:text-base font-light leading-relaxed transition-colors duration-[400ms]"
-              style={{
-                color: darkMode ? '#d1d5db' : '#475569',
-                transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
-              }}
-            >
-              {t.partnersSubtitle}
-            </p>
           </div>
 
           {/* Partners List */}
