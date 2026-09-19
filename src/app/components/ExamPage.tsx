@@ -252,7 +252,8 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
 
   const currentQuestion = examQuestions[currentQuestionIndex];
   const totalQuestions = examQuestions.length;
-  const progress = totalQuestions > 0 ? ((currentQuestionIndex + 1) / totalQuestions) * 100 : 0;
+  const answeredCount = Object.keys(answeredQuestions).length;
+  const progress = totalQuestions > 0 ? (answeredCount / totalQuestions) * 100 : 0;
   const MAX_WRONG_ANSWERS = 2;
   
   // Early safety check - must happen before using currentQuestion
@@ -487,6 +488,23 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
     setCurrentQuestionIndex(index);
     setShowAnswerFeedback(false);
   };
+
+  // Restore previously selected answer when navigating between questions
+  useEffect(() => {
+    const saved = answeredQuestions[currentQuestionIndex];
+    if (saved) {
+      if (Array.isArray(saved.answer)) {
+        setSelectedAnswers(saved.answer as number[]);
+        setSelectedAnswer(null);
+      } else {
+        setSelectedAnswer(saved.answer as number);
+        setSelectedAnswers([]);
+      }
+    } else {
+      setSelectedAnswer(null);
+      setSelectedAnswers([]);
+    }
+  }, [currentQuestionIndex]);
 
   const calculateResults = () => {
     let wrongCount = 0;
@@ -1152,56 +1170,57 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
         onNavigate={handleNavigate}
         isLoggedIn={!!user}
       />
-      <div 
-        className="min-h-screen pt-32 pb-6 px-4 transition-all duration-[400ms]"
-        style={{ 
-          background: darkMode 
+      <div
+        className="min-h-screen pt-32 pb-28 sm:pb-6 px-4 transition-all duration-[400ms] overflow-x-hidden"
+        style={{
+          background: darkMode
             ? 'linear-gradient(to bottom right, #0f172a, #1e293b, #0f172a)'
             : 'linear-gradient(to bottom right, #ffffff, #f0f9ff, #ffffff)',
           transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
         }}
       >
       <div className="container mx-auto max-w-5xl">
-        <div className="mb-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
+        <div className="mb-4 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
             <Button
               onClick={() => setShowExitDialog(true)}
               variant="outline"
-              className="hover:opacity-70 transition-opacity duration-200"
+              size="sm"
+              className="hover:opacity-70 transition-opacity duration-200 flex-shrink-0"
               style={{
                 borderColor: darkMode ? '#f87171' : '#ef4444',
                 color: darkMode ? '#fca5a5' : '#dc2626',
                 backgroundColor: darkMode ? 'rgba(51,65,85,0.5)' : 'transparent',
               }}
             >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              {t.exitExam}
+              <ArrowLeft className="w-4 h-4" />
+              <span className="hidden sm:inline ml-2">{t.exitExam}</span>
             </Button>
-            <Badge 
-              variant="secondary" 
-              className="px-3 py-1 flex items-center gap-1.5 shadow-sm"
+            <Badge
+              variant="secondary"
+              className="px-2 py-1 flex items-center gap-1 shadow-sm text-xs flex-shrink-0"
             >
               <BookOpen className="w-3 h-3" />
-              {mode === 'study' ? t.studyMode : t.examMode}
+              <span className="hidden xs:inline">{mode === 'study' ? t.studyMode : t.examMode}</span>
             </Badge>
             {mode === 'exam' && (
-              <Badge 
+              <Badge
                 variant={timeRemaining < 600 ? 'destructive' : 'secondary'}
-                className="flex items-center gap-1.5 shadow-sm text-base px-4 py-1.5"
+                className="flex items-center gap-1 shadow-sm text-sm px-2 py-1 flex-shrink-0"
               >
-                <Clock className="w-4 h-4" />
+                <Clock className="w-3.5 h-3.5" />
                 {formatTime(timeRemaining)}
               </Badge>
             )}
           </div>
-          
-          {/* Keyboard Shortcuts Hint */}
+
+          {/* Keyboard Shortcuts — desktop only */}
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Badge 
-                  variant="outline" 
-                  className="px-2 py-1 text-xs cursor-help border-cyan-300 dark:border-cyan-700 bg-cyan-50/50 dark:bg-cyan-900/20 text-cyan-700 dark:text-cyan-300"
+                <Badge
+                  variant="outline"
+                  className="hidden sm:flex px-2 py-1 text-xs cursor-help border-cyan-300 dark:border-cyan-700 bg-cyan-50/50 dark:bg-cyan-900/20 text-cyan-700 dark:text-cyan-300 flex-shrink-0"
                 >
                   ⌨️ Shortcuts
                 </Badge>
@@ -1305,7 +1324,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
             <span className="text-sm font-medium transition-colors duration-[400ms]" style={{ color: darkMode ? '#cbd5e1' : '#334155' }}>
               {t.question} {currentQuestionIndex + 1} {t.of} {totalQuestions}
             </span>
-            <span className="text-sm font-medium transition-colors duration-[400ms]" style={{ color: darkMode ? '#cbd5e1' : '#334155' }}>{Math.round(progress)}% {t.complete}</span>
+            <span className="text-sm font-medium transition-colors duration-[400ms]" style={{ color: darkMode ? '#cbd5e1' : '#334155' }}>{answeredCount}/{totalQuestions} {t.complete}</span>
           </div>
           <Progress value={progress} className="h-2 shadow-sm" />
         </div>
@@ -1337,17 +1356,17 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
             </div>
           </CardHeader>
           <CardContent className="space-y-2 pt-2 px-3 md:px-6 transition-all duration-[400ms]" style={{ backgroundColor: darkMode ? '#1e293b' : '#ffffff' }}>
-            {currentQuestion.image && (
-              <div className="rounded-lg overflow-hidden shadow-lg border-2 border-slate-200 dark:border-gray-700 bg-slate-50 dark:bg-gray-900 p-4 mb-2">
+            <div className={`rounded-lg overflow-hidden shadow-lg border-2 border-slate-200 dark:border-gray-700 bg-slate-50 dark:bg-gray-900 mb-2 flex items-center justify-center transition-all duration-300 ${currentQuestion.image ? 'h-[200px] p-2' : 'h-0 border-0 shadow-none mb-0'}`}>
+              {currentQuestion.image && (
                 <ImageWithFallback
                   src={currentQuestion.image}
                   alt="Question illustration"
-                  className="w-full min-h-[136px] max-h-[272px] object-contain mx-auto"
+                  className="max-w-full max-h-full object-contain"
                   fetchPriority="high"
                   loading="eager"
                 />
-              </div>
-            )}
+              )}
+            </div>
 
             {isMultipleChoice ? (
               <div className="space-y-2">
@@ -1447,10 +1466,17 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                 </AlertDescription>
               </Alert>
             )}
+            {mode === 'exam' && answeredData && (
+              <div className="flex items-center gap-2 mt-1 px-1">
+                <CheckCircle className="w-4 h-4 flex-shrink-0" style={{ color: '#22c55e' }} />
+                <span className="text-xs font-medium" style={{ color: darkMode ? '#86efac' : '#16a34a' }}>Answer recorded</span>
+              </div>
+            )}
           </CardContent>
         </Card>
 
-        <div className="flex flex-col gap-2 mb-4">
+        {/* Desktop navigation — inline */}
+        <div className="hidden sm:flex flex-col gap-2 mb-4">
           <div className="flex justify-between gap-2">
             <Button
               onClick={handlePrevious}
@@ -1493,11 +1519,10 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
             >
               {'>'}
             </Button>
-            {/* Desktop: Submit in the same row */}
             <Button
               onClick={() => setShowSubmitDialog(true)}
               variant="outline"
-              className="hidden sm:flex shadow-md hover:opacity-70 transition-opacity"
+              className="shadow-md hover:opacity-70 transition-opacity"
               style={{
                 borderColor: darkMode ? '#0891b2' : '#0891b2',
                 color: darkMode ? '#67e8f9' : '#0e7490',
@@ -1508,19 +1533,70 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
               {t.submitExam}
             </Button>
           </div>
-          {/* Mobile: Submit on its own full-width row */}
+        </div>
+
+        {/* Mobile navigation — fixed to bottom of viewport */}
+        <div
+          className="sm:hidden fixed bottom-0 left-0 right-0 z-30 px-3 py-2 border-t flex gap-2"
+          style={{
+            backgroundColor: darkMode ? '#0f172a' : '#ffffff',
+            borderColor: darkMode ? '#334155' : '#e2e8f0',
+          }}
+        >
+          <Button
+            onClick={handlePrevious}
+            disabled={currentQuestionIndex === 0}
+            variant="outline"
+            size="sm"
+            className="border-2 font-semibold hover:opacity-80 px-3"
+            style={{
+              borderColor: darkMode ? '#475569' : '#cbd5e1',
+              color: darkMode ? '#cbd5e1' : '#334155',
+              backgroundColor: darkMode ? '#334155' : '#f8fafc'
+            }}
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </Button>
+          <Button
+            onClick={mode === 'study' && showAnswerFeedback ? handleContinueAfterFeedback : handleNext}
+            disabled={tier !== 'mock' && (isMultipleChoice ? selectedAnswers.length === 0 : selectedAnswer === null)}
+            size="sm"
+            className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg text-xs font-semibold"
+          >
+            {mode === 'study' && showAnswerFeedback
+              ? (currentQuestionIndex === totalQuestions - 1 ? t.finish : t.continue)
+              : (isMultipleChoice ? selectedAnswers.length > 0 : selectedAnswer !== null)
+              ? (currentQuestionIndex === totalQuestions - 1 ? t.finishExam : t.submitAndNext)
+              : (currentQuestionIndex === totalQuestions - 1 ? t.finish : t.next)}
+            <ArrowRight className="w-4 h-4 ml-1" />
+          </Button>
+          <Button
+            onClick={handleSkipNext}
+            disabled={currentQuestionIndex === totalQuestions - 1}
+            variant="outline"
+            size="sm"
+            title="Skip"
+            className="px-3 hover:opacity-70"
+            style={{
+              borderColor: darkMode ? '#475569' : '#cbd5e1',
+              color: darkMode ? '#94a3b8' : '#6b7280',
+              backgroundColor: darkMode ? '#334155' : '#f8fafc',
+            }}
+          >
+            {'>'}
+          </Button>
           <Button
             onClick={() => setShowSubmitDialog(true)}
             variant="outline"
-            className="sm:hidden w-full shadow-md hover:opacity-70 transition-opacity"
+            size="sm"
+            className="px-3 hover:opacity-70"
             style={{
               borderColor: darkMode ? '#0891b2' : '#0891b2',
               color: darkMode ? '#67e8f9' : '#0e7490',
               backgroundColor: darkMode ? 'rgba(51,65,85,0.5)' : 'transparent',
             }}
           >
-            <CheckCircle className="w-4 h-4 mr-2" />
-            {t.submitExam}
+            <CheckCircle className="w-4 h-4" />
           </Button>
         </div>
 
@@ -1532,44 +1608,44 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
             transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
           }}
         >
-          <CardHeader 
-            className="pb-2 pt-3 transition-all duration-[400ms]"
-            style={{ 
-              background: darkMode 
-                ? 'linear-gradient(to bottom right, #334155, #1e293b)' 
+          <CardHeader
+            className="pb-1 pt-2 px-3 transition-all duration-[400ms]"
+            style={{
+              background: darkMode
+                ? 'linear-gradient(to bottom right, #334155, #1e293b)'
                 : 'linear-gradient(to bottom right, #f8fafc, #ffffff)',
               transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
             }}
           >
-            <CardTitle 
-              className="text-center text-sm transition-colors duration-[400ms]"
-              style={{ 
+            <CardTitle
+              className="text-center text-xs font-semibold transition-colors duration-[400ms]"
+              style={{
                 color: darkMode ? '#e2e8f0' : '#1e293b',
                 transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
               }}
             >{t.questionNavigator}</CardTitle>
           </CardHeader>
-          <CardContent 
-            className="pt-2 pb-3 transition-all duration-[400ms]"
+          <CardContent
+            className="pt-1 pb-2 px-2 transition-all duration-[400ms]"
             style={{ 
               backgroundColor: darkMode ? '#1e293b' : '#ffffff',
               transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)'
             }}
           >
             <div>
-              <div className="grid grid-cols-10 gap-1 p-1">
+              <div className="grid grid-cols-10 gap-0.5 p-0.5">
                 {examQuestions.map((q, index) => {
                   const answer = answeredQuestions[index];
                   const isCurrentQuestion = index === currentQuestionIndex;
-                  
+
                   return (
                     <TooltipProvider key={index}>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <div className="relative flex items-center justify-center p-1">
+                          <div className="relative flex items-center justify-center p-0.5">
                             <button
                               onClick={() => jumpToQuestion(index)}
-                              className="relative w-10 h-10 rounded-full border-2 transition-all duration-200 flex items-center justify-center overflow-hidden"
+                              className="relative w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 transition-all duration-200 flex items-center justify-center overflow-hidden"
                               style={{
                                 backgroundColor: isCurrentQuestion
                                   ? '#3b82f6'
