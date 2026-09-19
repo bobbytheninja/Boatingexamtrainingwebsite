@@ -91,6 +91,7 @@ export interface Translations {
   accountAccess: string;
   enterCredentials: string;
   signIn: string;
+  signingIn: string;
   signUp: string;
   password: string;
   createAccount: string;
@@ -332,6 +333,7 @@ export const translations: Record<Language, Translations> = {
     accountAccess: 'Account Access',
     enterCredentials: 'Enter your credentials to get started',
     signIn: 'Sign In',
+    signingIn: 'Signing in...',
     signUp: 'Sign Up',
     password: 'Password',
     createAccount: 'Create Account',
@@ -571,6 +573,7 @@ export const translations: Record<Language, Translations> = {
     accountAccess: 'Достъп до Акаунт',
     enterCredentials: 'Въведете вашите данни за начало',
     signIn: 'Вход',
+    signingIn: 'Влизане...',
     signUp: 'Регистрация',
     password: 'Парола',
     createAccount: 'Създай Акаунт',
@@ -810,6 +813,7 @@ export const translations: Record<Language, Translations> = {
     accountAccess: 'Acceso a la Cuenta',
     enterCredentials: 'Ingrese sus credenciales para comenzar',
     signIn: 'Iniciar Sesión',
+    signingIn: 'Iniciando sesión...',
     signUp: 'Registrarse',
     password: 'Contraseña',
     createAccount: 'Crear Cuenta',
@@ -1049,6 +1053,7 @@ export const translations: Record<Language, Translations> = {
     accountAccess: 'Πρόσβαση Λογαριασμού',
     enterCredentials: 'Εισάγετε τα διαπιστευτήριά σας για να ξεκινήσετε',
     signIn: 'Σύνδεση',
+    signingIn: 'Σύνδεση...',
     signUp: 'Εγγραφή',
     password: 'Κωδικός',
     createAccount: 'Δημιουργία Λογαριασμού',
@@ -1288,6 +1293,7 @@ export const translations: Record<Language, Translations> = {
     accountAccess: 'Accesso all\'Account',
     enterCredentials: 'Inserisci le tue credenziali per iniziare',
     signIn: 'Accedi',
+    signingIn: 'Accesso in corso...',
     signUp: 'Registrati',
     password: 'Password',
     createAccount: 'Crea Account',
