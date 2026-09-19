@@ -213,6 +213,7 @@ export interface Translations {
   questionsWrong: string;
   maximum: string;
   correct: string;
+  all: string;
   incorrect: string;
   noPointsLost: string;
   pointsLostMessage: string;
@@ -455,6 +456,7 @@ export const translations: Record<Language, Translations> = {
     questionsWrong: 'Questions Wrong',
     maximum: 'Maximum',
     correct: 'Correct!',
+    all: 'All',
     incorrect: 'Incorrect.',
     noPointsLost: 'No points lost',
     pointsLostMessage: 'points lost. The correct answer is highlighted above.',
@@ -517,8 +519,8 @@ export const translations: Record<Language, Translations> = {
     navigationDeviceDesc: 'Овладейте морската навигационна технология',
     selectExam: 'Изберете Изпит',
     howItWorks: 'Как Работи',
-    howItWorksSubtitle: 'Вашият път към ус��еха на сертификацията',
-    chooseCategory: 'Изберете Катего��ия',
+    howItWorksSubtitle: 'Вашият път към успеха на сертификацията',
+    chooseCategory: 'Изберете Категория',
     chooseCategoryDesc: 'Изберете от 5 категории изпити',
     selectMode: 'Изберете Режим',
     selectModeDesc: 'Режим на обучение или изпит',
@@ -695,6 +697,7 @@ export const translations: Record<Language, Translations> = {
     questionsWrong: 'Грешни Въпроси',
     maximum: 'Максимум',
     correct: 'Вярно!',
+    all: 'Всички',
     incorrect: 'Грешно.',
     noPointsLost: 'Без загубени точки',
     pointsLostMessage: 'загубени точки. Правилният отговор е маркиран по-горе.',
@@ -935,6 +938,7 @@ export const translations: Record<Language, Translations> = {
     questionsWrong: 'Respuestas Incorrectas',
     maximum: 'Máximo',
     correct: '¡Correcto!',
+    all: 'Todas',
     incorrect: 'Incorrecto.',
     noPointsLost: 'Sin puntos perdidos',
     pointsLostMessage: 'puntos perdidos. La respuesta correcta está resaltada arriba.',
@@ -1175,6 +1179,7 @@ export const translations: Record<Language, Translations> = {
     questionsWrong: 'Λανθασμένες Ερωτήσεις',
     maximum: 'Μέγιστο',
     correct: 'Σωστό!',
+    all: 'Όλες',
     incorrect: 'Λάθος.',
     noPointsLost: 'Δεν χάθηκαν πόντοι',
     pointsLostMessage: 'πόντοι χάθηκαν. Η σωστή απάντηση επισημαίνεται παραπάνω.',
@@ -1414,6 +1419,7 @@ export const translations: Record<Language, Translations> = {
     pointsLost: 'Punti Persi',
     maximum: 'Massimo',
     correct: 'Corretto!',
+    all: 'Tutte',
     incorrect: 'Sbagliato.',
     noPointsLost: 'Nessun punto perso',
     pointsLostMessage: 'punti persi. La risposta corretta è evidenziata sopra.',

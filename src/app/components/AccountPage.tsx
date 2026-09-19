@@ -536,10 +536,10 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
                             }}
                           >
                             <CardContent className="pt-6">
-                              <div className="flex items-start justify-between gap-4">
-                                <div className="flex-1">
-                                  <div className="flex items-center gap-3 mb-3">
-                                    <h4 className="font-bold text-lg transition-colors duration-[400ms]" style={{ color: darkMode ? '#f3f4f6' : '#0f172a' }}>{examTitle}</h4>
+                              <div className="flex flex-col sm:flex-row items-stretch sm:items-start justify-between gap-3 sm:gap-4">
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 mb-3 flex-wrap">
+                                    <h4 className="font-bold text-base sm:text-lg transition-colors duration-[400ms]" style={{ color: darkMode ? '#f3f4f6' : '#0f172a' }}>{examTitle}</h4>
                                     <Badge
                                       className={`${
                                         isFreeCategory
@@ -592,11 +592,11 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
                                     </div>
                                   )}
                                 </div>
-                                <div className="flex flex-col gap-2">
+                                <div className="flex flex-row sm:flex-col gap-2 flex-shrink-0 w-full sm:w-auto">
                                   <Button
                                     onClick={() => onStartExam(examType, 'exam')}
                                     variant="outline"
-                                    className="border-2 font-semibold whitespace-nowrap hover:opacity-70 transition-opacity"
+                                    className="flex-1 sm:flex-none border-2 font-semibold whitespace-nowrap hover:opacity-70 transition-opacity"
                                     style={{
                                       borderColor: darkMode ? '#60a5fa' : '#3b82f6',
                                       backgroundColor: darkMode ? 'rgba(124,45,18,0.25)' : 'rgba(255,237,213,0.6)',
@@ -608,7 +608,7 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
                                   <Button
                                     onClick={() => onStartExam(examType, 'study')}
                                     variant="outline"
-                                    className="border-2 font-semibold whitespace-nowrap hover:opacity-70 transition-opacity"
+                                    className="flex-1 sm:flex-none border-2 font-semibold whitespace-nowrap hover:opacity-70 transition-opacity"
                                     style={{
                                       borderColor: darkMode ? '#60a5fa' : '#3b82f6',
                                       backgroundColor: darkMode ? 'rgba(51,65,85,0.4)' : 'transparent',

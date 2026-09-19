@@ -778,7 +778,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                   key={f}
                   onClick={() => setReviewFilter(f)}
                   style={{
-                    padding: '6px 14px',
+                    padding: '5px 10px',
                     borderRadius: 8,
                     border: `2px solid ${
                       reviewFilter === f
@@ -796,12 +796,16 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                         : (darkMode ? '#93c5fd' : '#1e40af')
                       : darkMode ? '#cbd5e1' : '#374151',
                     fontWeight: 600,
-                    fontSize: 13,
+                    fontSize: 12,
                     cursor: 'pointer',
                     transition: 'all 0.2s',
                   }}
                 >
-                  {f === 'all' ? `All (${examQuestions.length})` : f === 'correct' ? `✓ Correct (${Object.values(answeredQuestions).filter(a => a.isCorrect).length})` : `✗ Wrong (${Object.values(answeredQuestions).filter(a => !a.isCorrect).length})`}
+                  {f === 'all'
+                    ? `${t.all} (${examQuestions.length})`
+                    : f === 'correct'
+                    ? `✓ ${t.correct} (${examQuestions.filter((_, i) => answeredQuestions[i]?.isCorrect).length})`
+                    : `✗ ${t.incorrect} (${examQuestions.filter((_, i) => !answeredQuestions[i]?.isCorrect).length})`}
                 </button>
               ))}
               <Button
@@ -853,7 +857,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
             </Card>
           </div>
           
-          <div className="space-y-4">
+          <div className="space-y-2">
             {examQuestions.map((question, index) => {
               const answer = answeredQuestions[index];
               const isCorrect = answer?.isCorrect ?? false;
@@ -876,13 +880,13 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                       : (isCorrect ? '#bbf7d0' : '#fecaca')
                   }}
                 >
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Badge 
-                            variant="outline" 
-                            className="text-xs transition-all duration-300"
+                  <CardHeader className="pb-1.5 pt-2.5 px-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 mb-1 flex-wrap">
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] px-1.5 py-0 transition-all duration-300"
                             style={{
                               backgroundColor: darkMode ? '#334155' : '#ffffff',
                               borderColor: darkMode ? '#64748b' : '#cbd5e1',
@@ -893,7 +897,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                           </Badge>
                           <Badge
                             variant="secondary"
-                            className="text-xs transition-all duration-300"
+                            className="text-[10px] px-1.5 py-0 transition-all duration-300"
                             style={{
                               backgroundColor: darkMode ? '#1e3a8a' : '#dbeafe',
                               color: darkMode ? '#93c5fd' : '#1e40af'
@@ -902,24 +906,24 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                             {t.selectMultipleAnswers.replace('{count}', (question.correctAnswers?.length || 1).toString())}
                           </Badge>
                         </div>
-                        <CardTitle 
-                          className="text-base transition-colors duration-300"
+                        <CardTitle
+                          className="text-sm leading-snug transition-colors duration-300"
                           style={{ color: darkMode ? '#f1f5f9' : '#1e293b' }}
                         >
                           {question.question}
                         </CardTitle>
                       </div>
                       {isCorrect ? (
-                        <CheckCircle className="w-6 h-6 flex-shrink-0" style={{ color: darkMode ? '#4ade80' : '#16a34a' }} />
+                        <CheckCircle className="w-5 h-5 flex-shrink-0" style={{ color: darkMode ? '#4ade80' : '#16a34a' }} />
                       ) : (
-                        <XCircle className="w-6 h-6 flex-shrink-0" style={{ color: darkMode ? '#f87171' : '#dc2626' }} />
+                        <XCircle className="w-5 h-5 flex-shrink-0" style={{ color: darkMode ? '#f87171' : '#dc2626' }} />
                       )}
                     </div>
                   </CardHeader>
-                  <CardContent className="space-y-2">
+                  <CardContent className="space-y-1.5 px-3 pb-2.5">
                     {question.image && (
-                      <div 
-                        className="rounded-lg overflow-hidden shadow-lg border-2 p-4 mb-3 transition-all duration-300"
+                      <div
+                        className="h-[160px] md:h-[200px] p-2 mb-1.5 flex items-center justify-center rounded-lg shadow border-2 transition-all duration-300"
                         style={{
                           borderColor: darkMode ? '#374151' : '#e2e8f0',
                           backgroundColor: darkMode ? '#111827' : '#f8fafc'
@@ -928,7 +932,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                         <ImageWithFallback
                           src={question.image}
                           alt="Question illustration"
-                          className="w-full min-h-[136px] max-h-[272px] object-contain mx-auto"
+                          className="max-w-full max-h-full object-contain"
                         />
                       </div>
                     )}
@@ -944,7 +948,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                       return (
                         <div
                           key={ansIndex}
-                          className="p-3 rounded-lg border-2 flex items-center gap-2 transition-all duration-300"
+                          className="px-2.5 py-1.5 rounded-lg border-2 flex items-center gap-2 transition-all duration-300"
                           style={{
                             borderColor: isCorrectAnswer
                               ? (darkMode ? '#16a34a' : '#22c55e')
@@ -977,26 +981,17 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                               )}
                             </div>
                           )}
-                          <span 
-                            className="flex-1 text-sm transition-colors duration-300"
+                          <span
+                            className="flex-1 text-xs md:text-sm leading-snug transition-colors duration-300"
                             style={{ color: darkMode ? '#e5e7eb' : '#334155' }}
                           >
                             {ans}
                           </span>
-                          {isCorrectAnswer && <CheckCircle className="w-4 h-4" style={{ color: darkMode ? '#4ade80' : '#16a34a' }} />}
-                          {isUserAnswer && !isCorrectAnswer && <XCircle className="w-4 h-4" style={{ color: darkMode ? '#f87171' : '#dc2626' }} />}
+                          {isCorrectAnswer && <CheckCircle className="w-4 h-4 flex-shrink-0" style={{ color: darkMode ? '#4ade80' : '#16a34a' }} />}
+                          {isUserAnswer && !isCorrectAnswer && <XCircle className="w-4 h-4 flex-shrink-0" style={{ color: darkMode ? '#f87171' : '#dc2626' }} />}
                         </div>
                       );
                     })}
-                    
-                    {!isCorrect && (
-                      <Alert className="border-red-200 bg-red-50 mt-3">
-                        <AlertCircle className="text-red-600" />
-                        <AlertDescription className="text-red-800 text-sm">
-                          <strong>{t.incorrect}</strong>
-                        </AlertDescription>
-                      </Alert>
-                    )}
                   </CardContent>
                 </Card>
               );
@@ -1185,8 +1180,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
             <Button
               onClick={() => setShowExitDialog(true)}
               variant="outline"
-              size="sm"
-              className="hover:opacity-70 transition-opacity duration-200 flex-shrink-0"
+              className="h-9 px-3 hover:opacity-70 transition-opacity duration-200 flex-shrink-0"
               style={{
                 borderColor: darkMode ? '#f87171' : '#ef4444',
                 color: darkMode ? '#fca5a5' : '#dc2626',
@@ -1198,17 +1192,17 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
             </Button>
             <Badge
               variant="secondary"
-              className="px-2 py-1 flex items-center gap-1 shadow-sm text-xs flex-shrink-0"
+              className="h-9 px-3 flex items-center gap-1.5 shadow-sm text-xs rounded-md flex-shrink-0"
             >
-              <BookOpen className="w-3 h-3" />
-              <span className="hidden xs:inline">{mode === 'study' ? t.studyMode : t.examMode}</span>
+              <BookOpen className="w-4 h-4 flex-shrink-0" />
+              <span className="truncate">{mode === 'study' ? t.studyMode : t.examMode}</span>
             </Badge>
             {mode === 'exam' && (
               <Badge
                 variant={timeRemaining < 600 ? 'destructive' : 'secondary'}
-                className="flex items-center gap-1 shadow-sm text-sm px-2 py-1 flex-shrink-0"
+                className="h-9 px-3 flex items-center gap-1.5 shadow-sm text-sm rounded-md flex-shrink-0"
               >
-                <Clock className="w-3.5 h-3.5" />
+                <Clock className="w-4 h-4" />
                 {formatTime(timeRemaining)}
               </Badge>
             )}
@@ -1264,8 +1258,12 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
               >
                 {t.continueExam}
               </AlertDialogCancel>
-              <AlertDialogAction 
-                onClick={onBackToHome}
+              <AlertDialogAction
+                onClick={() => {
+                  const storageKey = `exam_progress_${examType}_${mode}_${tier}`;
+                  localStorage.removeItem(storageKey);
+                  onBackToHome();
+                }}
                 className="bg-red-600 hover:bg-red-700"
               >
                 {t.exitAndLoseProgress}
@@ -1302,10 +1300,12 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
               >
                 {t.cancelSubmit}
               </AlertDialogCancel>
-              <AlertDialogAction 
+              <AlertDialogAction
                 onClick={() => {
                   setShowSubmitDialog(false);
                   setShowResults(true);
+                  const storageKey = `exam_progress_${examType}_${mode}_${tier}`;
+                  localStorage.removeItem(storageKey);
                 }}
                 style={{
                   backgroundColor: '#0891b2',
@@ -1356,8 +1356,8 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
             </div>
           </CardHeader>
           <CardContent className="space-y-2 pt-2 px-3 md:px-6 transition-all duration-[400ms]" style={{ backgroundColor: darkMode ? '#1e293b' : '#ffffff' }}>
-            <div className={`rounded-lg overflow-hidden shadow-lg border-2 border-slate-200 dark:border-gray-700 bg-slate-50 dark:bg-gray-900 mb-2 flex items-center justify-center transition-all duration-300 ${currentQuestion.image ? 'h-[200px] p-2' : 'h-0 border-0 shadow-none mb-0'}`}>
-              {currentQuestion.image && (
+            {currentQuestion.image && (
+              <div className="h-[200px] md:h-[240px] mb-2 p-2 flex items-center justify-center rounded-lg shadow-lg border-2 border-slate-200 dark:border-gray-700 bg-slate-50 dark:bg-gray-900">
                 <ImageWithFallback
                   src={currentQuestion.image}
                   alt="Question illustration"
@@ -1365,8 +1365,8 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                   fetchPriority="high"
                   loading="eager"
                 />
-              )}
-            </div>
+              </div>
+            )}
 
             {isMultipleChoice ? (
               <div className="space-y-2">
@@ -1633,7 +1633,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
             }}
           >
             <div>
-              <div className="grid grid-cols-10 gap-0.5 p-0.5">
+              <div className="grid grid-cols-10 gap-1">
                 {examQuestions.map((q, index) => {
                   const answer = answeredQuestions[index];
                   const isCurrentQuestion = index === currentQuestionIndex;
@@ -1642,7 +1642,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                     <TooltipProvider key={index}>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <div className="relative flex items-center justify-center p-0.5">
+                          <div className="relative flex items-center justify-center">
                             <button
                               onClick={() => jumpToQuestion(index)}
                               className="relative w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 transition-all duration-200 flex items-center justify-center overflow-hidden"
@@ -1654,7 +1654,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                                   : answer && mode === 'study'
                                   ? '#ef4444'
                                   : answer
-                                  ? (darkMode ? '#475569' : '#94a3b8')
+                                  ? (darkMode ? '#0284c7' : '#38bdf8')
                                   : (darkMode ? '#334155' : '#ffffff'),
                                 borderColor: isCurrentQuestion
                                   ? '#3b82f6'
@@ -1663,7 +1663,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                                   : answer && mode === 'study'
                                   ? '#dc2626'
                                   : answer
-                                  ? (darkMode ? '#64748b' : '#64748b')
+                                  ? '#0ea5e9'
                                   : (darkMode ? '#475569' : '#9ca3af'),
                                 color: isCurrentQuestion || answer ? '#ffffff' : (darkMode ? '#e2e8f0' : '#334155'),
                                 boxShadow: isCurrentQuestion ? '0 4px 6px -1px rgba(59, 130, 246, 0.3), 0 0 0 3px rgba(59, 130, 246, 0.2)' : 'none'
@@ -1704,7 +1704,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                 })}
               </div>
             </div>
-            <div className="flex items-center justify-center gap-3 mt-2 pt-2 border-t dark:border-t-slate-500 flex-wrap">
+            <div className="flex items-center justify-center gap-3 mt-1.5 pt-1.5 border-t dark:border-t-slate-500 flex-wrap">
               {mode === 'study' ? (
                 <>
                   <div className="flex items-center gap-1">
@@ -1727,7 +1727,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
               ) : (
                 <>
                   <div className="flex items-center gap-1">
-                    <div className="w-3.5 h-3.5 rounded-full border-2 border-green-600 bg-green-500"></div>
+                    <div className="w-3.5 h-3.5 rounded-full border-2" style={{ borderColor: '#0ea5e9', backgroundColor: darkMode ? '#0284c7' : '#38bdf8' }}></div>
                     <span className="text-[10px] text-gray-600 dark:text-gray-300">{t.answered}</span>
                   </div>
                   <div className="flex items-center gap-1">
@@ -1746,66 +1746,6 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
       </div>
     </div>
     <Footer />
-    
-    {/* Exit Exam Dialog */}
-    <AlertDialog open={showExitDialog} onOpenChange={setShowExitDialog}>
-      <AlertDialogContent className="dark:bg-slate-800">
-        <AlertDialogHeader>
-          <AlertDialogTitle className="dark:text-gray-100">{t.exitExamTitle || (language === 'English' ? 'Exit Exam?' : 'Излизане от изпита?')}</AlertDialogTitle>
-          <AlertDialogDescription className="dark:text-gray-300">
-            {t.exitExamMessage || (language === 'English' 
-              ? 'Your progress will be lost if you exit now. Are you sure you want to leave?' 
-              : 'Вашият прогрес ще бъде загубен ако излезете сега. Сигурни ли сте, че искате да напуснете?')}
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel className="dark:bg-slate-700 dark:text-gray-200 dark:hover:bg-slate-600">
-            {language === 'English' ? 'Cancel' : 'Отказ'}
-          </AlertDialogCancel>
-          <AlertDialogAction
-            onClick={() => {
-              const storageKey = `exam_progress_${examType}_${mode}_${tier}`;
-              localStorage.removeItem(storageKey);
-              onBackToHome();
-            }}
-            className="bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800"
-          >
-            {language === 'English' ? 'Exit' : 'Излез'}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
-
-    {/* Submit Exam Dialog */}
-    <AlertDialog open={showSubmitDialog} onOpenChange={setShowSubmitDialog}>
-      <AlertDialogContent className="dark:bg-slate-800">
-        <AlertDialogHeader>
-          <AlertDialogTitle className="dark:text-gray-100">{t.submitExamTitle || (language === 'English' ? 'Submit Exam?' : 'Подаване на изпита?')}</AlertDialogTitle>
-          <AlertDialogDescription className="dark:text-gray-300">
-            {t.submitExamMessage || (language === 'English' 
-              ? 'Once you submit, you cannot change your answers. Are you ready to submit your exam?' 
-              : 'След като подадете, не можете да промените отговорите си. Готови ли сте да подадете изпита?')}
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel className="dark:bg-slate-700 dark:text-gray-200 dark:hover:bg-slate-600">
-            {language === 'English' ? 'Cancel' : 'Отказ'}
-          </AlertDialogCancel>
-          <AlertDialogAction
-            onClick={() => {
-              setShowSubmitDialog(false);
-              setShowResults(true);
-              // Clear exam progress from localStorage when submitted
-              const storageKey = `exam_progress_${examType}_${mode}_${tier}`;
-              localStorage.removeItem(storageKey);
-            }}
-            className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800"
-          >
-            {language === 'English' ? 'Submit' : 'П��дай'}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
     </>
   );
 }
