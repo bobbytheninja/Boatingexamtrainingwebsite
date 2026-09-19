@@ -297,7 +297,7 @@ export function LoginPage({ onLogin, onNavigate }: LoginPageProps) {
                       {isLoggingIn ? (
                         <>
                           <ButtonSpinner className="mr-2" />
-                          {language === 'English' ? 'Signing in...' : 'лизане...'}
+                          {language === 'English' ? 'Signing in...' : 'Влизане...'}
                         </>
                       ) : (
                         t.signIn
