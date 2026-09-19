@@ -431,8 +431,6 @@ function AppContent() {
 
 function App() {
   React.useEffect(() => {
-    console.clear();
-
     // Inject favicon links into document head
     const head = document.head;
 
@@ -461,54 +459,6 @@ function App() {
     // Set document title
     document.title = 'Black Sea Bulgaria - Yacht & Boat Exam Training | Practice Tests Online';
 
-    console.log('%c✓ Favicons injected', 'color: #10b981; font-weight: bold');
-
-    // Filter out Figma devtools_worker noise
-    const originalError = console.error;
-    const originalWarn = console.warn;
-    
-    console.error = (...args: any[]) => {
-      const stringified = JSON.stringify(args);
-      // Suppress Figma platform errors that don't affect the app
-      if (stringified.includes('devtools_worker') || 
-          stringified.includes('webpack-artifacts') ||
-          stringified.includes('figma.com/webpack') ||
-          stringified.includes('.min.js.br') ||
-          stringified.includes('Invalid hook call') ||
-          stringified.includes('multiple Jotai instances') ||
-          stringified.includes('pmndrs/jotai')) {
-        return; // Silently ignore these
-      }
-      // Log actual application errors
-      originalError.apply(console, args);
-    };
-    
-    console.warn = (...args: any[]) => {
-      const stringified = JSON.stringify(args);
-      // Suppress Figma platform warnings
-      if (stringified.includes('devtools_worker') || 
-          stringified.includes('webpack-artifacts') ||
-          stringified.includes('figma.com/webpack') ||
-          stringified.includes('.min.js.br') ||
-          stringified.includes('multiple Jotai instances') ||
-          stringified.includes('pmndrs/jotai')) {
-        return; // Silently ignore these
-      }
-      // Log actual application warnings
-      originalWarn.apply(console, args);
-    };
-    
-    console.log('%c━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'color: #0ea5e9; font-weight: bold');
-    console.log('%c🚤 YACHT EXAM TRAINER - VERSION 111', 'color: #0ea5e9; font-size: 16px; font-weight: bold');
-    console.log('%c━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'color: #0ea5e9; font-weight: bold');
-    console.log('%c✓ Application initialized successfully', 'color: #10b981; font-weight: bold');
-    console.log('%c✓ Console error filtering enabled', 'color: #10b981; font-weight: bold');
-    console.log('%cCurrent URL:', 'color: #6366f1', window.location.href);
-    console.log('%cEnvironment:', 'color: #6366f1', 'Figma Make');
-    console.log('%c━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'color: #0ea5e9; font-weight: bold');
-    console.log('%c💡 Tip: Figma platform errors are now filtered out', 'color: #10b981; font-style: italic');
-    console.log('%c   Only your application errors will be shown below.', 'color: #10b981; font-style: italic');
-    console.log('%c━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'color: #0ea5e9; font-weight: bold');
   }, []);
 
   return (

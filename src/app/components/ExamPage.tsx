@@ -59,15 +59,10 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
   
   // Create a navigation handler that supports all pages
   const handleNavigate = (page: string) => {
-    console.log('[ExamPage] Navigation requested to:', page);
     if (onNavigate) {
-      console.log('[ExamPage] Using onNavigate prop');
       onNavigate(page);
     } else if (page === 'home') {
-      console.log('[ExamPage] Fallback to onBackToHome');
       onBackToHome();
-    } else {
-      console.warn('[ExamPage] Navigation handler not available for page:', page);
     }
   };
   
@@ -126,7 +121,6 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
       setQuestionLoadError(null);
 
       if (tier === 'paid') {
-        console.log('[ExamPage] 💳 Loading PAID exam (40 questions)...');
         // Fetch from database for paid tier
         if (!accessToken) {
           console.error('[ExamPage] No access token available');
@@ -136,10 +130,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
         }
 
         try {
-          console.log(`[ExamPage] Loading questions for exam type: ${examType}`);
           const response = await api.getQuestions(examType, accessToken);
-          
-          console.log(`[ExamPage] Received ${response.questions?.length || 0} questions from API`);
           
           if (!response.questions || response.questions.length === 0) {
             setQuestionLoadError(`No questions available for ${examType} exam. Please check the Admin Panel > Diagnostics tab to verify questions were imported.`);
@@ -198,12 +189,8 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
         }
       } else {
         // Fetch mock questions (first 10) from database for free tier
-        console.log('[ExamPage] 🆓 Loading MOCK exam (10 questions)...');
         try {
-          console.log(`[ExamPage] Loading mock questions for exam type: ${examType}`);
           const response = await api.getMockQuestions(examType);
-
-          console.log(`[ExamPage] Received ${response.questions?.length || 0} mock questions from API`);
 
           if (!response.questions || response.questions.length === 0) {
             // Show error - no fallback to demo questions

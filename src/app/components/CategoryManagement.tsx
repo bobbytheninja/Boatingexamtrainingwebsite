@@ -174,46 +174,17 @@ export function CategoryManagement({ accessToken }: CategoryManagementProps) {
   const loadCategories = async () => {
     setLoading(true);
     try {
-      console.log('');
-      console.log('📥📥📥📥📥📥📥📥📥📥📥📥📥📥📥📥📥📥📥📥📥📥📥📥📥');
-      console.log('[CategoryManagement] LOADING CATEGORIES');
-      console.log('📥📥📥📥📥📥📥📥📥📥📥📥📥📥📥📥📥📥📥📥📥📥📥📥📥');
-      
-      const url = `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/categories`;
-      console.log('[CategoryManagement] Request URL:', url);
-      console.log('[CategoryManagement] Request Method: GET');
-      
-      const response = await fetch(url, {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-        },
-      });
-
-      console.log('[CategoryManagement] Response Status:', response.status, response.statusText);
-      console.log('[CategoryManagement] Response OK:', response.ok);
-
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/categories`,
+        { headers: { 'Authorization': `Bearer ${accessToken}` } }
+      );
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('[CategoryManagement] ❌ Error Response:', errorText);
         throw new Error(`Failed to load categories: ${response.status} - ${errorText}`);
       }
-
       const data = await response.json();
-      console.log('[CategoryManagement] ✅ Success Response:', data);
-      console.log('[CategoryManagement] Categories Count:', data.categories?.length);
-      console.log('[CategoryManagement] Categories Data:', JSON.stringify(data.categories, null, 2));
-      console.log('📥📥📥📥📥📥📥📥📥📥📥📥📥📥📥📥📥📥📥📥📥📥📥📥📥');
-      console.log('[CategoryManagement] LOAD COMPLETE');
-      console.log('📥📥📥📥📥📥📥📥📥📥📥📥📥📥📥📥📥📥📥📥📥📥📥📥📥');
-      console.log('');
-      
       setCategories(data.categories || []);
     } catch (error: any) {
-      console.error('[CategoryManagement] ❌ LOAD ERROR:', error);
-      console.error('[CategoryManagement] Error details:', {
-        message: error.message,
-        stack: error.stack,
-      });
       toast.error(`Failed to load categories: ${error.message}`);
     } finally {
       setLoading(false);
@@ -232,17 +203,14 @@ export function CategoryManagement({ accessToken }: CategoryManagementProps) {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.warn('[CategoryManagement] Could not load pricing settings, using default:', errorText);
-        // Use default value instead of throwing
+        void errorText;
         setOverallPrice(5);
         return;
       }
 
       const data = await response.json();
-      console.log('[CategoryManagement] Loaded pricing settings:', data);
       setOverallPrice(data.settings?.overallPrice || 5);
-    } catch (error: any) {
-      console.warn('[CategoryManagement] Error loading pricing, using default:', error.message);
+    } catch {
       // Use default value on error - don't show error toast since it's not critical
       setOverallPrice(5);
     } finally {
@@ -379,53 +347,24 @@ export function CategoryManagement({ accessToken }: CategoryManagementProps) {
 
     setSavingCategory(true);
     try {
-      console.log('[CategoryManagement] Saving category:', formData);
-      console.log('[CategoryManagement] isUpdate:', !isAddingNew);
-      
-      const url = `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/categories`;
-      console.log('[CategoryManagement] Request URL:', url);
-      
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({
-          category: formData,
-          isUpdate: !isAddingNew,
-        }),
-      });
-
-      console.log('[CategoryManagement] Response status:', response.status);
-      console.log('[CategoryManagement] Response headers:', Object.fromEntries(response.headers.entries()));
-
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/categories`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
+          body: JSON.stringify({ category: formData, isUpdate: !isAddingNew }),
+        }
+      );
       const responseText = await response.text();
-      console.log('[CategoryManagement] Response text:', responseText);
-
       if (!response.ok) {
         let errorData;
-        try {
-          errorData = JSON.parse(responseText);
-        } catch {
-          errorData = { message: responseText || 'Unknown error' };
-        }
+        try { errorData = JSON.parse(responseText); } catch { errorData = { message: responseText || 'Unknown error' }; }
         throw new Error(errorData.message || `Server returned ${response.status}`);
       }
-
-      const result = JSON.parse(responseText);
-      console.log('[CategoryManagement] Save successful:', result);
-
       toast.success(isAddingNew ? '✅ Category added successfully!' : '✅ Category updated successfully!');
       handleCancel();
       await loadCategories();
     } catch (error: any) {
-      console.error('[CategoryManagement] Error saving category:', error);
-      console.error('[CategoryManagement] Error details:', {
-        message: error.message,
-        stack: error.stack,
-        name: error.name,
-      });
       toast.error(`Failed to save category: ${error.message}`);
     } finally {
       setSavingCategory(false);
@@ -439,52 +378,17 @@ export function CategoryManagement({ accessToken }: CategoryManagementProps) {
 
     setResettingDefaults(true);
     try {
-      console.log('');
-      console.log('🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄');
-      console.log('[CategoryManagement] RESET TO DEFAULTS CLICKED');
-      console.log('🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄');
-      console.log('[CategoryManagement] Access Token:', accessToken ? 'Present' : 'MISSING');
-      
-      const url = `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/debug/init-categories`;
-      console.log('[CategoryManagement] Request URL:', url);
-      console.log('[CategoryManagement] Request Method: POST');
-      console.log('[CategoryManagement] Request Headers:', {
-        'Authorization': `Bearer ${accessToken?.substring(0, 20)}...`,
-      });
-      
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-        },
-      });
-      
-      console.log('[CategoryManagement] Response Status:', response.status, response.statusText);
-      console.log('[CategoryManagement] Response OK:', response.ok);
-      
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/debug/init-categories`,
+        { method: 'POST', headers: { 'Authorization': `Bearer ${accessToken}` } }
+      );
       if (!response.ok) {
         const error = await response.json();
-        console.error('[CategoryManagement] Error Response:', error);
         throw new Error(error.message || 'Failed to reset categories');
       }
-
-      const result = await response.json();
-      console.log('[CategoryManagement] Success Response:', result);
-      console.log('[CategoryManagement] Categories in response:', result.categories?.length);
-      console.log('🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄');
-      console.log('[CategoryManagement] RESET COMPLETE');
-      console.log('🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄');
-      console.log('');
-      
       toast.success('✅ Categories reset to defaults successfully!');
       await loadCategories();
     } catch (error: any) {
-      console.error('[CategoryManagement] ❌ RESET ERROR:', error);
-      console.error('[CategoryManagement] Error details:', {
-        message: error.message,
-        stack: error.stack,
-        name: error.name,
-      });
       toast.error(`Failed to reset categories: ${error.message}`);
     } finally {
       setResettingDefaults(false);
@@ -575,53 +479,24 @@ export function CategoryManagement({ accessToken }: CategoryManagementProps) {
 
     setSavingPrice(true);
     try {
-      console.log('');
-      console.log('💰💰💰 [CategoryManagement] SAVING PRICING');
-      console.log('💰 [CategoryManagement] Price value to save:', priceValue);
-      
-      const url = `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/pricing-settings`;
-      console.log('💰 [CategoryManagement] Request URL:', url);
-      
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({ overallPrice: priceValue }),
-      });
-
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/pricing-settings`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
+          body: JSON.stringify({ overallPrice: priceValue }),
+        }
+      );
       const responseText = await response.text();
-      console.log('💰 [CategoryManagement] Response status:', response.status);
-      console.log('💰 [CategoryManagement] Response text:', responseText);
-
       if (!response.ok) {
         let errorData;
-        try {
-          errorData = JSON.parse(responseText);
-        } catch {
-          errorData = { message: responseText || 'Unknown error' };
-        }
-        console.error('❌ [CategoryManagement] Save failed:', errorData);
+        try { errorData = JSON.parse(responseText); } catch { errorData = { message: responseText || 'Unknown error' }; }
         throw new Error(errorData.message || `Server returned ${response.status}`);
       }
-
-      const result = JSON.parse(responseText);
-      console.log('💰 [CategoryManagement] Save successful:', result);
-
-      // Update the local state with the saved value
       setOverallPrice(priceValue);
-      
-      // Reload pricing settings to verify
-      console.log('💰 [CategoryManagement] Reloading pricing to verify...');
       await loadPricingSettings();
-      
-      console.log('💰💰💰 [CategoryManagement] PRICING SAVE COMPLETE');
-      console.log('');
-      
       toast.success('✅ Pricing updated successfully!');
     } catch (error: any) {
-      console.error('❌ [CategoryManagement] Error saving pricing:', error);
       toast.error(`Failed to save pricing: ${error.message}`);
     } finally {
       setSavingPrice(false);

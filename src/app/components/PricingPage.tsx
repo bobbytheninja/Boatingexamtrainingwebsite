@@ -67,45 +67,24 @@ export function PricingPage({ onNavigate, isLoggedIn, paidExams = [] }: PricingP
   useEffect(() => {
     const fetchData = async () => {
       try {
-        console.log('');
-        console.log('💰💰💰 [PricingPage] FETCHING DATA');
-        
-        // Fetch categories
         const categoriesResponse = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/categories`);
-
         if (categoriesResponse.ok) {
           const data = await categoriesResponse.json();
-          console.log('💰 [PricingPage] Categories fetched:', data.categories?.length);
           setExamCategories(data.categories || []);
         } else {
-          console.warn('❌ [PricingPage] Failed to fetch categories, status:', categoriesResponse.status);
           if (categoriesResponse.status === 404 || categoriesResponse.status === 401 || categoriesResponse.status === 403) {
             setSessionError(true);
           }
         }
 
-        // Fetch pricing settings
-        console.log('💰 [PricingPage] Fetching pricing settings...');
         const pricingResponse = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/pricing-settings`);
-        
-        console.log('💰 [PricingPage] Pricing response status:', pricingResponse.status);
-        
         if (pricingResponse.ok) {
           const pricingData = await pricingResponse.json();
-          console.log('💰 [PricingPage] Pricing data received:', JSON.stringify(pricingData));
-          console.log('💰 [PricingPage] Overall price from data:', pricingData.settings?.overallPrice);
-          const price = pricingData.settings?.overallPrice || 5;
-          console.log('💰 [PricingPage] Setting overall price to:', price);
-          setOverallPrice(price);
+          setOverallPrice(pricingData.settings?.overallPrice || 5);
         } else {
-          console.warn('❌ [PricingPage] Failed to fetch pricing settings, using default: 5');
           setOverallPrice(5);
         }
-        
-        console.log('💰💰💰 [PricingPage] DATA FETCH COMPLETE');
-        console.log('');
-      } catch (error) {
-        console.error('❌ [PricingPage] Error fetching data:', error);
+      } catch {
         setSessionError(true);
       } finally {
         setLoading(false);

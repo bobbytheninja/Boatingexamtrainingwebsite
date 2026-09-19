@@ -27,44 +27,24 @@ const FALLBACK_CATEGORIES = [
  * Returns categories in the format: { value: string, label: string, short?: string }[]
  */
 export async function loadExamCategories(): Promise<{ value: string; label: string; short?: string }[]> {
-  console.log('🚀 [CategoryLoader] Starting loadExamCategories...');
-  console.log('🔑 [CategoryLoader] projectId:', projectId);
-  console.log('🔑 [CategoryLoader] publicAnonKey:', publicAnonKey ? 'Present' : 'Missing');
-  
   try {
-    const url = `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/categories`;
-    console.log('🌐 [CategoryLoader] Fetching from:', url);
-    
-    const response = await fetch(url, {
-      headers: {
-        'Authorization': `Bearer ${publicAnonKey}`,
-      },
-    });
-
-    console.log('📡 [CategoryLoader] Response status:', response.status, response.statusText);
-
+    const response = await fetch(
+      `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/categories`,
+      { headers: { 'Authorization': `Bearer ${publicAnonKey}` } }
+    );
     if (response.ok) {
       const data = await response.json();
-      console.log('📦 [CategoryLoader] Response data:', data);
       const categories = data.categories || [];
-      
       if (categories.length > 0) {
-        // Transform server categories to dropdown format
-        const transformed = categories.map((cat: ExamCategory) => ({
+        return categories.map((cat: ExamCategory) => ({
           value: cat.type,
-          label: cat.title, // Changed from cat.name to cat.title
-          short: cat.type.substring(0, 3).toUpperCase(), // Generate short name from type
+          label: cat.title,
+          short: cat.type.substring(0, 3).toUpperCase(),
         }));
-        console.log('✅ [CategoryLoader] Returning transformed categories:', transformed);
-        return transformed;
       }
     }
-    
-    // Fallback to hardcoded categories
-    console.log('⚠️ [CategoryLoader] Using fallback categories');
     return FALLBACK_CATEGORIES;
-  } catch (error) {
-    console.error('❌ [CategoryLoader] Error loading categories:', error);
+  } catch {
     return FALLBACK_CATEGORIES;
   }
 }

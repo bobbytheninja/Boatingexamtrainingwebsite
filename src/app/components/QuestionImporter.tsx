@@ -48,17 +48,13 @@ export function QuestionImporter() {
 
   // Load exam categories on mount
   useEffect(() => {
-    console.log('🔧 QuestionImporter mounted, starting category load...');
     const loadCategories = async () => {
       try {
-        console.log('🔧 Calling loadExamCategories...');
         const categories = await loadExamCategories();
-        console.log('📊 LOADED CATEGORIES:', categories);
         setExamTypes(categories);
-        setLoadingCategories(false);
-        // Do NOT auto-select a category — user must choose manually
-      } catch (error) {
-        console.error('❌ Error loading categories:', error);
+      } catch {
+        // falls back to hardcoded categories inside loadExamCategories
+      } finally {
         setLoadingCategories(false);
       }
     };
@@ -177,51 +173,17 @@ export function QuestionImporter() {
       const firstSheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[firstSheetName];
       
-      // **EXTRACT EMBEDDED IMAGES FROM EXCEL**
-      console.log('🔍 CHECKING FOR EMBEDDED IMAGES IN EXCEL...');
       const workbookImages = workbook.Sheets[firstSheetName]['!images'] || [];
-      console.log(`📸 Found ${workbookImages.length} embedded images in Excel sheet`);
-      
-      if (workbookImages.length > 0) {
-        console.log('✅ Excel contains embedded images! These will be uploaded to Supabase Storage.');
-        workbookImages.slice(0, 3).forEach((img: any, i: number) => {
-          console.log(`  Image ${i + 1}:`, {
-            position: img.position,
-            name: img.name,
-            type: img.type,
-            size: img.data?.length || 0
-          });
-        });
-      } else {
-        console.log('⚠️ No embedded images found. Looking for URLs in Column 3...');
-      }
-      
+
       // Convert to JSON
       const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
-      
-      // **DIAGNOSTIC: Check what's in column 3**
-      console.log('🔍 EXCEL DIAGNOSTIC - Checking Column 3 (Image URLs):');
-      console.log('📊 Total rows in Excel:', jsonData.length);
-      console.log('📊 First row:', jsonData[0]);
-      
-      const dataRows = jsonData[0] && typeof jsonData[0][0] === 'string' && 
-                      (jsonData[0][0].toLowerCase().includes('question') || 
+
+      const dataRows = jsonData[0] && typeof jsonData[0][0] === 'string' &&
+                      (jsonData[0][0].toLowerCase().includes('question') ||
                        jsonData[0][0].toLowerCase().includes('number') ||
                        jsonData[0][1]?.toString().toLowerCase().includes('question'))
-                      ? jsonData.slice(1) 
+                      ? jsonData.slice(1)
                       : jsonData;
-      
-      console.log('📊 Data rows (after header):', dataRows.length);
-      
-      let imageUrlCount = 0;
-      dataRows.slice(0, 10).forEach((row, index) => {
-        console.log(`  Row ${index + 1} - Full row:`, row);
-        const col3Value = row[2]; // Column 3 (index 2) - THIS IS COLUMN C
-        const hasValue = col3Value && col3Value.toString().trim() !== '';
-        if (hasValue) imageUrlCount++;
-        console.log(`  Row ${index + 1}, Column C (index 2):`, hasValue ? `"${col3Value}"` : '(empty or undefined)');
-      });
-      console.log(`✅ Found ${imageUrlCount} rows with data in Column 3 (out of first 10 rows)`);
       
       const parsed: QuestionRow[] = dataRows
         .filter(row => row && row.length > 1 && row[1]) // Must have at least question text
@@ -420,7 +382,6 @@ export function QuestionImporter() {
                 <DropdownMenuItem
                   key={type.value}
                   onClick={() => {
-                    console.log('Selected:', type.value, type.label);
                     setSelectedExamType(type.value);
                   }}
                   className={`cursor-pointer text-gray-900 dark:text-gray-100 ${
