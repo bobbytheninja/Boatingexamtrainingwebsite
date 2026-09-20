@@ -471,3 +471,15 @@
   ::view-transition-old(root),
   ::view-transition-new(root) { animation: none !important; }
 }
+
+/* Held only while a theme transition is running. Backdrop filters sample
+   whatever is painted behind them, and during a view transition that is the
+   other snapshot rather than the live page — so the navigation bar's blur
+   smears over the incoming theme. Suspending them keeps the falling edge
+   crisp; they return the moment the transition finishes. */
+html.theme-switching *,
+html.theme-switching *::before,
+html.theme-switching *::after {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}

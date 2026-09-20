@@ -37,5 +37,26 @@ export function runThemeTransition(apply: () => void): void {
     apply();
     return;
   }
-  (document as any).startViewTransition(apply);
+
+  // A view transition stacks two snapshots of the page. Anything using
+  // backdrop-filter then samples the snapshot behind it rather than the real
+  // page, and the navigation bar's 24px blur in particular smears across the
+  // whole switch. Suspending backdrop filters for the duration keeps the
+  // falling edge clean; they come back as soon as it finishes.
+  const root = document.documentElement;
+  root.classList.add('theme-switching');
+
+  const restore = () => root.classList.remove('theme-switching');
+  // Safety net: if `finished` never settles on some implementation, the class
+  // would otherwise strip the navigation bar's blur for the rest of the
+  // session. Comfortably past the 560ms animation.
+  const failsafe = window.setTimeout(restore, 1200);
+
+  const transition = (document as any).startViewTransition(apply);
+  transition.finished
+    .catch(() => {})
+    .finally(() => {
+      window.clearTimeout(failsafe);
+      restore();
+    });
 }
