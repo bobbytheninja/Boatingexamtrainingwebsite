@@ -1270,10 +1270,37 @@ export function ExamPage({ examType, mode, tier, topic, onBackToHome, onNavigate
                 </Badge>
               </TooltipTrigger>
               <TooltipContent className="max-w-xs">
-                <div className="text-xs space-y-1">
-                  <p><kbd className="px-1.5 py-0.5 bg-gray-200 dark:bg-gray-700 rounded">←</kbd> Previous question</p>
-                  <p><kbd className="px-1.5 py-0.5 bg-gray-200 dark:bg-gray-700 rounded">→</kbd> Next question</p>
-                  <p><kbd className="px-1.5 py-0.5 bg-gray-200 dark:bg-gray-700 rounded">Esc</kbd> Exit exam</p>
+                {/* Colour carries the meaning: movement keys blue, the one that
+                    leaves the exam red, so the destructive shortcut is not the
+                    same weight as the harmless ones. */}
+                <div className="text-xs space-y-1.5">
+                  {([
+                    { k: '←', label: 'Previous question', tone: 'move' },
+                    { k: '→', label: 'Next question', tone: 'move' },
+                    { k: 'Esc', label: 'Exit exam', tone: 'exit' },
+                  ] as const).map(({ k, label, tone }) => (
+                    <p key={k} className="flex items-center gap-2">
+                      <kbd
+                        className="inline-flex items-center justify-center min-w-[1.6rem] px-1.5 py-0.5 rounded font-mono text-[11px] font-semibold border"
+                        style={
+                          tone === 'exit'
+                            ? {
+                                backgroundColor: darkMode ? 'rgba(127,29,29,0.35)' : '#fee2e2',
+                                borderColor: darkMode ? '#b91c1c' : '#fca5a5',
+                                color: darkMode ? '#fca5a5' : '#991b1b',
+                              }
+                            : {
+                                backgroundColor: darkMode ? 'rgba(30,58,138,0.35)' : '#dbeafe',
+                                borderColor: darkMode ? '#2563eb' : '#93c5fd',
+                                color: darkMode ? '#93c5fd' : '#1e40af',
+                              }
+                        }
+                      >
+                        {k}
+                      </kbd>
+                      <span>{label}</span>
+                    </p>
+                  ))}
                 </div>
               </TooltipContent>
             </Tooltip>

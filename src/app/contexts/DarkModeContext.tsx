@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import { setTopBarColor, THEME_TOP_COLOR } from '../utils/topBarColor';
 
 interface DarkModeContextType {
   darkMode: boolean;
@@ -37,18 +38,18 @@ export function DarkModeProvider({ children }: { children: React.ReactNode }) {
     let timer: number | undefined;
     if (!firstRun.current && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       root.classList.add('theme-transition');
-      timer = window.setTimeout(() => root.classList.remove('theme-transition'), 320);
+      timer = window.setTimeout(() => root.classList.remove('theme-transition'), 660);
     }
     firstRun.current = false;
 
     if (darkMode) {
       root.classList.add('dark');
       root.setAttribute('data-theme', 'dark');
-      document.body.style.backgroundColor = '#1e293b';
+      setTopBarColor(THEME_TOP_COLOR.dark);
     } else {
       root.classList.remove('dark');
       root.removeAttribute('data-theme');
-      document.body.style.backgroundColor = '#ffffff';
+      setTopBarColor(THEME_TOP_COLOR.light);
     }
 
     return () => {
