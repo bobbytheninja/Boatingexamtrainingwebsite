@@ -194,6 +194,10 @@ export interface Translations {
   learnUnavailable: string;
   learnRequestHint: string;
   noQuestionsInCategory: string;
+  noExamsForRegion: string;
+  noExamsForRegionDesc: string;
+  showExamsFor: string;
+  noExamsAtAll: string;
   notPassed: string;
   failed: string;
   correctAnswers: string;
@@ -441,6 +445,10 @@ export const translations: Record<Language, Translations> = {
     learnUnavailable: 'Learn mode is not available for this exam yet.',
     learnRequestHint: 'Request it from our admin and we can usually add it within a few days. In the meantime, take a look at our other exams.',
     noQuestionsInCategory: 'No questions in this category',
+    noExamsForRegion: 'No exams for {region} yet',
+    noExamsForRegionDesc: 'We have not added exams for this country yet. Try another region, or get in touch and tell us which exam you need.',
+    showExamsFor: 'Show exams for {region}',
+    noExamsAtAll: 'No exams are available right now. Please check back shortly.',
     notPassed: 'Not Passed',
     failed: 'Failed',
     correctAnswers: 'Correct Answers',
@@ -686,6 +694,10 @@ export const translations: Record<Language, Translations> = {
     learnUnavailable: 'Режим Учи още не е достъпен за този изпит.',
     learnRequestHint: 'Заявете го от нашия администратор и обикновено можем да го добавим в рамките на няколко дни. Междувременно разгледайте другите ни изпити.',
     noQuestionsInCategory: 'Няма въпроси в тази категория',
+    noExamsForRegion: 'Все още няма изпити за {region}',
+    noExamsForRegionDesc: 'Още не сме добавили изпити за тази държава. Изберете друг регион или ни пишете кой изпит ви трябва.',
+    showExamsFor: 'Покажи изпитите за {region}',
+    noExamsAtAll: 'В момента няма налични изпити. Моля, проверете отново скоро.',
     notPassed: 'Неиздържан',
     failed: 'Неиздържан',
     correctAnswers: 'Верни Отговори',
@@ -931,6 +943,10 @@ export const translations: Record<Language, Translations> = {
     learnUnavailable: 'El modo Aprender aún no está disponible para este examen.',
     learnRequestHint: 'Solicítelo a nuestro administrador y normalmente podemos añadirlo en unos días. Mientras tanto, eche un vistazo a nuestros otros exámenes.',
     noQuestionsInCategory: 'No hay preguntas en esta categoría',
+    noExamsForRegion: 'Aún no hay exámenes para {region}',
+    noExamsForRegionDesc: 'Todavía no hemos añadido exámenes para este país. Pruebe otra región o escríbanos y díganos cuál necesita.',
+    showExamsFor: 'Ver exámenes de {region}',
+    noExamsAtAll: 'No hay exámenes disponibles en este momento. Vuelva a consultar pronto.',
     notPassed: 'No Aprobado',
     failed: 'Reprobado',
     correctAnswers: 'Respuestas Correctas',
@@ -1176,6 +1192,10 @@ export const translations: Record<Language, Translations> = {
     learnUnavailable: 'Η λειτουργία Μάθησης δεν είναι ακόμη διαθέσιμη για αυτή την εξέταση.',
     learnRequestHint: 'Ζητήστε το από τον διαχειριστή μας και συνήθως μπορούμε να το προσθέσουμε μέσα σε λίγες ημέρες. Στο μεταξύ, δείτε τις άλλες εξετάσεις μας.',
     noQuestionsInCategory: 'Δεν υπάρχουν ερωτήσεις σε αυτή την κατηγορία',
+    noExamsForRegion: 'Δεν υπάρχουν ακόμη εξετάσεις για {region}',
+    noExamsForRegionDesc: 'Δεν έχουμε προσθέσει ακόμη εξετάσεις για αυτή τη χώρα. Δοκιμάστε άλλη περιοχή ή επικοινωνήστε μαζί μας.',
+    showExamsFor: 'Εμφάνιση εξετάσεων για {region}',
+    noExamsAtAll: 'Δεν υπάρχουν διαθέσιμες εξετάσεις αυτή τη στιγμή. Ελέγξτε ξανά σύντομα.',
     notPassed: 'Δεν Πέρασε',
     failed: 'Απέτυχε',
     correctAnswers: 'Σωστές Απαντήσεις',
@@ -1421,6 +1441,10 @@ export const translations: Record<Language, Translations> = {
     learnUnavailable: 'La modalità Impara non è ancora disponibile per questo esame.',
     learnRequestHint: 'Richiedila al nostro amministratore e di solito possiamo aggiungerla in pochi giorni. Nel frattempo, dai un’occhiata agli altri nostri esami.',
     noQuestionsInCategory: 'Nessuna domanda in questa categoria',
+    noExamsForRegion: 'Nessun esame per {region} al momento',
+    noExamsForRegionDesc: 'Non abbiamo ancora aggiunto esami per questo paese. Prova un\'altra regione oppure scrivici quale ti serve.',
+    showExamsFor: 'Mostra esami per {region}',
+    noExamsAtAll: 'Nessun esame disponibile al momento. Riprova a breve.',
     notPassed: 'Non Superato',
     failed: 'Bocciato',
     correctAnswers: 'Risposte Corrette',

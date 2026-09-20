@@ -16,6 +16,7 @@ import { CategoryManagement } from './CategoryManagement';
 import { Analytics } from './Analytics';
 import { SubscriptionDebug } from './SubscriptionDebug';
 import { QuestionEditor } from './QuestionEditor';
+import { SiteSettings } from './SiteSettings';
 import { Database, Users, Key, AlertCircle, CheckCircle, Shield, Image as ImageIcon, Ship, Search, FileEdit } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useDarkMode } from '../contexts/DarkModeContext';
@@ -593,7 +594,8 @@ export function AdminPage({ onBack, onNavigate }: AdminPageProps) {
             </>
           )}
 
-          <TabsContent value="keys">
+          <TabsContent value="keys" className="space-y-6">
+            {userIsAdmin && <SiteSettings />}
             <Card style={{ background: darkMode ? '#1e293b' : undefined, borderColor: darkMode ? '#334155' : undefined }}>
               <CardHeader>
                 <CardTitle>Environment Variables & Keys</CardTitle>

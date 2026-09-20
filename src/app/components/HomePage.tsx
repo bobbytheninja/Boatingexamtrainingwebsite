@@ -75,7 +75,7 @@ export function HomePage() {
   const { user } = useAuth();
   const { darkMode } = useDarkMode();
   const { language } = useLanguage();
-  const { region } = useRegion();
+  const { region, setRegion } = useRegion();
   const t = getTranslation(language);
   usePageTitle(
     language === 'Bulgarian'
@@ -275,8 +275,43 @@ export function HomePage() {
                   <Button onClick={() => { fetchCategories().catch(() => {}); }} variant="outline">Retry</Button>
                 </div>
               ) : examTypes.length === 0 ? (
-                <div className="col-span-full text-center py-20">
-                  <p style={{ color: darkMode ? '#9ca3af' : '#6b7280' }}>No exam categories available.</p>
+                <div className="col-span-full flex justify-center py-16 px-4">
+                  {/* Two different situations wear the same empty grid: the
+                      catalogue is genuinely empty, or it simply has nothing for
+                      the region you are filtered to. The second is far more
+                      likely and is recoverable, so it gets a way out. */}
+                  <div
+                    className="w-full max-w-md text-center rounded-xl border-2 border-dashed px-6 py-10"
+                    style={{
+                      borderColor: darkMode ? '#3f4652' : '#e2e8f0',
+                      background: darkMode ? 'rgba(51,65,85,0.3)' : '#f8fafc',
+                    }}
+                  >
+                    <Compass className="w-10 h-10 mx-auto mb-3" style={{ color: darkMode ? '#64748b' : '#94a3b8' }} />
+                    {categories.length > 0 ? (
+                      <>
+                        <p className="font-semibold mb-2" style={{ color: darkMode ? '#e2e8f0' : '#1e293b' }}>
+                          {t.noExamsForRegion.replace('{region}', region)}
+                        </p>
+                        <p className="text-sm mb-5" style={{ color: darkMode ? '#94a3b8' : '#64748b' }}>
+                          {t.noExamsForRegionDesc}
+                        </p>
+                        {(() => {
+                          // Offer the first region that actually has something.
+                          const alternative = categories.find(c => c.country && c.country !== region)?.country;
+                          return alternative ? (
+                            <Button onClick={() => setRegion(alternative)} variant="outline">
+                              {t.showExamsFor.replace('{region}', alternative)}
+                            </Button>
+                          ) : null;
+                        })()}
+                      </>
+                    ) : (
+                      <p className="text-sm" style={{ color: darkMode ? '#94a3b8' : '#64748b' }}>
+                        {t.noExamsAtAll}
+                      </p>
+                    )}
+                  </div>
                 </div>
               ) : examTypes.map((exam, index) => {
                 const Icon = exam.icon;

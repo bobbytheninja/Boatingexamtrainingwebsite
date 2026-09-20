@@ -212,6 +212,30 @@ async function isAdmin(user: any): Promise<boolean> {
 }
 
 // Helper function to verify admin access
+/**
+ * Every user, not just the first page.
+ *
+ * supabase.auth.admin.listUsers() returns 50 by default. Called bare, it means
+ * anything that searches users — granting a licence by email, the admin user
+ * list, counting admins — silently stops seeing anyone past the 50th account.
+ * That reads as "user not found" for a real, paying customer.
+ */
+async function listAllUsers(): Promise<{ users: any[]; error: any }> {
+  const all: any[] = [];
+  const perPage = 1000;
+  for (let page = 1; ; page++) {
+    const { data, error } = await supabase!.auth.admin.listUsers({ page, perPage });
+    if (error) return { users: all, error };
+    const batch = data?.users ?? [];
+    all.push(...batch);
+    // A short page means there is nothing after it.
+    if (batch.length < perPage) break;
+    // Stop runaway paging if the API ever stops shortening the last page.
+    if (page > 50) break;
+  }
+  return { users: all, error: null };
+}
+
 async function verifyAdmin(authHeader: string | null) {
   const { error, user } = await verifyUser(authHeader);
   
@@ -388,7 +412,7 @@ app.get("/make-server-d36f8f91/admin/debug-subscription/:email", async (c) => {
     console.log('═══════════════════════════════════════════════════');
 
     // Find user by email
-    const { data: { users }, error: listError } = await supabase.auth.admin.listUsers();
+    const { users, error: listError } = await listAllUsers();
 
     if (listError) {
       return c.json({ message: 'Failed to find user' }, 500);
@@ -479,7 +503,7 @@ app.post("/make-server-d36f8f91/public/grant-admin", async (c) => {
 
     // Find user by email
     console.log('[grant-admin] Looking up user by email...');
-    const { data: { users }, error: listError } = await supabase.auth.admin.listUsers();
+    const { users, error: listError } = await listAllUsers();
 
     if (listError) {
       console.error('[grant-admin] ❌ Error listing users:', listError);
@@ -1685,7 +1709,7 @@ app.get("/make-server-d36f8f91/admin/users", async (c) => {
 
   try {
     // Get all users from Supabase Auth
-    const { data: { users }, error: listError } = await supabase.auth.admin.listUsers();
+    const { users, error: listError } = await listAllUsers();
     
     if (listError) {
       console.error('Error listing users:', listError);
@@ -1880,7 +1904,7 @@ app.post("/make-server-d36f8f91/admin/make-admin-by-email", async (c) => {
 
     // Find user by email
     console.log('[make-admin-by-email] Looking up user by email...');
-    const { data: { users }, error: listError } = await supabase.auth.admin.listUsers();
+    const { users, error: listError } = await listAllUsers();
 
     if (listError) {
       console.error('[make-admin-by-email] ❌ Error listing users:', listError);
@@ -1987,7 +2011,7 @@ app.post("/make-server-d36f8f91/admin/revoke-admin-access", async (c) => {
 
     // Count total admins before revoking
     console.log(`Checking total admin count before revoking access from user ${userId}...`);
-    const { data: { users }, error: listError } = await supabase.auth.admin.listUsers();
+    const { users, error: listError } = await listAllUsers();
 
     if (listError) {
       console.error('Error listing users to check admin count:', listError);
@@ -3509,6 +3533,37 @@ app.delete("/make-server-d36f8f91/regions/:name", async (c) => {
 // ============== PRICING SETTINGS ==============
 
 // Get overall pricing settings
+// Site-wide switches an admin can flip without a deploy. Public to read,
+// since the front end needs them before anyone signs in.
+app.get("/make-server-d36f8f91/site-settings", async (c) => {
+  try {
+    const settings = await kv.get('site_settings');
+    return c.json({ settings: { cookieBannerEnabled: false, ...(settings || {}) } });
+  } catch (error: any) {
+    // Never let a settings read break the page — fall back to everything off.
+    console.error('[site-settings] read failed:', error);
+    return c.json({ settings: { cookieBannerEnabled: false } });
+  }
+});
+
+app.post("/make-server-d36f8f91/site-settings", async (c) => {
+  const { error, user, isAdmin: adminStatus } = await verifyAdmin(c.req.header('Authorization'));
+  if (error || !user || !adminStatus) return c.json({ message: 'Admin access required' }, 403);
+
+  try {
+    const body = await c.req.json();
+    const current = (await kv.get('site_settings')) || {};
+    const next = { ...current };
+    if (typeof body.cookieBannerEnabled === 'boolean') {
+      next.cookieBannerEnabled = body.cookieBannerEnabled;
+    }
+    await kv.set('site_settings', next);
+    return c.json({ success: true, settings: next });
+  } catch (error: any) {
+    return c.json({ message: error.message }, 500);
+  }
+});
+
 app.get("/make-server-d36f8f91/pricing-settings", async (c) => {
   try {
     console.log('');
