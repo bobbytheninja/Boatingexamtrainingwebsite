@@ -182,23 +182,19 @@ export function HomePage() {
         }}
       >
         {/* Hero Image - Navigation bar overlays this */}
-        <div className="relative h-[58vh] sm:h-[68vh] md:h-[81vh] overflow-hidden">
+        <div className="relative h-[66vh] md:h-[81vh] overflow-hidden">
+          {/* Art-directed: phones get a portrait crop of the same photo. The two
+              files have different aspect ratios, so this needs media queries —
+              srcset/sizes alone can only pick between sizes, not crops. */}
           <picture>
-            <source
-              type="image/webp"
-              srcSet="/hero-yacht-mobile.webp 750w, /hero-yacht.webp 1400w"
-              sizes="(max-width: 768px) 100vw, 1400px"
-            />
-            <source
-              type="image/jpeg"
-              srcSet="/hero-yacht-mobile.jpg 750w, /hero-yacht.jpg 1400w"
-              sizes="(max-width: 768px) 100vw, 1400px"
-            />
+            <source media="(max-width: 768px)" type="image/webp" srcSet="/hero-yacht-mobile.webp" />
+            <source media="(max-width: 768px)" type="image/jpeg" srcSet="/hero-yacht-mobile.jpg" />
+            <source type="image/webp" srcSet="/hero-yacht.webp" />
             <img
               src="/hero-yacht.jpg"
-              alt="Bavaria Cruiser 45 yacht"
+              alt="Bavaria Cruiser 45 yacht under sail"
               className="w-full h-full object-cover hero-pan"
-              style={{ objectPosition: 'center 65%' }}
+              style={{ objectPosition: 'center 60%' }}
               fetchPriority="high"
               decoding="async"
             />
