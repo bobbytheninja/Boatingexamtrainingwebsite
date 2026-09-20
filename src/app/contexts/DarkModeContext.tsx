@@ -36,10 +36,10 @@ export function DarkModeProvider({ children }: { children: React.ReactNode }) {
     let timer: number | undefined;
     if (!firstRun.current && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       root.classList.add('theme-wave', darkMode ? 'theme-wave-dark' : 'theme-wave-light');
-      // Outlast the last band: 280ms delay + 420ms travel.
+      // Outlast the last band: 200ms delay + 420ms travel.
       timer = window.setTimeout(() => {
         root.classList.remove('theme-wave', 'theme-wave-dark', 'theme-wave-light');
-      }, 720);
+      }, 640);
     }
     firstRun.current = false;
 
