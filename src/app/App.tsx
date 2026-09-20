@@ -464,30 +464,11 @@ function AppContent() {
 
 function App() {
   React.useEffect(() => {
-    // Inject favicon links into document head
-    const head = document.head;
-
-    // Remove any existing favicon links
-    const existingIcons = head.querySelectorAll('link[rel*="icon"]');
-    existingIcons.forEach(icon => icon.remove());
-
-    // Add new favicon links
-    const favicons = [
-      { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
-      { rel: 'icon', type: 'image/svg+xml', sizes: 'any', href: '/favicon.svg' },
-      { rel: 'apple-touch-icon', sizes: '180x180', href: '/apple-touch-icon.svg' },
-      { rel: 'icon', type: 'image/svg+xml', sizes: '192x192', href: '/icon-192.svg' },
-      { rel: 'icon', type: 'image/svg+xml', sizes: '512x512', href: '/icon-512.svg' },
-    ];
-
-    favicons.forEach(({ rel, type, sizes, href }) => {
-      const link = document.createElement('link');
-      link.rel = rel;
-      if (type) link.type = type;
-      if (sizes) link.setAttribute('sizes', sizes);
-      link.href = href;
-      head.appendChild(link);
-    });
+    // Favicons are declared statically in index.html and are correct there.
+    // They used to be stripped and replaced here at runtime with a separate SVG
+    // set that still carried the old sailboat mark — and because search
+    // crawlers render JavaScript, that replacement is what they indexed. The
+    // markup is now left alone.
 
     // Set document title
     document.title = 'Black Sea Bulgaria - Yacht & Boat Exam Training | Practice Tests Online';
