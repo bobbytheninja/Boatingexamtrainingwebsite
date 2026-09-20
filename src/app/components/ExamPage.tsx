@@ -556,6 +556,7 @@ export function ExamPage({ examType, mode, tier, topic, onBackToHome, onNavigate
     const { wrongCount, correctCount, submittedCount } = calculateResults();
     // Learn is practice — there is no pass mark, so never show it as a failure.
     const passed = mode === 'learn' ? true : wrongCount < MAX_WRONG_ANSWERS;
+    const allCorrect = wrongCount === 0;
     const percentage = Math.round((correctCount / totalQuestions) * 100);
 
     return (
@@ -593,17 +594,27 @@ export function ExamPage({ examType, mode, tier, topic, onBackToHome, onNavigate
               }}
             >
               <div className="mb-3">
-                {passed ? (
+                {mode === 'learn' ? (
+                  allCorrect
+                    ? <CheckCircle className="w-16 h-16 text-green-500 mx-auto drop-shadow-lg" />
+                    : <BookOpen className="w-16 h-16 mx-auto drop-shadow-lg" style={{ color: '#d4a017' }} />
+                ) : passed ? (
                   <CheckCircle className="w-16 h-16 text-green-500 mx-auto drop-shadow-lg" />
                 ) : (
                   <XCircle className="w-16 h-16 text-red-500 mx-auto drop-shadow-lg" />
                 )}
               </div>
               <CardTitle className="mb-2 text-xl" style={{ color: darkMode ? '#f3f4f6' : '#0f172a' }}>
-                {t.examResults}
+                {mode === 'learn' ? topicLabel : t.examResults}
               </CardTitle>
               <CardDescription className="text-lg font-bold">
-                {passed ? (
+                {mode === 'learn' ? (
+                  allCorrect ? (
+                    <span style={{ color: darkMode ? '#4ade80' : '#16a34a' }}>{t.perfectScore}</span>
+                  ) : (
+                    <span style={{ color: darkMode ? '#e0b83a' : '#a97a0f' }}>{t.keepPractising}</span>
+                  )
+                ) : passed ? (
                   <span style={{ color: darkMode ? '#4ade80' : '#16a34a' }}>{t.passed}! 🎉</span>
                 ) : (
                   <span style={{ color: darkMode ? '#f87171' : '#dc2626' }}>{t.notPassed}</span>

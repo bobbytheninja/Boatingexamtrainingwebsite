@@ -189,6 +189,8 @@ export interface Translations {
   examResults: string;
   yourScore: string;
   passed: string;
+  perfectScore: string;
+  keepPractising: string;
   notPassed: string;
   failed: string;
   correctAnswers: string;
@@ -431,6 +433,8 @@ export const translations: Record<Language, Translations> = {
     examResults: 'Exam Results',
     yourScore: 'Your Score',
     passed: 'Passed',
+    perfectScore: 'Perfect! 🎉',
+    keepPractising: "Keep going — you'll learn them.",
     notPassed: 'Not Passed',
     failed: 'Failed',
     correctAnswers: 'Correct Answers',
@@ -671,6 +675,8 @@ export const translations: Record<Language, Translations> = {
     examResults: 'Резултати от Изпит',
     yourScore: 'Вашият Резултат',
     passed: 'Издържан',
+    perfectScore: 'Перфектно! 🎉',
+    keepPractising: 'Продължавайте — ще ги научите.',
     notPassed: 'Неиздържан',
     failed: 'Неиздържан',
     correctAnswers: 'Верни Отговори',
@@ -911,6 +917,8 @@ export const translations: Record<Language, Translations> = {
     examResults: 'Resultados del Examen',
     yourScore: 'Su Puntuación',
     passed: 'Aprobado',
+    perfectScore: '¡Perfecto! 🎉',
+    keepPractising: 'Sigue así — los aprenderás.',
     notPassed: 'No Aprobado',
     failed: 'Reprobado',
     correctAnswers: 'Respuestas Correctas',
@@ -1151,6 +1159,8 @@ export const translations: Record<Language, Translations> = {
     examResults: 'Αποτελέσματα Εξέτασης',
     yourScore: 'Η Βαθμολογία σας',
     passed: 'Πέρασε',
+    perfectScore: 'Τέλεια! 🎉',
+    keepPractising: 'Συνέχισε — θα τα μάθεις.',
     notPassed: 'Δεν Πέρασε',
     failed: 'Απέτυχε',
     correctAnswers: 'Σωστές Απαντήσεις',
@@ -1391,6 +1401,8 @@ export const translations: Record<Language, Translations> = {
     examResults: 'Risultati Esame',
     yourScore: 'Il Tuo Punteggio',
     passed: 'Superato',
+    perfectScore: 'Perfetto! 🎉',
+    keepPractising: 'Continua così — li imparerai.',
     notPassed: 'Non Superato',
     failed: 'Bocciato',
     correctAnswers: 'Risposte Corrette',

@@ -1,17 +1,32 @@
 /**
- * Learn-mode topic classification.
+ * Question topic classification, used by Learn mode and the admin panel.
  *
- * Questions are not tagged with a topic in the database, so they are classified
- * at runtime by matching keywords against the question and its answers. Patterns
- * cover English and Bulgarian, since the same exam category exists in both.
+ * Questions carry an optional `topic` field once an admin sets one. When they
+ * do not, they are classified here by matching keywords against the question
+ * and its answers, in English and Bulgarian. So the stored value is an
+ * override and this is the default — see `resolveTopic`.
  *
  * Order matters: the first pattern that matches wins, so narrower topics are
- * listed before broader ones. Day shapes in particular must be tested before
- * lights — a shapes question often lists vessel types whose answers also
- * mention lights.
+ * listed before broader ones. Two orderings are load-bearing:
+ *   - Day shapes before lights: a shapes question lists vessel types whose
+ *     answers often mention lights too.
+ *   - `general` is last and matches anything, which is what guarantees every
+ *     question lands in exactly one topic.
  */
 
-export type LearnTopic = 'shapes' | 'lights' | 'sounds' | 'flags' | 'buoys' | 'charts';
+export type LearnTopic =
+  | 'shapes'
+  | 'lights'
+  | 'sounds'
+  | 'flags'
+  | 'buoys'
+  | 'charts'
+  | 'colregs'
+  | 'navigation'
+  | 'instruments'
+  | 'weather'
+  | 'localwaters'
+  | 'general';
 
 export interface TopicDef {
   key: LearnTopic;
@@ -25,42 +40,84 @@ export const LEARN_TOPICS: TopicDef[] = [
     key: 'shapes',
     en: 'Day Shapes',
     bg: 'Знаци (фигури)',
-    pattern: /these sh[as]pes?\b|\bday ?shapes?\b|\bblack ball\b|\bcone\b|\bcylinder\b|\bdiamond shape|фигур|конус|цилиндър/i,
+    pattern: /these sh[as]pes?\b|\bday ?shapes?\b|\bshapes?\b|\bblack ball\b|\bcones?\b|\bcylinders?\b|\bdiamond\b|фигур|конус|цилиндър|ромб/i,
   },
   {
     key: 'lights',
     en: 'Lights',
     bg: 'Светлини',
-    pattern: /\blights?\b|sidelight|masthead light|sternlight|all-?round light|светлин|фенер/i,
+    pattern: /\blights?\b|\bsidelights?\b|masthead light|\bsternlights?\b|all-?round light|\bflashing\b|\bocculting\b|\bisophase\b|светлин|фенер|проблясв/i,
   },
   {
     key: 'sounds',
     en: 'Sound Signals',
     bg: 'Звукови сигнали',
-    pattern: /\bsound signal|\bfog signal|\bwhistle\b|\bhorn\b|\bblasts?\b|\bbell\b|\bgong\b|manoeuvring and warning|звуков|звук|свирк|камбан/i,
+    pattern: /\bsound signals?\b|\bfog signals?\b|\bwhistles?\b|\bhorns?\b|\bblasts?\b|\bbells?\b|\bgongs?\b|manoeuvring and warning|звуков|звук|свирк|камбан/i,
   },
   {
     key: 'flags',
     en: 'Flags',
     bg: 'Флагове',
-    pattern: /\bflags?\b|\bpennant\b|code letter|signal letter|\bensign\b|флаг|знаме/i,
+    pattern: /\bflags?\b|\bpennants?\b|code letter|signal letter|\bensigns?\b|флаг|знаме/i,
   },
   {
     key: 'buoys',
     en: 'Buoys & Marks',
     bg: 'Буйове и знаци',
-    pattern: /\bbuoys?\b|cardinal mark|lateral mark|safe water|isolated danger|special mark|region [ab]\b|\btopmark\b|port hand|starboard hand|буй|кардинал|латерал/i,
+    pattern: /\bbuoys?\b|cardinal marks?|lateral marks?|safe water|isolated danger|special marks?|region [ab]\b|\btopmarks?\b|port hand|starboard hand|буй|кардинал|латерал/i,
   },
   {
     key: 'charts',
     en: 'Chart Symbols',
     bg: 'Символи от карти',
-    pattern: /\bchart\b|admiralty|\bsymbol\b|\bsounding\b|depth contour|карт|символ/i,
+    pattern: /\bcharts?\b|admiralty|\bsymbols?\b|\bsoundings?\b|depth contour|\bisobath|карт|символ/i,
+  },
+  {
+    key: 'colregs',
+    en: 'Collision Rules',
+    bg: 'Правила за разминаване',
+    pattern: /give ?way|stand ?on|overtak|crossing situation|head-?on|right of way|collision|narrow channel|in sight of one another|restricted visibility|traffic separation|\bcolregs?\b|разминав|сблъс|изпревар|тесен канал/i,
+  },
+  {
+    key: 'navigation',
+    en: 'Navigation & Position',
+    bg: 'Навигация и позиция',
+    pattern: /\bbearings?\b|\bcourses?\b|latitude|longitude|coordinate|\bmeridians?\b|\bequator\b|\bparallel\b|declination|variation|deviation|\bnautical mile\b|\bknots?\b|\bspeed\b|great circle|rhumb|loxodrome|\bangle\b|\bdistance\b|\bposition\b|\bfix\b|\bgps\b|dead reckoning|ширин|дължин|координат|меридиан|курс|пеленг|склонение|девиац/i,
+  },
+  {
+    key: 'instruments',
+    en: 'Instruments',
+    bg: 'Уреди',
+    pattern: /\bcompass\b|echo ?sounder|\bradar\b|\bsextant\b|anemometer|barometer|hygrometer|\blog\b|\bais\b|\bepirb\b|navigation device|компас|ехолот|радар|уред|барометр/i,
+  },
+  {
+    key: 'weather',
+    en: 'Weather & Sea',
+    bg: 'Време и море',
+    pattern: /\bwinds?\b|\bweather\b|beaufort|\btides?\b|\bcurrents?\b|\bhumidity\b|\bfog\b|\bstorm\b|\bwaves?\b|\bforecast\b|\bpressure\b|вятър|време|прилив|течени|влажност|мъгла/i,
+  },
+  {
+    key: 'localwaters',
+    en: 'Local Waters',
+    bg: 'Местни води',
+    pattern: /\bcape\b|black sea|bulgaria|\bvarna\b|\bburgas\b|\bemine\b|athanasius|magnetic anomaly|нос |черно море|българ|варна|бургас/i,
+  },
+  {
+    // Catch-all. Must stay last, and must match everything, so that no question
+    // is ever left without a topic.
+    key: 'general',
+    en: 'General Theory',
+    bg: 'Обща теория',
+    pattern: /.*/,
   },
 ];
 
+export const TOPIC_BY_KEY: Record<LearnTopic, TopicDef> = Object.fromEntries(
+  LEARN_TOPICS.map(t => [t.key, t]),
+) as Record<LearnTopic, TopicDef>;
+
 /** Anything with a question and answers — works for both DB and local shapes. */
-interface ClassifiableQuestion {
+export interface ClassifiableQuestion {
   question?: string;
   questionText?: string;
   answers?: string[];
@@ -68,44 +125,46 @@ interface ClassifiableQuestion {
   answerB?: string;
   answerC?: string;
   answerD?: string;
+  /** Admin override. When set, classification is skipped. */
+  topic?: LearnTopic | null;
 }
 
 function textOf(q: ClassifiableQuestion): string {
-  const parts = [
+  return [
     q.question ?? q.questionText ?? '',
     ...(q.answers ?? []),
     q.answerA ?? '',
     q.answerB ?? '',
     q.answerC ?? '',
     q.answerD ?? '',
-  ];
-  return parts.filter(Boolean).join(' ');
+  ].filter(Boolean).join(' ');
 }
 
-/** Returns the topic a question belongs to, or null if it fits none of them. */
-export function categorizeQuestion(q: ClassifiableQuestion): LearnTopic | null {
+/** The topic a question falls into by keyword. Always returns one. */
+export function categorizeQuestion(q: ClassifiableQuestion): LearnTopic {
   const text = textOf(q);
-  if (!text.trim()) return null;
   for (const topic of LEARN_TOPICS) {
     if (topic.pattern.test(text)) return topic.key;
   }
-  return null;
+  return 'general';
 }
 
-/** How many questions fall into each topic. Topics with none are still present, at 0. */
+/** An admin-set topic if there is one, otherwise the classified default. */
+export function resolveTopic(q: ClassifiableQuestion): LearnTopic {
+  return q.topic ?? categorizeQuestion(q);
+}
+
+/** How many questions fall into each topic. Topics with none are present, at 0. */
 export function countByTopic(questions: ClassifiableQuestion[]): Record<LearnTopic, number> {
   const counts = Object.fromEntries(
     LEARN_TOPICS.map(t => [t.key, 0]),
   ) as Record<LearnTopic, number>;
 
-  for (const q of questions) {
-    const topic = categorizeQuestion(q);
-    if (topic) counts[topic] += 1;
-  }
+  for (const q of questions) counts[resolveTopic(q)] += 1;
   return counts;
 }
 
 /** The subset of questions belonging to one topic. */
 export function filterByTopic<T extends ClassifiableQuestion>(questions: T[], topic: LearnTopic): T[] {
-  return questions.filter(q => categorizeQuestion(q) === topic);
+  return questions.filter(q => resolveTopic(q) === topic);
 }

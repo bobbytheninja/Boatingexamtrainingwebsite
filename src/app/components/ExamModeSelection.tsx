@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import { Check, BookOpen, FileText, GraduationCap, Lightbulb, Flag, Volume2, Anchor, Map, Circle } from 'lucide-react';
+import { Check, BookOpen, FileText, GraduationCap, Lightbulb, Flag, Volume2, Anchor, Map, Circle, Shuffle, Compass, Gauge, CloudSun, MapPin } from 'lucide-react';
 import { ExamType, examData } from '../data/examQuestions';
 import { getTranslation } from '../data/translations';
 import { Navigation } from './Navigation';
@@ -19,12 +19,18 @@ import { projectId, publicAnonKey } from '../utils/supabase/info';
 export type ExamMode = 'study' | 'exam' | 'learn';
 
 const TOPIC_ICONS: Record<LearnTopic, typeof Lightbulb> = {
-  lights: Lightbulb,
   shapes: Circle,
+  lights: Lightbulb,
   sounds: Volume2,
   flags: Flag,
   buoys: Anchor,
   charts: Map,
+  colregs: Shuffle,
+  navigation: Compass,
+  instruments: Gauge,
+  weather: CloudSun,
+  localwaters: MapPin,
+  general: BookOpen,
 };
 export type ExamTier = 'mock' | 'paid';
 
@@ -43,6 +49,7 @@ export function ExamModeSelection() {
   const [loading, setLoading] = useState(true);
   const [topicCounts, setTopicCounts] = useState<Record<LearnTopic, number> | null>(null);
   const [countsLoading, setCountsLoading] = useState(false);
+  const [countsError, setCountsError] = useState(false);
   
   const examType = examTypeParam as ExamType;
 
@@ -114,29 +121,34 @@ export function ExamModeSelection() {
   }, [examType, navigate]);
 
   // Work out which topics actually have questions in this exam. Needs the full
-  // question set, so it only runs for signed-in users; everyone else sees the
-  // topics enabled and gets the usual login prompt on click.
+  // question set, so it only runs for signed-in users.
+  //
+  // The attempt is tracked in a ref rather than by checking state: deriving the
+  // guard from topicCounts/countsLoading meant a failed request left both back
+  // at their initial values, so the effect re-ran and refetched forever.
+  const countsRequested = useRef<string | null>(null);
+
   useEffect(() => {
-    if (selectedMode !== 'learn' || !examType) return;
-    if (topicCounts || countsLoading || !accessToken) return;
+    if (selectedMode !== 'learn' || !examType || !accessToken) return;
+    if (countsRequested.current === examType) return;
+    countsRequested.current = examType;
 
     let cancelled = false;
     setCountsLoading(true);
+    setCountsError(false);
     api.getQuestions(examType, accessToken)
       .then(res => {
         if (!cancelled) setTopicCounts(countByTopic(res.questions || []));
       })
       .catch(() => {
-        // No access or the request failed — leave counts unknown rather than
-        // greying out topics that may well have questions.
-        if (!cancelled) setTopicCounts(null);
+        if (!cancelled) setCountsError(true);
       })
       .finally(() => {
         if (!cancelled) setCountsLoading(false);
       });
 
     return () => { cancelled = true; };
-  }, [selectedMode, examType, accessToken, topicCounts, countsLoading]);
+  }, [selectedMode, examType, accessToken]);
 
   const handleStartTopic = (topic: LearnTopic) => {
     if (!user) {
@@ -345,13 +357,16 @@ export function ExamModeSelection() {
                     ? 'Pick a topic to practise on its own. No timer, no pass mark.'
                     : 'Изберете тема за упражнение. Без таймер и без праг за преминаване.'}
                 </p>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {LEARN_TOPICS.map(topic => {
                     const Icon = TOPIC_ICONS[topic.key];
                     const count = topicCounts ? topicCounts[topic.key] : null;
-                    // Unknown counts stay enabled — better to let someone try than
-                    // to grey out a topic that does have questions.
-                    const available = count === null ? true : count > 0;
+                    // Only enable a topic we know has questions. While counts are
+                    // loading, or if they failed, tiles stay disabled rather than
+                    // letting someone start a run with nothing in it.
+                    const available = count !== null
+                      ? count > 0
+                      : (!accessToken && !countsLoading && !countsError);
                     const label = language === 'English' ? topic.en : topic.bg;
 
                     return (
@@ -377,16 +392,18 @@ export function ExamModeSelection() {
                           opacity: available ? 1 : 0.7,
                         }}
                       >
-                        <Icon className="w-8 h-8" />
-                        <span className="font-semibold text-base text-center">{label}</span>
+                        <Icon className="w-7 h-7" />
+                        <span className="font-semibold text-sm text-center leading-tight">{label}</span>
                         <span className="text-xs font-medium">
-                          {countsLoading && count === null
+                          {count !== null
+                            ? (count > 0
+                                ? `${count} ${language === 'English' ? 'questions' : 'въпроса'}`
+                                : (language === 'English' ? 'Coming soon' : 'Очаквайте скоро'))
+                            : countsLoading
                             ? (language === 'English' ? 'Checking…' : 'Проверка…')
-                            : count === null
-                            ? (language === 'English' ? 'Practise' : 'Упражнение')
-                            : available
-                            ? `${count} ${language === 'English' ? 'questions' : 'въпроса'}`
-                            : (language === 'English' ? 'Coming soon' : 'Очаквайте скоро')}
+                            : countsError
+                            ? (language === 'English' ? 'Unavailable' : 'Недостъпно')
+                            : (language === 'English' ? 'Practise' : 'Упражнение')}
                         </span>
                       </button>
                     );
