@@ -3,7 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import { Check, BookOpen, FileText, GraduationCap, Lightbulb, Flag, Volume2, Anchor, Map, Circle, Shuffle, Compass, Gauge, CloudSun, MapPin } from 'lucide-react';
+import { Check, BookOpen, FileText, GraduationCap, Lightbulb, Flag, Volume2, Anchor, Map, Circle, Shuffle, Compass, Gauge, CloudSun, MapPin, Siren, Mic, RadioTower, Radio, FileCheck } from 'lucide-react';
 import { ExamType, examData } from '../data/examQuestions';
 import { getTranslation } from '../data/translations';
 import { Navigation } from './Navigation';
@@ -30,6 +30,11 @@ const TOPIC_ICONS: Record<LearnTopic, typeof Lightbulb> = {
   instruments: Gauge,
   weather: CloudSun,
   localwaters: MapPin,
+  distress: Siren,
+  radioprocedure: Mic,
+  channels: RadioTower,
+  radioequipment: Radio,
+  licensing: FileCheck,
   general: BookOpen,
 };
 export type ExamTier = 'mock' | 'paid';
@@ -394,7 +399,10 @@ export function ExamModeSelection() {
                     : 'Изберете тема за упражнение. Без таймер и без праг за преминаване.'}
                 </p>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  {LEARN_TOPICS.map(topic => {
+                  {(topicCounts
+                      ? LEARN_TOPICS.filter(t => topicCounts[t.key] > 0)
+                      : LEARN_TOPICS
+                    ).map(topic => {
                     const Icon = TOPIC_ICONS[topic.key];
                     const count = topicCounts ? topicCounts[topic.key] : null;
                     // Only enable a topic we know has questions. While counts are

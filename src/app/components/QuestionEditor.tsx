@@ -52,6 +52,7 @@ export function QuestionEditor({ accessToken }: QuestionEditorProps) {
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [bulkTopic, setBulkTopic] = useState<LearnTopic | ''>('');
   const [bulkSaving, setBulkSaving] = useState(false);
+  const [autoAssigning, setAutoAssigning] = useState(false);
 
   // Load categories
   useEffect(() => {
@@ -111,6 +112,60 @@ export function QuestionEditor({ accessToken }: QuestionEditorProps) {
       else next.add(questionNumber);
       return next;
     });
+  };
+
+  /**
+   * Write the auto-detected topic onto every question that has none yet.
+   *
+   * Classification normally happens at read time, so this is not required for
+   * Learn mode to work — it just makes the assignment explicit and editable,
+   * without needing the questions re-imported. Questions an admin has already
+   * set are left alone.
+   */
+  const handleAutoAssign = async () => {
+    const targets = questions.filter(q => !q.topic);
+    if (targets.length === 0) {
+      setSaveResult({ ok: true, msg: 'Every question already has a topic set.' });
+      return;
+    }
+
+    setAutoAssigning(true);
+    setSaveResult(null);
+    try {
+      // Group by detected topic so this is a handful of calls, not one per question.
+      const byTopic = new Map<LearnTopic, number[]>();
+      for (const q of targets) {
+        const topic = resolveTopic(q);
+        if (!byTopic.has(topic)) byTopic.set(topic, []);
+        byTopic.get(topic)!.push(q.questionNumber);
+      }
+
+      let total = 0;
+      for (const [topic, numbers] of byTopic) {
+        // The endpoint caps a single request at 500.
+        for (let i = 0; i < numbers.length; i += 400) {
+          const batch = numbers.slice(i, i + 400);
+          const res = await fetch(
+            `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/admin/questions/set-topic`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+              body: JSON.stringify({ examType: selectedExam, questionNumbers: batch, topic }),
+            }
+          );
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.message || `Error ${res.status}`);
+          total += data.updated ?? batch.length;
+        }
+      }
+
+      setQuestions(prev => prev.map(q => q.topic ? q : { ...q, topic: resolveTopic(q) }));
+      setSaveResult({ ok: true, msg: `Saved topics for ${total} question${total === 1 ? '' : 's'}.` });
+    } catch (err: any) {
+      setSaveResult({ ok: false, msg: err.message || 'Failed to assign topics' });
+    } finally {
+      setAutoAssigning(false);
+    }
   };
 
   const handleBulkSetTopic = async () => {
@@ -407,6 +462,15 @@ export function QuestionEditor({ accessToken }: QuestionEditorProps) {
                   : `${selected.size} selected`}
               </span>
               <div className="flex-1" />
+              <Button
+                onClick={handleAutoAssign}
+                disabled={autoAssigning}
+                variant="outline"
+                className="h-8 text-xs px-3"
+                title="Save the detected topic onto every question that has none yet"
+              >
+                {autoAssigning ? <ButtonSpinner /> : 'Auto-assign missing'}
+              </Button>
               <button
                 type="button"
                 onClick={() => setSelected(new Set(filtered.map(q => q.questionNumber)))}

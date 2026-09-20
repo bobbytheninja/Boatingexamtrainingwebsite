@@ -26,6 +26,11 @@ export type LearnTopic =
   | 'instruments'
   | 'weather'
   | 'localwaters'
+  | 'distress'
+  | 'radioprocedure'
+  | 'channels'
+  | 'radioequipment'
+  | 'licensing'
   | 'general';
 
 export interface TopicDef {
@@ -101,6 +106,39 @@ export const LEARN_TOPICS: TopicDef[] = [
     en: 'Local Waters',
     bg: 'Местни води',
     pattern: /\bcape\b|black sea|bulgaria|\bvarna\b|\bburgas\b|\bemine\b|athanasius|magnetic anomaly|нос |черно море|българ|варна|бургас/i,
+  },
+
+  // --- Radio topics. These only match radio-operator exams, so they simply
+  // report zero (and stay hidden) on the maritime exams, and vice versa. ---
+  {
+    key: 'distress',
+    en: 'Distress & Urgency',
+    bg: 'Бедствие и спешност',
+    pattern: /\bmayday\b|\bpan[- ]?pan\b|s[ée]curit[ée]|\bdistress\b|\burgency\b|мейдей|бедств|спешн|тревог|авари|спасител/i,
+  },
+  {
+    key: 'radioprocedure',
+    en: 'Radio Procedure',
+    bg: 'Радиопроцедури',
+    pattern: /\bcall sign\b|phonetic|spelling alphabet|\bover\b and \bout\b|позивн|повикван|предаван|приеман|съобщени|дежурств|процедур/i,
+  },
+  {
+    key: 'channels',
+    en: 'Channels & Frequencies',
+    bg: 'Канали и честоти',
+    pattern: /channel\s*\d|\bvhf\b|\bfrequenc|\bmhz\b|simplex|duplex|\bкана[лг]|честот|\bукв\b|\bмхц\b|обхват/i,
+  },
+  {
+    key: 'radioequipment',
+    en: 'Radio Equipment',
+    bg: 'Радиооборудване',
+    pattern: /\bgmdss\b|\bdsc\b|\bmmsi\b|navtex|\bsart\b|\bepirb\b|\bantenna\b|радиостанц|антена|батер|мощност|смущен/i,
+  },
+  {
+    key: 'licensing',
+    en: 'Licensing & Rules',
+    bg: 'Правила и удостоверения',
+    pattern: /\blicen[cs]|certificate of competen|удостоверен|оператор|\bкурс\b|\bизпит\b|правил|разрешител/i,
   },
   {
     // Catch-all. Must stay last, and must match everything, so that no question
