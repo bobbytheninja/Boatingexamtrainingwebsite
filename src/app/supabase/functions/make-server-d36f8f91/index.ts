@@ -2594,15 +2594,57 @@ app.put("/make-server-d36f8f91/questions/:examType/:questionNumber", async (c) =
     const questionId = `${examType}_${paddedNumber}`;
 
     const body = await c.req.json();
-    const { questionText, answerA, answerB, answerC, answerD, correctAnswer } = body;
+    const { questionText, answerA, answerB, answerC, answerD, correctAnswer, topic } = body;
 
     const existing = await kv.get(`question:${questionId}`);
     if (!existing) return c.json({ message: 'Question not found' }, 404);
 
     const updated = { ...existing, questionText, answerA, answerB, answerC, answerD, correctAnswer };
+    // Topic is optional: only touch it when the caller sends the field, so
+    // ordinary edits do not wipe an assignment. null clears it back to auto.
+    if (Object.prototype.hasOwnProperty.call(body, 'topic')) {
+      updated.topic = topic || null;
+    }
     await kv.set(`question:${questionId}`, updated);
     return c.json({ success: true, question: updated });
   } catch (error: any) {
+    return c.json({ message: error.message }, 500);
+  }
+});
+
+// Set the topic on one or many questions at once. Sending topic: null clears
+// the assignment, so the question falls back to automatic classification.
+app.post("/make-server-d36f8f91/admin/questions/set-topic", async (c) => {
+  const { error, user, isAdmin: adminStatus } = await verifyAdmin(c.req.header('Authorization'));
+  if (error || !user || !adminStatus) return c.json({ message: 'Admin required' }, 403);
+
+  try {
+    const { examType, questionNumbers, topic } = await c.req.json();
+
+    if (!examType || !Array.isArray(questionNumbers) || questionNumbers.length === 0) {
+      return c.json({ message: 'examType and a non-empty questionNumbers array are required' }, 400);
+    }
+    if (questionNumbers.length > 500) {
+      return c.json({ message: 'Too many questions in one request (max 500)' }, 400);
+    }
+
+    let updated = 0;
+    const missing: number[] = [];
+
+    for (const num of questionNumbers) {
+      const questionId = `${examType}_${String(Number(num)).padStart(3, '0')}`;
+      const existing = await kv.get(`question:${questionId}`);
+      if (!existing) {
+        missing.push(num);
+        continue;
+      }
+      await kv.set(`question:${questionId}`, { ...existing, topic: topic || null });
+      updated += 1;
+    }
+
+    return c.json({ success: true, updated, missing });
+  } catch (error: any) {
+    console.error('[set-topic] error:', error);
     return c.json({ message: error.message }, 500);
   }
 });

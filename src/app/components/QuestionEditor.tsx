@@ -10,8 +10,11 @@ import { projectId } from '../utils/supabase/info';
 import { toast } from 'sonner';
 import { ButtonSpinner, LoadingSpinner } from './LoadingSpinner';
 
+import { LEARN_TOPICS, resolveTopic, TOPIC_BY_KEY, type LearnTopic } from '../utils/questionTopics';
+
 interface Question {
   questionNumber: number;
+  topic?: LearnTopic | null;
   questionText: string;
   answerA: string;
   answerB: string;
@@ -46,6 +49,9 @@ export function QuestionEditor({ accessToken }: QuestionEditorProps) {
   const [draftQuestion, setDraftQuestion] = useState<Question | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveResult, setSaveResult] = useState<{ ok: boolean; msg: string } | null>(null);
+  const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [bulkTopic, setBulkTopic] = useState<LearnTopic | ''>('');
+  const [bulkSaving, setBulkSaving] = useState(false);
 
   // Load categories
   useEffect(() => {
@@ -98,6 +104,51 @@ export function QuestionEditor({ accessToken }: QuestionEditorProps) {
     setSaveResult(null);
   };
 
+  const toggleSelected = (questionNumber: number) => {
+    setSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(questionNumber)) next.delete(questionNumber);
+      else next.add(questionNumber);
+      return next;
+    });
+  };
+
+  const handleBulkSetTopic = async () => {
+    if (!bulkTopic || selected.size === 0) return;
+    setBulkSaving(true);
+    setSaveResult(null);
+    try {
+      const res = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/admin/questions/set-topic`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({
+            examType: selectedExam,
+            questionNumbers: Array.from(selected),
+            topic: bulkTopic,
+          }),
+        }
+      );
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || `Error ${res.status}`);
+
+      setQuestions(prev => prev.map(q =>
+        selected.has(q.questionNumber) ? { ...q, topic: bulkTopic } : q
+      ));
+      setSaveResult({ ok: true, msg: `Set ${data.updated} question${data.updated === 1 ? '' : 's'} to ${TOPIC_BY_KEY[bulkTopic].en}.` });
+      setSelected(new Set());
+      setBulkTopic('');
+    } catch (err: any) {
+      setSaveResult({ ok: false, msg: err.message || 'Failed to update topics' });
+    } finally {
+      setBulkSaving(false);
+    }
+  };
+
   const handleSave = async () => {
     if (!draftQuestion) return;
     setSaving(true);
@@ -118,6 +169,7 @@ export function QuestionEditor({ accessToken }: QuestionEditorProps) {
             answerC: draftQuestion.answerC,
             answerD: draftQuestion.answerD,
             correctAnswer: draftQuestion.correctAnswer,
+            topic: draftQuestion.topic ?? null,
           }),
         }
       );
@@ -277,6 +329,29 @@ export function QuestionEditor({ accessToken }: QuestionEditorProps) {
               </div>
             </div>
 
+            {/* Topic */}
+            <div>
+              <Label style={labelStyle} className="mb-1.5 block text-sm font-medium">Topic</Label>
+              <select
+                value={draftQuestion.topic ?? ''}
+                onChange={e => setDraftQuestion(prev => prev
+                  ? { ...prev, topic: (e.target.value || null) as LearnTopic | null }
+                  : prev)}
+                className="w-full text-sm rounded px-3 py-2 border"
+                style={inputStyle}
+              >
+                <option value="">
+                  Automatic — {TOPIC_BY_KEY[resolveTopic({ ...draftQuestion, topic: null })].en}
+                </option>
+                {LEARN_TOPICS.map(t => (
+                  <option key={t.key} value={t.key}>{t.en}</option>
+                ))}
+              </select>
+              <p className="text-xs mt-1" style={mutedStyle}>
+                Leave on Automatic to classify by keyword, or pick a topic to override it.
+              </p>
+            </div>
+
             {/* Save button + result */}
             {saveResult && (
               <Alert style={{
@@ -320,6 +395,51 @@ export function QuestionEditor({ accessToken }: QuestionEditorProps) {
                 />
               </div>
             </div>
+
+            {/* Bulk topic assignment */}
+            <div
+              className="mt-3 flex flex-wrap items-center gap-2 rounded-md px-3 py-2"
+              style={{ background: darkMode ? '#0f172a' : '#f8fafc', border: `1px solid ${darkMode ? '#334155' : '#e2e8f0'}` }}
+            >
+              <span className="text-xs font-semibold" style={mutedStyle}>
+                {selected.size === 0
+                  ? 'Select questions to reassign their topic'
+                  : `${selected.size} selected`}
+              </span>
+              <div className="flex-1" />
+              <button
+                type="button"
+                onClick={() => setSelected(new Set(filtered.map(q => q.questionNumber)))}
+                className="text-xs underline"
+                style={mutedStyle}
+              >
+                Select all shown
+              </button>
+              {selected.size > 0 && (
+                <button type="button" onClick={() => setSelected(new Set())} className="text-xs underline" style={mutedStyle}>
+                  Clear
+                </button>
+              )}
+              <select
+                value={bulkTopic}
+                onChange={e => setBulkTopic(e.target.value as LearnTopic | '')}
+                disabled={selected.size === 0}
+                className="text-sm rounded px-2 py-1 border"
+                style={inputStyle}
+              >
+                <option value="">Set topic to…</option>
+                {LEARN_TOPICS.map(t => (
+                  <option key={t.key} value={t.key}>{t.en}</option>
+                ))}
+              </select>
+              <Button
+                onClick={handleBulkSetTopic}
+                disabled={!bulkTopic || selected.size === 0 || bulkSaving}
+                className="bg-sky-600 hover:bg-sky-700 text-white h-8 text-xs px-3"
+              >
+                {bulkSaving ? <ButtonSpinner /> : 'Apply'}
+              </Button>
+            </div>
           </CardHeader>
           <CardContent className="p-0">
             <div className="divide-y" style={{ borderColor: darkMode ? '#334155' : '#f1f5f9' }}>
@@ -328,41 +448,67 @@ export function QuestionEditor({ accessToken }: QuestionEditorProps) {
               ) : (
                 filtered.map(q => {
                   const isActive = editingQuestion?.questionNumber === q.questionNumber;
+                  const topicKey = resolveTopic(q);
+                  const isAuto = !q.topic;
                   return (
-                    <button
+                    <div
                       key={q.questionNumber}
-                      onClick={() => isActive ? closeEditor() : openEditor(q)}
-                      className="w-full text-left px-4 py-3 flex items-start gap-3 transition-colors duration-150 hover:bg-opacity-60"
+                      className="flex items-start gap-2 px-3 py-3 transition-colors duration-150"
                       style={{
                         background: isActive
                           ? (darkMode ? 'rgba(14,165,233,0.15)' : '#e0f2fe')
                           : 'transparent',
                       }}
                     >
-                      {/* Question number badge */}
-                      <span
-                        className="shrink-0 inline-flex items-center justify-center w-9 h-7 rounded text-xs font-bold mt-0.5"
-                        style={{
-                          background: isActive ? '#0ea5e9' : (darkMode ? '#334155' : '#e5e7eb'),
-                          color: isActive ? '#ffffff' : (darkMode ? '#e2e8f0' : '#374151'),
-                        }}
-                      >#{q.questionNumber}</span>
+                      <input
+                        type="checkbox"
+                        checked={selected.has(q.questionNumber)}
+                        onChange={() => toggleSelected(q.questionNumber)}
+                        aria-label={`Select question ${q.questionNumber}`}
+                        className="mt-1.5 shrink-0 w-4 h-4 cursor-pointer accent-sky-600"
+                      />
+                      <button
+                        onClick={() => isActive ? closeEditor() : openEditor(q)}
+                        className="flex-1 min-w-0 text-left flex items-start gap-3"
+                      >
+                        {/* Question number badge */}
+                        <span
+                          className="shrink-0 inline-flex items-center justify-center w-9 h-7 rounded text-xs font-bold mt-0.5"
+                          style={{
+                            background: isActive ? '#0ea5e9' : (darkMode ? '#334155' : '#e5e7eb'),
+                            color: isActive ? '#ffffff' : (darkMode ? '#e2e8f0' : '#374151'),
+                          }}
+                        >#{q.questionNumber}</span>
 
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm leading-snug line-clamp-2" style={textStyle}>{q.questionText}</p>
-                        <div className="flex flex-wrap gap-x-3 mt-1">
-                          {ANSWER_LABELS.map(letter => (
-                            <span key={letter} className="text-xs" style={{
-                              color: toUpper(q.correctAnswer) === letter ? '#16a34a' : (darkMode ? '#64748b' : '#9ca3af'),
-                              fontWeight: toUpper(q.correctAnswer) === letter ? 700 : 400,
-                            }}>
-                              {letter}: {q[`answer${letter}` as keyof Question] as string}
-                              {toUpper(q.correctAnswer) === letter && ' ✓'}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start gap-2">
+                            <p className="text-sm leading-snug line-clamp-2 flex-1" style={textStyle}>{q.questionText}</p>
+                            {/* Dashed border means the topic was inferred, solid means an admin set it */}
+                            <span
+                              className="shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded whitespace-nowrap"
+                              style={{
+                                border: `1px ${isAuto ? 'dashed' : 'solid'} ${darkMode ? '#475569' : '#cbd5e1'}`,
+                                color: darkMode ? '#94a3b8' : '#64748b',
+                              }}
+                              title={isAuto ? 'Detected automatically' : 'Set by an admin'}
+                            >
+                              {TOPIC_BY_KEY[topicKey].en}
                             </span>
-                          ))}
+                          </div>
+                          <div className="flex flex-wrap gap-x-3 mt-1">
+                            {ANSWER_LABELS.map(letter => (
+                              <span key={letter} className="text-xs" style={{
+                                color: toUpper(q.correctAnswer) === letter ? '#16a34a' : (darkMode ? '#64748b' : '#9ca3af'),
+                                fontWeight: toUpper(q.correctAnswer) === letter ? 700 : 400,
+                              }}>
+                                {letter}: {q[`answer${letter}` as keyof Question] as string}
+                                {toUpper(q.correctAnswer) === letter && ' ✓'}
+                              </span>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    </button>
+                      </button>
+                    </div>
                   );
                 })
               )}
