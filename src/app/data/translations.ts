@@ -238,7 +238,6 @@ export interface Translations {
 
   // Partners Page
   partnersTitle: string;
-  partnersSubtitle: string;
   ourPartners: string;
   visitWebsite: string;
   viewClasses: string;
@@ -481,7 +480,6 @@ export const translations: Record<Language, Translations> = {
 
     // Partners Page
     partnersTitle: 'People We Partner With',
-    partnersSubtitle: 'Partners help us prepare test materials',
     ourPartners: 'Our Partners',
     visitWebsite: 'Visit Website',
     viewClasses: 'View Classes',
@@ -722,7 +720,6 @@ export const translations: Record<Language, Translations> = {
 
     // Partners Page
     partnersTitle: 'Хора, с Които Партнираме',
-    partnersSubtitle: 'Партньорите ни помагат да подготвим тестови материали',
     ourPartners: 'Нашите Партньори',
     visitWebsite: 'Посетете Уебсайта',
     viewClasses: 'Вижте Курсовете',
@@ -963,7 +960,6 @@ export const translations: Record<Language, Translations> = {
 
     // Partners Page
     partnersTitle: 'Personas con las que Colaboramos',
-    partnersSubtitle: 'Los socios nos ayudan a preparar materiales de examen',
     ourPartners: 'Nuestros Socios',
     visitWebsite: 'Visitar Sitio Web',
     viewClasses: 'Ver Clases',
@@ -1204,7 +1200,6 @@ export const translations: Record<Language, Translations> = {
 
     // Partners Page
     partnersTitle: 'Άνθρωποι με τους Οποίους Συνεργαζόμαστε',
-    partnersSubtitle: 'Οι συνεργάτες μας βοηθούν να προετοιμάσουμε εξεταστικό υλικό',
     ourPartners: 'Οι Συνεργάτες Μας',
     visitWebsite: 'Επίσκεψη Ιστοσελίδας',
     viewClasses: 'Προβολή Μαθημάτων',
@@ -1444,7 +1439,6 @@ export const translations: Record<Language, Translations> = {
 
     // Partners Page
     partnersTitle: 'Persone con cui Collaboriamo',
-    partnersSubtitle: 'I partner ci aiutano a preparare materiali di test',
     ourPartners: 'I Nostri Partner',
     visitWebsite: 'Visita il Sito Web',
     viewClasses: 'Visualizza Corsi',

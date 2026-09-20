@@ -435,6 +435,13 @@ app.get("/make-server-d36f8f91/admin/payments/:userId", async (c) => {
 // Public endpoint to grant admin by email (requires only admin key, NO AUTH)
 app.post("/make-server-d36f8f91/public/grant-admin", async (c) => {
   try {
+    // Strict limit: this endpoint grants admin and is guarded only by a shared
+    // secret, so unlimited attempts would make that secret brute-forceable.
+    const clientIp = c.req.header('x-forwarded-for') || 'unknown';
+    if (!checkRateLimit(clientIp, 'grant-admin', 5, 15 * 60_000)) {
+      return c.json({ message: 'Too many attempts. Please try again later.' }, 429);
+    }
+
     const body = await c.req.json();
     const { email, adminKey } = body;
 
@@ -893,6 +900,14 @@ app.post("/make-server-d36f8f91/contact", async (c) => {
 // Send password reset email via Resend (bypasses Supabase rate limit)
 app.post("/make-server-d36f8f91/send-reset-email", async (c) => {
   try {
+    // Unauthenticated and sends real email — limit to avoid inbox flooding
+    // a victim's address and burning the Resend quota.
+    const clientIp = c.req.header('x-forwarded-for') || 'unknown';
+    if (!checkRateLimit(clientIp, 'reset-email', 3, 15 * 60_000)) {
+      // Mirror the success response used below so this stays non-enumerable.
+      return c.json({ success: true });
+    }
+
     const { email } = await c.req.json();
     if (!email || typeof email !== 'string') {
       return c.json({ message: 'Email required' }, 400);

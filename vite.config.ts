@@ -18,8 +18,14 @@ function figmaAssetResolver() {
 
 // Makes the Tailwind CSS link non-blocking so it no longer delays FCP.
 // The browser downloads CSS in parallel with JS; `onload` swaps it to a
-// real stylesheet once available. FOUC is negligible since React must
-// also execute before any content renders.
+// real stylesheet once available. FOUC is negligible since #root is empty
+// until React mounts, and React's JS is several times larger than the CSS,
+// so the stylesheet effectively always wins that race.
+//
+// fetchpriority="high" matters here: a `preload as=style` is given lower
+// priority than a render-blocking stylesheet would be. On a repeat visit
+// (JS served from cache, CSS revalidating) that gap is the only realistic
+// window for a flash, so we ask the browser to treat it as urgent.
 function nonBlockingCSSPlugin() {
   return {
     name: 'non-blocking-css',
@@ -28,7 +34,7 @@ function nonBlockingCSSPlugin() {
       return html.replace(
         /<link rel="stylesheet"(\s[^>]*)?href="([^"]+\.css)"([^>]*)>/g,
         (_, before = '', href, after = '') =>
-          `<link rel="preload" as="style"${before}href="${href}"${after} onload="this.onload=null;this.rel='stylesheet'">` +
+          `<link rel="preload" as="style" fetchpriority="high"${before}href="${href}"${after} onload="this.onload=null;this.rel='stylesheet'">` +
           `<noscript><link rel="stylesheet"${before}href="${href}"${after}></noscript>`
       );
     },
