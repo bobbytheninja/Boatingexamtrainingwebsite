@@ -183,7 +183,7 @@ export function ExamModeSelection() {
           transparent={false}
         />
         <div 
-          className="min-h-screen pt-32 flex items-center justify-center"
+          className="min-h-screen pt-32 flex items-center justify-center overflow-x-hidden"
           style={{ 
             background: darkMode 
               ? 'linear-gradient(to bottom right, #0f172a, #1e293b, #0f172a)'
@@ -231,7 +231,7 @@ export function ExamModeSelection() {
       />
       
       <div 
-        className="min-h-screen pt-32 pb-12 px-4 transition-all duration-[400ms]"
+        className="min-h-screen pt-32 pb-12 px-4 transition-all duration-[400ms] overflow-x-hidden"
         style={{ 
           background: darkMode 
             ? 'linear-gradient(to bottom right, #0f172a, #1e293b, #0f172a)'
@@ -257,7 +257,7 @@ export function ExamModeSelection() {
               {/* Toggle buttons */}
               <div className="flex justify-center mb-8">
                 <div 
-                  className="inline-flex rounded-lg border-2 p-1 shadow-lg transition-all duration-[600ms] relative overflow-hidden"
+                  className="flex w-full max-w-lg rounded-lg border-2 p-1 shadow-lg transition-all duration-[600ms] relative overflow-hidden"
                   style={{ 
                     borderColor: darkMode ? '#0369a1' : '#7dd3fc',
                     backgroundColor: darkMode ? '#1e293b' : '#f0f9ff',
@@ -279,7 +279,7 @@ export function ExamModeSelection() {
                   
                   <button
                     onClick={() => setSelectedMode('exam')}
-                    className="relative z-10 flex items-center gap-2 px-6 py-3 rounded-md transition-all"
+                    className="relative z-10 flex-1 min-w-0 flex items-center justify-center gap-2 px-2 sm:px-4 py-3 rounded-md transition-all"
                     style={{
                       background: selectedMode === 'exam'
                         ? 'linear-gradient(to right, #1d4ed8, #1e3a8a)'
@@ -288,8 +288,8 @@ export function ExamModeSelection() {
                       color: selectedMode === 'exam' ? '#ffffff' : (darkMode ? '#d1d5db' : '#334155'),
                     }}
                   >
-                    <FileText className="w-5 h-5" />
-                    <span className="font-semibold">{t.examMode}</span>
+                    <FileText className="w-5 h-5 flex-shrink-0" />
+                    <span className="font-semibold truncate text-sm sm:text-base">{t.examMode}</span>
                   </button>
 
                   {/* Divider */}
@@ -302,7 +302,7 @@ export function ExamModeSelection() {
 
                   <button
                     onClick={() => setSelectedMode('study')}
-                    className="relative z-10 flex items-center gap-2 px-6 py-3 rounded-md transition-all"
+                    className="relative z-10 flex-1 min-w-0 flex items-center justify-center gap-2 px-2 sm:px-4 py-3 rounded-md transition-all"
                     style={{
                       background: selectedMode === 'study'
                         ? 'linear-gradient(to right, #10b981, #0d9488)'
@@ -311,8 +311,8 @@ export function ExamModeSelection() {
                       color: selectedMode === 'study' ? '#ffffff' : (darkMode ? '#d1d5db' : '#334155'),
                     }}
                   >
-                    <BookOpen className="w-5 h-5" />
-                    <span className="font-semibold">{t.studyMode}</span>
+                    <BookOpen className="w-5 h-5 flex-shrink-0" />
+                    <span className="font-semibold truncate text-sm sm:text-base">{t.studyMode}</span>
                   </button>
 
                   {/* Divider */}
@@ -325,7 +325,7 @@ export function ExamModeSelection() {
 
                   <button
                     onClick={() => setSelectedMode('learn')}
-                    className="relative z-10 flex items-center gap-2 px-6 py-3 rounded-md transition-all"
+                    className="relative z-10 flex-1 min-w-0 flex items-center justify-center gap-2 px-2 sm:px-4 py-3 rounded-md transition-all"
                     style={{
                       background: selectedMode === 'learn'
                         ? 'linear-gradient(to right, #d4a017, #a97a0f)'
@@ -334,8 +334,8 @@ export function ExamModeSelection() {
                       color: selectedMode === 'learn' ? '#ffffff' : (darkMode ? '#d1d5db' : '#334155'),
                     }}
                   >
-                    <GraduationCap className="w-5 h-5" />
-                    <span className="font-semibold">{language === 'English' ? 'Learn' : 'Учи'}</span>
+                    <GraduationCap className="w-5 h-5 flex-shrink-0" />
+                    <span className="font-semibold truncate text-sm sm:text-base">{language === 'English' ? 'Learn' : 'Учи'}</span>
                   </button>
                 </div>
               </div>

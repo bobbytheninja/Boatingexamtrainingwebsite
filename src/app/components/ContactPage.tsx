@@ -46,7 +46,7 @@ export function ContactPage({ onNavigate, isLoggedIn = false }: ContactPageProps
       />
       
       <div 
-        className="min-h-screen pt-32 pb-20 transition-all duration-[400ms]"
+        className="min-h-screen pt-32 pb-20 transition-all duration-[400ms] overflow-x-hidden"
         style={{ 
           background: darkMode 
             ? 'linear-gradient(to bottom right, #0f172a, #1e293b, #0f172a)'

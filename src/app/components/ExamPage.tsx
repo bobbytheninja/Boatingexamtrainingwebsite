@@ -572,7 +572,7 @@ export function ExamPage({ examType, mode, tier, topic, onBackToHome, onNavigate
           accent={mode === 'learn' ? 'learn' : mode === 'study' ? 'study' : 'exam'}
         />
         <div 
-          className="min-h-screen pt-32 pb-8 px-4 transition-all duration-[400ms]"
+          className="min-h-screen pt-32 pb-8 px-4 transition-all duration-[400ms] overflow-x-hidden"
           style={{ 
             background: darkMode 
               ? 'linear-gradient(to bottom right, #0f172a, #1e293b, #0f172a)'
@@ -800,7 +800,7 @@ export function ExamPage({ examType, mode, tier, topic, onBackToHome, onNavigate
           accent={mode === 'learn' ? 'learn' : mode === 'study' ? 'study' : 'exam'}
         />
         <div 
-          className="min-h-screen pt-32 pb-8 px-4 transition-all duration-[400ms]"
+          className="min-h-screen pt-32 pb-8 px-4 transition-all duration-[400ms] overflow-x-hidden"
           style={{ 
             background: darkMode 
               ? 'linear-gradient(to bottom right, #0f172a, #1e293b, #0f172a)'
