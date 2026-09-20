@@ -430,21 +430,35 @@
 
    The curve matters as much as the duration. A linear or ease-out fade spends
    most of its time near the destination, so a light theme arrives as a sudden
-   glare; ease-in-out keeps the midpoint dim and lets the eye follow the change.
-   Removed straight after, so hover states are never slowed down.
+   glare; ease-in-out keeps the midpoint dim and lets the eye follow it.
 
    Deliberately no overlay element here. An earlier version faded a translucent
    veil over the page to mask the luminance jump, and a full-screen layer
    appearing and disappearing reads as a flash — worse than the problem it was
-   meant to solve. Transitioning the colours themselves is enough. */
+   meant to solve. Transitioning the colours themselves is enough.
+
+   The whole thing is removed as soon as the switch finishes, so hover states
+   are never slowed down. */
 html.theme-transition,
 html.theme-transition *,
 html.theme-transition *::before,
 html.theme-transition *::after {
   transition-property: background-color, border-color, color, fill, stroke, box-shadow !important;
-  transition-duration: 620ms !important;
+  transition-duration: 460ms !important;
   transition-timing-function: cubic-bezier(0.4, 0.0, 0.2, 1) !important;
   transition-delay: 0s !important;
+}
+
+/* Depth: the cards and controls change first, then the surface behind them
+   follows. Holding the page background back by a beat makes the switch read as
+   travelling backwards through the layers rather than everything flipping at
+   once. The selectors below are the full-bleed surfaces — the document itself
+   and the page wrappers each screen builds on — so anything sitting on top of
+   them is, by definition, in the leading group. */
+html.theme-transition,
+html.theme-transition body,
+html.theme-transition .min-h-screen {
+  transition-delay: 230ms !important;
 }
 
 /* Never animate the theme switch for anyone who asked not to. */
@@ -454,5 +468,6 @@ html.theme-transition *::after {
   html.theme-transition *::before,
   html.theme-transition *::after {
     transition-duration: 0s !important;
+    transition-delay: 0s !important;
   }
 }

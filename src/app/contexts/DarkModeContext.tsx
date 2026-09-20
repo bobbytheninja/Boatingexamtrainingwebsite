@@ -38,7 +38,8 @@ export function DarkModeProvider({ children }: { children: React.ReactNode }) {
     let timer: number | undefined;
     if (!firstRun.current && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       root.classList.add('theme-transition');
-      timer = window.setTimeout(() => root.classList.remove('theme-transition'), 660);
+      // Must outlast the slowest layer: 230ms delay + 460ms travel.
+      timer = window.setTimeout(() => root.classList.remove('theme-transition'), 740);
     }
     firstRun.current = false;
 
