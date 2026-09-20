@@ -2,7 +2,11 @@
 <html lang="bg">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- viewport-fit=cover lets the page extend under the status bar, so the
+         navigation bar's own background fills that strip instead of leaving a
+         white band above it. It is also what makes env(safe-area-inset-*)
+         resolve to anything other than zero. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
     <!-- Favicons for all devices and browsers -->
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />

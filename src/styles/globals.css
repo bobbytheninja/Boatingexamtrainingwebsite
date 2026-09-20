@@ -407,3 +407,12 @@
 @media (prefers-reduced-motion: reduce) {
   .learn-tile { transition: none; }
 }
+
+/* Under viewport-fit=cover the fixed nav grows by the status-bar inset, since
+   it pads itself by env(safe-area-inset-top). Pages clear the nav with
+   `min-h-screen pt-32`, so that pairing has to grow by the same amount or the
+   first rows of content end up tucked underneath. Scoped to the pairing rather
+   than to pt-32 alone, so it cannot affect unrelated spacing. */
+.min-h-screen.pt-32 {
+  padding-top: calc(8rem + env(safe-area-inset-top));
+}
