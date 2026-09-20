@@ -573,14 +573,21 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
                                   )}
                                 </div>
                                 <div className="flex flex-row sm:flex-col gap-2 flex-shrink-0 w-full sm:w-auto">
+                                  {/* Matched to the mode toggle: exam blue, study
+                                      green, learn gold. Study sits between the
+                                      other two, and its green bleeds a little
+                                      into the corner of each neighbour that
+                                      faces it, so the three read as one set
+                                      rather than three unrelated buttons. */}
                                   <Button
                                     onClick={() => onStartExam(examType, 'exam')}
                                     variant="outline"
                                     className="flex-1 sm:flex-none border-2 font-semibold whitespace-nowrap hover:opacity-70 transition-opacity"
                                     style={{
                                       borderColor: darkMode ? '#60a5fa' : '#3b82f6',
-                                      backgroundColor: darkMode ? 'rgba(124,45,18,0.25)' : 'rgba(255,237,213,0.6)',
-                                      color: darkMode ? '#fb923c' : '#c2410c',
+                                      backgroundImage: `radial-gradient(130% 130% at 100% 100%, ${darkMode ? 'rgba(52,211,153,0.30)' : 'rgba(16,185,129,0.26)'} 0%, transparent 58%)`,
+                                      backgroundColor: darkMode ? 'rgba(30,58,138,0.38)' : 'rgba(37,99,235,0.10)',
+                                      color: darkMode ? '#93c5fd' : '#1d4ed8',
                                     }}
                                   >
                                     {t.startExam}
@@ -590,9 +597,9 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
                                     variant="outline"
                                     className="flex-1 sm:flex-none border-2 font-semibold whitespace-nowrap hover:opacity-70 transition-opacity"
                                     style={{
-                                      borderColor: darkMode ? '#60a5fa' : '#3b82f6',
-                                      backgroundColor: darkMode ? 'rgba(51,65,85,0.4)' : 'transparent',
-                                      color: darkMode ? '#93c5fd' : '#1d4ed8',
+                                      borderColor: darkMode ? '#34d399' : '#10b981',
+                                      backgroundColor: darkMode ? 'rgba(6,95,70,0.42)' : 'rgba(16,185,129,0.14)',
+                                      color: darkMode ? '#6ee7b7' : '#047857',
                                     }}
                                   >
                                     {t.startStudy}
@@ -602,8 +609,9 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
                                     variant="outline"
                                     className="flex-1 sm:flex-none border-2 font-semibold whitespace-nowrap hover:opacity-70 transition-opacity"
                                     style={{
-                                      borderColor: darkMode ? '#d4a017' : '#d4a017',
-                                      backgroundColor: darkMode ? 'rgba(212,160,23,0.12)' : 'rgba(212,160,23,0.08)',
+                                      borderColor: darkMode ? '#e0b83a' : '#d4a017',
+                                      backgroundImage: `radial-gradient(130% 130% at 0% 0%, ${darkMode ? 'rgba(52,211,153,0.30)' : 'rgba(16,185,129,0.26)'} 0%, transparent 58%)`,
+                                      backgroundColor: darkMode ? 'rgba(212,160,23,0.20)' : 'rgba(212,160,23,0.12)',
                                       color: darkMode ? '#e0b83a' : '#a97a0f',
                                     }}
                                   >

@@ -423,101 +423,6 @@
   padding-top: calc(8rem + env(safe-area-inset-top));
 }
 
-/* Applied to <html> only while the theme is switching, alongside a direction
-   class. The app styles itself through a mix of `dark:` utilities and inline
-   styles from the dark-mode context, which land at slightly different moments;
-   giving everything one shared transition makes the switch read as a single
-   movement.
-
-   background-image is in the list because gradients are backgrounds too. Left
-   out, every gradient badge and card accent snapped to its new colour while
-   the rest of the page faded — most visible on the pricing cards, which carry
-   seven of them.
-
-   The curve matters as much as the duration: a linear or ease-out fade spends
-   most of its time near the destination, so a light theme arrives as a glare;
-   ease-in-out keeps the midpoint dim.
-
-   Deliberately no overlay element. An earlier version faded a veil over the
-   page to mask the luminance jump, and a full-screen layer appearing and
-   disappearing reads as a flash — worse than the problem it solved.
-
-   All of it is removed once the switch finishes, so hover states are never
-   slowed down. */
-html.theme-transition,
-html.theme-transition *,
-html.theme-transition *::before,
-html.theme-transition *::after {
-  /* filter is listed so the hero image can ease its brightness with the rest
-     of the switch. Nothing else changes filter, so no other element pays
-     for it — a property only animates when its value actually changes. */
-  transition-property: background-color, background-image, border-color, color, fill, stroke, box-shadow, filter !important;
-  transition-duration: 460ms !important;
-  transition-timing-function: cubic-bezier(0.4, 0.0, 0.2, 1) !important;
-  transition-delay: 0s !important;
-}
-
-/* Depth, and it runs the way the light does.
-   
-   Going dark, the lights go out at the front first: cards and controls change,
-   then the surface behind them follows. Going light, it comes from behind —
-   the page brightens first and the content settles onto it. Reversing the
-   order rather than repeating it keeps the background the far layer in both
-   directions, instead of making it merely "the late one".
-   
-   The trailing group is only the full-bleed surfaces — the document, the body,
-   and the min-h-screen wrapper each screen builds on — so anything on top of
-   them leads by definition, with no per-component markup. */
-html.theme-to-dark,
-html.theme-to-dark body,
-html.theme-to-dark .min-h-screen {
-  transition-delay: 230ms !important;
-}
-
-html.theme-to-light * {
-  transition-delay: 230ms !important;
-}
-
-html.theme-to-light,
-html.theme-to-light body,
-html.theme-to-light .min-h-screen {
-  transition-delay: 0s !important;
-}
-
-/* Never animate the theme switch for anyone who asked not to. */
-@media (prefers-reduced-motion: reduce) {
-  html.theme-transition,
-  html.theme-transition *,
-  html.theme-transition *::before,
-  html.theme-transition *::after,
-  html.theme-to-dark,
-  html.theme-to-dark body,
-  html.theme-to-dark .min-h-screen,
-  html.theme-to-light *,
-  html.theme-to-light,
-  html.theme-to-light body,
-  html.theme-to-light .min-h-screen {
-    transition-duration: 0s !important;
-    transition-delay: 0s !important;
-  }
-}
-
-/* The sun/moon swap. Short and small on purpose: its job is to tie the change
-   to the click, not to be an animation in its own right. Fires immediately,
-   so it leads the page rather than trailing it. */
-@keyframes themeIconSwap {
-  from { opacity: 0; transform: rotate(-90deg) scale(0.6); }
-  to   { opacity: 1; transform: rotate(0deg) scale(1); }
-}
-
-/* Scoped to an in-flight switch. Keying the icon on darkMode also remounts it
-   on every page navigation, and without this guard the icon would spin each
-   time you changed page — motion with no cause behind it. */
-html.theme-transition .theme-icon-swap {
-  animation: themeIconSwap 320ms cubic-bezier(0.34, 1.3, 0.64, 1);
-  transform-origin: center;
-}
-
 /* A photo at full brightness against a dark page is the one element that still
    reads as glaring — the surface around it darkens but the image does not.
    Easing it down slightly keeps it part of the page. Applied to the image
@@ -532,6 +437,5 @@ html.theme-transition .theme-icon-swap {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html.theme-transition .theme-icon-swap { animation: none; }
   .hero-pan { transition: none; }
 }

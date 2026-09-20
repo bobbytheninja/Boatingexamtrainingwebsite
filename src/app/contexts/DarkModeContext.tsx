@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { setThemeTopColor, THEME_TOP_COLOR } from '../utils/topBarColor';
 
 interface DarkModeContextType {
@@ -23,30 +23,8 @@ export function DarkModeProvider({ children }: { children: React.ReactNode }) {
   });
   const [isAnimating, setIsAnimating] = useState(false);
 
-  // Skip the cross-fade on first paint — there is nothing to fade from, and
-  // animating the initial render just delays it.
-  const firstRun = useRef(true);
-
   useEffect(() => {
     const root = document.documentElement;
-
-    // Elements style themselves from a mix of `dark:` classes and inline styles
-    // keyed off this context. Those switch at different moments, so without a
-    // shared transition the theme change arrives in visible stages. This turns
-    // one on for the duration of the switch only — leaving it on permanently
-    // would make ordinary hovers and focus rings feel sluggish.
-    let timer: number | undefined;
-    if (!firstRun.current && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      // The direction class decides which layer leads: going dark the content
-      // changes first, going light the background does.
-      const direction = darkMode ? 'theme-to-dark' : 'theme-to-light';
-      root.classList.add('theme-transition', direction);
-      // Must outlast the slowest layer: 230ms delay + 460ms travel.
-      timer = window.setTimeout(() => {
-        root.classList.remove('theme-transition', 'theme-to-dark', 'theme-to-light');
-      }, 740);
-    }
-    firstRun.current = false;
 
     if (darkMode) {
       root.classList.add('dark');
@@ -57,10 +35,6 @@ export function DarkModeProvider({ children }: { children: React.ReactNode }) {
       root.removeAttribute('data-theme');
       setThemeTopColor(THEME_TOP_COLOR.light);
     }
-
-    return () => {
-      if (timer) window.clearTimeout(timer);
-    };
   }, [darkMode]);
 
   useEffect(() => {
