@@ -18,6 +18,11 @@ interface NavigationProps {
   onNavigate: (page: string) => void;
   isLoggedIn: boolean;
   transparent?: boolean;
+  /**
+   * Tints the bar's bottom edge to match the active exam mode, so the mode you
+   * picked stays visible for the whole session. Defaults to the site blue.
+   */
+  accent?: 'default' | 'exam' | 'study' | 'learn';
 }
 
 export function Navigation({ 
@@ -25,6 +30,7 @@ export function Navigation({
   onNavigate, 
   isLoggedIn, 
   transparent = false,
+  accent = 'default',
 }: NavigationProps) {
   // Use contexts for global state
   const { language, setLanguage } = useLanguage();
@@ -46,6 +52,15 @@ export function Navigation({
     onNavigate(page);
     setMobileMenuOpen(false);
   };
+
+  // Mode accents: exam keeps the site blue, study goes green, learn gold.
+  const ACCENTS: Record<string, string> = {
+    exam:  darkMode ? 'rgba(56, 189, 248, 0.6)' : 'rgba(34, 211, 238, 0.6)',
+    study: darkMode ? 'rgba(52, 211, 153, 0.7)' : 'rgba(16, 185, 129, 0.7)',
+    learn: darkMode ? 'rgba(224, 184, 58, 0.8)' : 'rgba(212, 160, 23, 0.8)',
+  };
+  const accentColor = accent === 'default' ? null : ACCENTS[accent] ?? null;
+  const defaultEdge = darkMode ? 'rgba(56, 189, 248, 0.6)' : 'rgba(34, 211, 238, 0.5)';
 
   return (
     <>
@@ -80,20 +95,24 @@ export function Navigation({
         aria-label="Main navigation"
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-[400ms] ${
           transparent
-            ? isLoggedIn
-              ? 'backdrop-blur-md border-b-2 border-cyan-400/50'
+            ? isLoggedIn || accentColor
+              ? 'backdrop-blur-md border-b-2'
               : 'backdrop-blur-md'
-            : isLoggedIn
-            ? 'backdrop-blur-xl border-b-2 border-cyan-400/60 dark:border-cyan-500/60 shadow-sm'
+            : isLoggedIn || accentColor
+            ? 'backdrop-blur-xl border-b-2 shadow-sm'
             : 'backdrop-blur-xl border-b-2 border-gray-200/70 dark:border-gray-600/70 shadow-sm'
         }`}
-        style={transparent ? {
-          background: 'linear-gradient(to bottom, rgba(107, 114, 128, 0.05), rgba(107, 114, 128, 0.05)), linear-gradient(to bottom, rgba(30, 58, 138, 0.05), rgba(30, 58, 138, 0.05))',
-          paddingTop: 'env(safe-area-inset-top)',
-        } : {
-          backgroundColor: darkMode ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+        style={{
+          ...(transparent ? {
+            background: 'linear-gradient(to bottom, rgba(107, 114, 128, 0.05), rgba(107, 114, 128, 0.05)), linear-gradient(to bottom, rgba(30, 58, 138, 0.05), rgba(30, 58, 138, 0.05))',
+          } : {
+            backgroundColor: darkMode ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+          }),
           transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)',
           paddingTop: 'env(safe-area-inset-top)',
+          // The accent overrides the default edge; the colour transitions with
+          // everything else so switching modes slides rather than snaps.
+          ...((accentColor || isLoggedIn) ? { borderBottomColor: accentColor ?? defaultEdge } : {}),
         }}
       >
         <div className="container mx-auto px-4 md:px-6 lg:px-8 py-[1.02rem]" style={{ fontSize: '1.02em' }}>
@@ -361,7 +380,7 @@ export function Navigation({
                         className={`w-full justify-start text-base ${
                           currentPage === link.id
                             ? 'bg-sky-600 hover:bg-sky-700 text-white font-semibold'
-                            : 'hover:bg-gray-100'
+                            : 'hover:bg-gray-100 dark:hover:bg-slate-700'
                         }`}
                         style={currentPage !== link.id ? { color: darkMode ? '#e2e8f0' : '#374151' } : undefined}
                       >
@@ -375,7 +394,7 @@ export function Navigation({
                     <Button
                       onClick={toggleDarkMode}
                       variant="ghost"
-                      className="w-full justify-start text-base hover:bg-gray-100"
+                      className="w-full justify-start text-base hover:bg-gray-100 dark:hover:bg-slate-700"
                       style={{ color: darkMode ? '#e2e8f0' : '#374151' }}
                     >
                       {darkMode ? <Moon className="w-4 h-4 mr-2" /> : <Sun className="w-4 h-4 mr-2" />}
@@ -396,7 +415,7 @@ export function Navigation({
                           className={`w-full justify-start text-base ${
                             language === lang
                               ? 'bg-sky-600 hover:bg-sky-700 text-white font-semibold'
-                              : 'hover:bg-gray-100'
+                              : 'hover:bg-gray-100 dark:hover:bg-slate-700'
                           }`}
                           style={language !== lang ? { color: darkMode ? '#e2e8f0' : '#374151' } : undefined}
                         >
@@ -420,7 +439,7 @@ export function Navigation({
                           className={`w-full justify-start text-base ${
                             region === reg
                               ? 'bg-sky-600 hover:bg-sky-700 text-white font-semibold'
-                              : 'hover:bg-gray-100'
+                              : 'hover:bg-gray-100 dark:hover:bg-slate-700'
                           }`}
                           style={region !== reg ? { color: darkMode ? '#e2e8f0' : '#374151' } : undefined}
                         >

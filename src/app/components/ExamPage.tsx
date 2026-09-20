@@ -569,6 +569,7 @@ export function ExamPage({ examType, mode, tier, topic, onBackToHome, onNavigate
           currentPage="exam"
           onNavigate={handleNavigate}
           isLoggedIn={!!user}
+          accent={mode === 'learn' ? 'learn' : mode === 'study' ? 'study' : 'exam'}
         />
         <div 
           className="min-h-screen pt-32 pb-8 px-4 transition-all duration-[400ms]"
@@ -796,6 +797,7 @@ export function ExamPage({ examType, mode, tier, topic, onBackToHome, onNavigate
           currentPage="exam"
           onNavigate={handleNavigate}
           isLoggedIn={!!user}
+          accent={mode === 'learn' ? 'learn' : mode === 'study' ? 'study' : 'exam'}
         />
         <div 
           className="min-h-screen pt-32 pb-8 px-4 transition-all duration-[400ms]"
@@ -1090,6 +1092,7 @@ export function ExamPage({ examType, mode, tier, topic, onBackToHome, onNavigate
           currentPage="exam"
           onNavigate={handleNavigate}
           isLoggedIn={!!user}
+          accent={mode === 'learn' ? 'learn' : mode === 'study' ? 'study' : 'exam'}
         />
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 pt-20 pb-12 px-4">
           <div className="container mx-auto max-w-4xl">
@@ -1109,6 +1112,7 @@ export function ExamPage({ examType, mode, tier, topic, onBackToHome, onNavigate
           currentPage="exam"
           onNavigate={handleNavigate}
           isLoggedIn={!!user}
+          accent={mode === 'learn' ? 'learn' : mode === 'study' ? 'study' : 'exam'}
         />
         <div 
           className="min-h-screen flex items-center justify-center bg-gradient-to-br px-4 pt-20 transition-all duration-300"
@@ -1180,6 +1184,7 @@ export function ExamPage({ examType, mode, tier, topic, onBackToHome, onNavigate
           currentPage="exam"
           onNavigate={handleNavigate}
           isLoggedIn={!!user}
+          accent={mode === 'learn' ? 'learn' : mode === 'study' ? 'study' : 'exam'}
         />
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 pt-20">
           <Card className="max-w-md">
@@ -1208,6 +1213,7 @@ export function ExamPage({ examType, mode, tier, topic, onBackToHome, onNavigate
         currentPage="exam"
         onNavigate={handleNavigate}
         isLoggedIn={!!user}
+        accent={mode === 'learn' ? 'learn' : mode === 'study' ? 'study' : 'exam'}
       />
       <div
         className="min-h-screen pt-32 pb-28 sm:pb-6 px-4 transition-all duration-[400ms] overflow-x-hidden"

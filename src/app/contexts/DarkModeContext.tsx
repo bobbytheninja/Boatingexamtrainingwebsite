@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 
 interface DarkModeContextType {
   darkMode: boolean;
@@ -22,16 +22,38 @@ export function DarkModeProvider({ children }: { children: React.ReactNode }) {
   });
   const [isAnimating, setIsAnimating] = useState(false);
 
+  // Skip the cross-fade on first paint — there is nothing to fade from, and
+  // animating the initial render just delays it.
+  const firstRun = useRef(true);
+
   useEffect(() => {
+    const root = document.documentElement;
+
+    // Elements style themselves from a mix of `dark:` classes and inline styles
+    // keyed off this context. Those switch at different moments, so without a
+    // shared transition the theme change arrives in visible stages. This turns
+    // one on for the duration of the switch only — leaving it on permanently
+    // would make ordinary hovers and focus rings feel sluggish.
+    let timer: number | undefined;
+    if (!firstRun.current && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      root.classList.add('theme-transition');
+      timer = window.setTimeout(() => root.classList.remove('theme-transition'), 320);
+    }
+    firstRun.current = false;
+
     if (darkMode) {
-      document.documentElement.classList.add('dark');
-      document.documentElement.setAttribute('data-theme', 'dark');
+      root.classList.add('dark');
+      root.setAttribute('data-theme', 'dark');
       document.body.style.backgroundColor = '#1e293b';
     } else {
-      document.documentElement.classList.remove('dark');
-      document.documentElement.removeAttribute('data-theme');
+      root.classList.remove('dark');
+      root.removeAttribute('data-theme');
       document.body.style.backgroundColor = '#ffffff';
     }
+
+    return () => {
+      if (timer) window.clearTimeout(timer);
+    };
   }, [darkMode]);
 
   useEffect(() => {

@@ -422,3 +422,28 @@
 .min-h-screen.pt-32 {
   padding-top: calc(8rem + env(safe-area-inset-top));
 }
+
+/* Applied to <html> only while the theme is switching. The app styles itself
+   through a mix of `dark:` utilities and inline styles from the dark-mode
+   context, which land at slightly different moments; giving everything the
+   same brief colour transition makes the switch read as one movement rather
+   than several. Removed straight after, so it never slows down hover states. */
+html.theme-transition,
+html.theme-transition *,
+html.theme-transition *::before,
+html.theme-transition *::after {
+  transition-property: background-color, border-color, color, fill, stroke, box-shadow !important;
+  transition-duration: 300ms !important;
+  transition-timing-function: cubic-bezier(0.65, 0, 0.35, 1) !important;
+  transition-delay: 0s !important;
+}
+
+/* Never animate the theme switch for anyone who asked not to. */
+@media (prefers-reduced-motion: reduce) {
+  html.theme-transition,
+  html.theme-transition *,
+  html.theme-transition *::before,
+  html.theme-transition *::after {
+    transition-duration: 0s !important;
+  }
+}

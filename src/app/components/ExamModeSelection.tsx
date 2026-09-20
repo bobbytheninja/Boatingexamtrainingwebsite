@@ -227,6 +227,7 @@ export function ExamModeSelection() {
         onNavigate={handleNavigate}
         isLoggedIn={!!user}
         transparent={false}
+        accent={selectedMode}
       />
       
       <div 
