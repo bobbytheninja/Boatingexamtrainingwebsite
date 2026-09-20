@@ -441,14 +441,14 @@
 }
 
 /* ── View Transitions: the theme switch ────────────────────────────────────
-   The browser cross-fades its own before/after snapshots by default. This
-   replaces that with a sheet of the new theme falling from the top of the
-   screen over the old one, which stays put underneath.
+   The navigation bar is lifted out as its own layer, so it is captured and
+   animated separately from the page. Two things follow from that: it can
+   finish changing before the page starts, and its blur is baked into its own
+   snapshot rather than sampling whichever page snapshot happens to sit behind
+   it — which is what made the earlier version smear.
 
-   The leading edge is raked by roughly a quarter of the screen height across
-   its width, so it arrives as a sweep rather than a horizontal bar dropping
-   flat. The clip-path runs past 100% at the end so the trailing corner clears
-   the bottom of the screen instead of stopping short of it. */
+   The bar settles first. Then a sheet of the new theme falls straight down
+   the page *behind* the bar, which stays put and keeps its blur throughout. */
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation: none;
@@ -458,28 +458,30 @@
 ::view-transition-old(root) { z-index: 1; }
 ::view-transition-new(root) { z-index: 2; }
 
+/* The bar rides above both page snapshots so the sheet passes under it. */
+::view-transition-group(site-nav) { z-index: 20; }
+
+@keyframes themeNavIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+::view-transition-new(site-nav) { animation: themeNavIn 200ms ease-out; }
+::view-transition-old(site-nav) { animation: none; }
+
+/* A flat edge, straight down, starting once the bar has settled. */
 @keyframes themeSheetDown {
-  from { clip-path: polygon(0 0, 100% 0, 100% -28%, 0 0); }
-  to   { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 128%); }
+  from { clip-path: inset(0 0 100% 0); }
+  to   { clip-path: inset(0 0 0 0); }
 }
 
 ::view-transition-new(root) {
-  animation: themeSheetDown 560ms cubic-bezier(0.36, 0, 0.2, 1);
+  animation: themeSheetDown 480ms cubic-bezier(0.36, 0, 0.2, 1) 200ms both;
 }
 
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-old(root),
-  ::view-transition-new(root) { animation: none !important; }
-}
-
-/* Held only while a theme transition is running. Backdrop filters sample
-   whatever is painted behind them, and during a view transition that is the
-   other snapshot rather than the live page — so the navigation bar's blur
-   smears over the incoming theme. Suspending them keeps the falling edge
-   crisp; they return the moment the transition finishes. */
-html.theme-switching *,
-html.theme-switching *::before,
-html.theme-switching *::after {
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
+  ::view-transition-new(root),
+  ::view-transition-old(site-nav),
+  ::view-transition-new(site-nav) { animation: none !important; }
 }
