@@ -216,7 +216,13 @@ export function Navigation({
                 } px-2 flex-shrink-0 transition-all`}
                 style={{ willChange: 'auto' }}
               >
-                {darkMode ? <Moon style={{ width: '1.02rem', height: '1.02rem' }} /> : <Sun style={{ width: '1.02rem', height: '1.02rem' }} />}
+                {/* Keyed so React replaces the node on toggle, which restarts the
+                    animation and makes the switch feel caused by the click. */}
+                <span key={darkMode ? 'moon' : 'sun'} className="theme-icon-swap inline-flex">
+                  {darkMode
+                    ? <Moon style={{ width: '1.02rem', height: '1.02rem' }} />
+                    : <Sun style={{ width: '1.02rem', height: '1.02rem' }} />}
+                </span>
               </Button>
               
               {/* Language Dropdown - Desktop */}
@@ -397,7 +403,9 @@ export function Navigation({
                       className="w-full justify-start text-base hover:bg-gray-100 dark:hover:bg-slate-700"
                       style={{ color: darkMode ? '#e2e8f0' : '#374151' }}
                     >
-                      {darkMode ? <Moon className="w-4 h-4 mr-2" /> : <Sun className="w-4 h-4 mr-2" />}
+                      <span key={darkMode ? 'moon' : 'sun'} className="theme-icon-swap inline-flex mr-2">
+                        {darkMode ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+                      </span>
                       {darkMode ? 'Light Mode' : 'Dark Mode'}
                     </Button>
 
