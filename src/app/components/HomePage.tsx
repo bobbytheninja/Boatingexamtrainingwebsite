@@ -182,27 +182,47 @@ export function HomePage() {
         }}
       >
         {/* Hero Image - Navigation bar overlays this */}
-        <div className="relative h-[77vh] md:h-[81vh] overflow-hidden">
+        <div className="relative h-[58vh] sm:h-[68vh] md:h-[81vh] overflow-hidden">
           <picture>
             <source
               type="image/webp"
               srcSet="/hero-yacht-mobile.webp 750w, /hero-yacht.webp 1400w"
-              sizes="(max-width: 768px) 750px, 1400px"
+              sizes="(max-width: 768px) 100vw, 1400px"
             />
             <source
               type="image/jpeg"
               srcSet="/hero-yacht-mobile.jpg 750w, /hero-yacht.jpg 1400w"
-              sizes="(max-width: 768px) 750px, 1400px"
+              sizes="(max-width: 768px) 100vw, 1400px"
             />
             <img
               src="/hero-yacht.jpg"
               alt="Bavaria Cruiser 45 yacht"
-              className="w-full h-full object-cover"
-              style={{ objectPosition: 'center 70%' }}
+              className="w-full h-full object-cover hero-pan"
+              style={{ objectPosition: 'center 65%' }}
               fetchPriority="high"
               decoding="async"
             />
           </picture>
+
+          {/* Scrim under the navbar so the logo stays legible against bright sky */}
+          <div
+            className="absolute inset-x-0 top-0 h-[32%] pointer-events-none"
+            style={{
+              background: darkMode
+                ? 'linear-gradient(to bottom, rgba(15,23,42,0.75), transparent)'
+                : 'linear-gradient(to bottom, rgba(15,23,42,0.45), transparent)',
+            }}
+          />
+
+          {/* Vignette — pulls the eye to the centre and hides the soft edges
+              that come from upscaling a 1400px source across a large hero */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background:
+                'radial-gradient(120% 85% at 50% 42%, transparent 45%, rgba(8,20,35,0.28) 100%)',
+            }}
+          />
           <div
             className="absolute bottom-0 left-0 right-0 h-[20%] duration-[400ms]"
             style={{

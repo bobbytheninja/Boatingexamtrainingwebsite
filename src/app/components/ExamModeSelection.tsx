@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import { Check, BookOpen, FileText, ArrowLeft } from 'lucide-react';
+import { Check, BookOpen, FileText, ArrowLeft, GraduationCap, Lightbulb, Flag, Volume2, Anchor } from 'lucide-react';
 import { ExamType, examData } from '../data/examQuestions';
 import { getTranslation } from '../data/translations';
 import { Navigation } from './Navigation';
@@ -14,7 +14,16 @@ import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'sonner';
 import { projectId, publicAnonKey } from '../utils/supabase/info';
 
-export type ExamMode = 'study' | 'exam';
+export type ExamMode = 'study' | 'exam' | 'learn';
+
+// Learn mode topics. Each drills one category of exam content on its own.
+// Not built yet — the cards render disabled under a "coming soon" heading.
+const LEARN_TOPICS = [
+  { key: 'lights',  en: 'Lights',  bg: 'Светлини' },
+  { key: 'flags',   en: 'Flags',   bg: 'Флагове' },
+  { key: 'sounds',  en: 'Sounds',  bg: 'Звуци' },
+  { key: 'buoys',   en: 'Buoys',   bg: 'Буйове' },
+] as const;
 export type ExamTier = 'mock' | 'paid';
 
 export function ExamModeSelection() {
@@ -210,9 +219,12 @@ export function ExamModeSelection() {
                   <div 
                     className="absolute inset-0 opacity-30 transition-all duration-[600ms] ease-in-out"
                     style={{
-                      background: 'linear-gradient(90deg, #1e3a8a 0%, #1e40af 25%, #0ea5e9 50%, #14b8a6 75%, #10b981 100%)',
+                      background: 'linear-gradient(90deg, #1e3a8a 0%, #1e40af 20%, #0ea5e9 40%, #14b8a6 60%, #10b981 75%, #d4a017 100%)',
                       backgroundSize: '200% 100%',
-                      backgroundPosition: selectedMode === 'exam' ? '0% center' : '100% center'
+                      backgroundPosition:
+                        selectedMode === 'exam' ? '0% center'
+                        : selectedMode === 'study' ? '50% center'
+                        : '100% center'
                     }}
                   />
                   
@@ -225,12 +237,6 @@ export function ExamModeSelection() {
                         : 'transparent',
                       boxShadow: selectedMode === 'exam' ? '0 4px 6px -1px rgba(0,0,0,0.3)' : 'none',
                       color: selectedMode === 'exam' ? '#ffffff' : (darkMode ? '#d1d5db' : '#334155'),
-                    }}
-                    onMouseEnter={(e) => {
-                      if (selectedMode !== 'exam') e.currentTarget.style.backgroundColor = darkMode ? 'rgba(51,65,85,0.7)' : 'rgba(255,255,255,0.8)';
-                    }}
-                    onMouseLeave={(e) => {
-                      if (selectedMode !== 'exam') e.currentTarget.style.backgroundColor = 'transparent';
                     }}
                   >
                     <FileText className="w-5 h-5" />
@@ -255,22 +261,45 @@ export function ExamModeSelection() {
                       boxShadow: selectedMode === 'study' ? '0 4px 6px -1px rgba(0,0,0,0.3)' : 'none',
                       color: selectedMode === 'study' ? '#ffffff' : (darkMode ? '#d1d5db' : '#334155'),
                     }}
-                    onMouseEnter={(e) => {
-                      if (selectedMode !== 'study') e.currentTarget.style.backgroundColor = darkMode ? 'rgba(51,65,85,0.7)' : 'rgba(255,255,255,0.8)';
-                    }}
-                    onMouseLeave={(e) => {
-                      if (selectedMode !== 'study') e.currentTarget.style.backgroundColor = 'transparent';
-                    }}
                   >
                     <BookOpen className="w-5 h-5" />
                     <span className="font-semibold">{t.studyMode}</span>
+                  </button>
+
+                  {/* Divider */}
+                  <div
+                    className="w-px h-8 self-center mx-1 transition-colors duration-[400ms]"
+                    style={{
+                      backgroundColor: darkMode ? '#475569' : '#cbd5e1'
+                    }}
+                  />
+
+                  <button
+                    onClick={() => setSelectedMode('learn')}
+                    className="relative z-10 flex items-center gap-2 px-6 py-3 rounded-md transition-all"
+                    style={{
+                      background: selectedMode === 'learn'
+                        ? 'linear-gradient(to right, #d4a017, #a97a0f)'
+                        : 'transparent',
+                      boxShadow: selectedMode === 'learn' ? '0 4px 6px -1px rgba(0,0,0,0.3)' : 'none',
+                      color: selectedMode === 'learn' ? '#ffffff' : (darkMode ? '#d1d5db' : '#334155'),
+                    }}
+                  >
+                    <GraduationCap className="w-5 h-5" />
+                    <span className="font-semibold">{language === 'English' ? 'Learn' : 'Учи'}</span>
                   </button>
                 </div>
               </div>
 
               {/* Dynamic badges below toggle */}
               <div className="flex gap-6 justify-center items-center flex-wrap mb-4">
-                {selectedMode === 'study' ? (
+                {selectedMode === 'learn' ? (
+                  <>
+                    <Badge variant="secondary" className="px-4 py-2">{language === 'English' ? 'No Timer' : 'Без Таймер'}</Badge>
+                    <Badge variant="secondary" className="px-4 py-2">{language === 'English' ? 'One Topic at a Time' : 'Тема по тема'}</Badge>
+                    <Badge variant="secondary" className="px-4 py-2">{language === 'English' ? 'Practise Until It Sticks' : 'Упражнявай до затвърждаване'}</Badge>
+                  </>
+                ) : selectedMode === 'study' ? (
                   <>
                     <Badge variant="secondary" className="px-4 py-2">{language === 'English' ? 'No Timer' : 'Без Таймер'}</Badge>
                     <Badge variant="secondary" className="px-4 py-2">{language === 'English' ? 'Learn as You Submit' : 'Учете докато решавате'}</Badge>
@@ -286,6 +315,42 @@ export function ExamModeSelection() {
               </div>
             </div>
 
+            {selectedMode === 'learn' ? (
+              <div className="max-w-2xl mx-auto">
+                <p
+                  className="text-center font-semibold tracking-wide uppercase text-sm mb-4"
+                  style={{ color: darkMode ? '#d4a017' : '#a97a0f' }}
+                >
+                  {language === 'English' ? 'Coming soon' : 'Очаквайте скоро'}
+                </p>
+                <div className="grid grid-cols-2 gap-4">
+                  {LEARN_TOPICS.map(topic => {
+                    const Icon = topic.key === 'lights' ? Lightbulb
+                      : topic.key === 'flags' ? Flag
+                      : topic.key === 'sounds' ? Volume2
+                      : Anchor;
+                    return (
+                      <div
+                        key={topic.key}
+                        aria-disabled="true"
+                        className="flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed p-8 cursor-not-allowed select-none"
+                        style={{
+                          borderColor: darkMode ? '#7a5c12' : '#e6cf92',
+                          backgroundColor: darkMode ? 'rgba(212,160,23,0.06)' : 'rgba(212,160,23,0.05)',
+                          color: darkMode ? '#d4a017' : '#a97a0f',
+                          opacity: 0.85,
+                        }}
+                      >
+                        <Icon className="w-8 h-8" />
+                        <span className="font-semibold text-base">
+                          {language === 'English' ? topic.en : topic.bg}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
             <div>
               <div className="max-w-2xl mx-auto space-y-6">
                 {/* Full Access Card - stacked on top */}
@@ -413,6 +478,7 @@ export function ExamModeSelection() {
                 </Card>
               </div>
             </div>
+            )}
 
           </div>
         </div>

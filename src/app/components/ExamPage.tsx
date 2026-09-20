@@ -772,42 +772,42 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
               }}
             >{t.reviewAnswers}</h2>
             <div className="flex items-center gap-2 flex-wrap">
-              {/* Review filter buttons */}
-              {(['all', 'correct', 'wrong'] as const).map(f => (
-                <button
-                  key={f}
-                  onClick={() => setReviewFilter(f)}
-                  style={{
-                    padding: '5px 10px',
-                    borderRadius: 8,
-                    border: `2px solid ${
-                      reviewFilter === f
-                        ? f === 'wrong' ? '#dc2626' : f === 'correct' ? '#16a34a' : (darkMode ? '#60a5fa' : '#2563eb')
-                        : darkMode ? '#475569' : '#e5e7eb'
-                    }`,
-                    backgroundColor: reviewFilter === f
-                      ? f === 'wrong' ? (darkMode ? '#450a0a' : '#fee2e2')
-                        : f === 'correct' ? (darkMode ? '#052e16' : '#dcfce7')
-                        : (darkMode ? '#1e3a8a' : '#dbeafe')
-                      : darkMode ? '#334155' : '#ffffff',
-                    color: reviewFilter === f
-                      ? f === 'wrong' ? (darkMode ? '#fca5a5' : '#991b1b')
-                        : f === 'correct' ? (darkMode ? '#86efac' : '#166534')
-                        : (darkMode ? '#93c5fd' : '#1e40af')
-                      : darkMode ? '#cbd5e1' : '#374151',
-                    fontWeight: 600,
-                    fontSize: 12,
-                    cursor: 'pointer',
-                    transition: 'all 0.2s',
-                  }}
-                >
-                  {f === 'all'
-                    ? `${t.all} (${examQuestions.length})`
+              {/* Segmented filter: active correct/wrong fill solid green/red */}
+              <div
+                role="group"
+                className="inline-flex gap-1 p-1 rounded-lg border-2"
+                style={{
+                  borderColor: darkMode ? '#475569' : '#e2e8f0',
+                  backgroundColor: darkMode ? '#1e293b' : '#f8fafc',
+                }}
+              >
+                {(['all', 'correct', 'wrong'] as const).map(f => {
+                  const isActive = reviewFilter === f;
+                  const activeBg = f === 'correct' ? '#16a34a' : f === 'wrong' ? '#dc2626' : (darkMode ? '#2563eb' : '#2563eb');
+                  const count = f === 'all'
+                    ? examQuestions.length
                     : f === 'correct'
-                    ? `✓ ${t.correct} (${examQuestions.filter((_, i) => answeredQuestions[i]?.isCorrect).length})`
-                    : `✗ ${t.incorrect} (${examQuestions.filter((_, i) => !answeredQuestions[i]?.isCorrect).length})`}
-                </button>
-              ))}
+                    ? examQuestions.filter((_, i) => answeredQuestions[i]?.isCorrect).length
+                    : examQuestions.filter((_, i) => !answeredQuestions[i]?.isCorrect).length;
+                  const label = f === 'all' ? t.all : f === 'correct' ? `✓ ${t.correct}` : `✗ ${t.incorrect}`;
+                  return (
+                    <button
+                      key={f}
+                      onClick={() => setReviewFilter(f)}
+                      aria-pressed={isActive}
+                      className="px-3 py-1.5 rounded-md font-semibold text-xs transition-all duration-200"
+                      style={{
+                        backgroundColor: isActive ? activeBg : 'transparent',
+                        color: isActive ? '#ffffff' : (darkMode ? '#cbd5e1' : '#475569'),
+                        boxShadow: isActive ? '0 1px 3px rgba(0,0,0,0.25)' : 'none',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {label} ({count})
+                    </button>
+                  );
+                })}
+              </div>
               <Button
                 onClick={onBackToHome}
                 variant="outline"

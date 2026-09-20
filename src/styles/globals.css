@@ -362,3 +362,18 @@
     background-size: 200% 100%;
   }
 }
+/* Hero: a very slow pan so the image reads as composed rather than pasted in.
+   Scaled slightly so the movement never exposes an edge. */
+@keyframes heroPan {
+  from { transform: scale(1.06) translate3d(0, 0, 0); }
+  to   { transform: scale(1.06) translate3d(-1.2%, -0.8%, 0); }
+}
+
+.hero-pan {
+  will-change: transform;
+  animation: heroPan 32s ease-in-out infinite alternate;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-pan { animation: none; transform: scale(1.02); }
+}
