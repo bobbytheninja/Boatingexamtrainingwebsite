@@ -428,38 +428,23 @@
    context, which land at slightly different moments; giving everything the
    same colour transition makes the switch read as one movement.
 
-   The curve matters as much as the duration here. A linear or ease-out fade
-   spends most of its time near the destination, so a light theme arrives as a
-   sudden glare. ease-in-out with a long tail keeps the midpoint dim and lets
-   the eye follow the change instead of being hit by it. Removed straight
-   after, so hover states are never slowed down. */
+   The curve matters as much as the duration. A linear or ease-out fade spends
+   most of its time near the destination, so a light theme arrives as a sudden
+   glare; ease-in-out keeps the midpoint dim and lets the eye follow the change.
+   Removed straight after, so hover states are never slowed down.
+
+   Deliberately no overlay element here. An earlier version faded a translucent
+   veil over the page to mask the luminance jump, and a full-screen layer
+   appearing and disappearing reads as a flash — worse than the problem it was
+   meant to solve. Transitioning the colours themselves is enough. */
 html.theme-transition,
 html.theme-transition *,
 html.theme-transition *::before,
 html.theme-transition *::after {
-  transition-property: background-color, border-color, color, fill, stroke, box-shadow, opacity !important;
+  transition-property: background-color, border-color, color, fill, stroke, box-shadow !important;
   transition-duration: 620ms !important;
   transition-timing-function: cubic-bezier(0.4, 0.0, 0.2, 1) !important;
   transition-delay: 0s !important;
-}
-
-/* A brief neutral veil over the whole page during the switch. It peaks around
-   the midpoint, which is where the luminance change is largest, so neither
-   direction lands as a jolt. Non-interactive and removed with the class. */
-html.theme-transition::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: 2147483647;
-  pointer-events: none;
-  background: #64748b;
-  animation: themeVeil 620ms cubic-bezier(0.4, 0.0, 0.2, 1);
-}
-
-@keyframes themeVeil {
-  0%   { opacity: 0; }
-  45%  { opacity: 0.16; }
-  100% { opacity: 0; }
 }
 
 /* Never animate the theme switch for anyone who asked not to. */
@@ -470,5 +455,4 @@ html.theme-transition::after {
   html.theme-transition *::after {
     transition-duration: 0s !important;
   }
-  html.theme-transition::after { animation: none; content: none; }
 }

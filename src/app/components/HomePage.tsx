@@ -2,7 +2,7 @@ import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { usePageTitle } from '../hooks/usePageTitle';
 import { useNavigate } from 'react-router-dom';
 import { ImageWithFallback } from './figma/ImageWithFallback';
-import { setTopBarColor, HERO_TOP_COLOR, THEME_TOP_COLOR } from '../utils/topBarColor';
+import { setTopBarOverride, clearTopBarOverride, HERO_TOP_COLOR } from '../utils/topBarColor';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Waves, Ship, Sailboat, Anchor as AnchorIcon, Compass, Users, Fish, Sunset, BookOpen, Award, LucideIcon } from 'lucide-react';
@@ -157,10 +157,14 @@ export function HomePage() {
 
   // The hero runs to the top of this page, so the status-bar strip should
   // continue the photo rather than show the page background behind it.
-  React.useEffect(() => {
-    setTopBarColor(HERO_TOP_COLOR);
-    return () => setTopBarColor(darkMode ? THEME_TOP_COLOR.dark : THEME_TOP_COLOR.light);
-  }, [darkMode]);
+  //
+  // Registered once for the life of the page. The override survives theme
+  // changes, so switching themes here re-applies the hero colour instead of
+  // bouncing to the theme colour and back.
+  useEffect(() => {
+    setTopBarOverride(HERO_TOP_COLOR);
+    return clearTopBarOverride;
+  }, []);
 
   const handleNavigate = (page: string) => {
     if (page === 'home') return;

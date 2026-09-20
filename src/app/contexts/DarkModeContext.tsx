@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
-import { setTopBarColor, THEME_TOP_COLOR } from '../utils/topBarColor';
+import { setThemeTopColor, THEME_TOP_COLOR } from '../utils/topBarColor';
 
 interface DarkModeContextType {
   darkMode: boolean;
@@ -45,11 +45,11 @@ export function DarkModeProvider({ children }: { children: React.ReactNode }) {
     if (darkMode) {
       root.classList.add('dark');
       root.setAttribute('data-theme', 'dark');
-      setTopBarColor(THEME_TOP_COLOR.dark);
+      setThemeTopColor(THEME_TOP_COLOR.dark);
     } else {
       root.classList.remove('dark');
       root.removeAttribute('data-theme');
-      setTopBarColor(THEME_TOP_COLOR.light);
+      setThemeTopColor(THEME_TOP_COLOR.light);
     }
 
     return () => {
