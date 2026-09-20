@@ -7,6 +7,12 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Tailwind v4 resolves `dark:` against prefers-color-scheme by default, and
+   with no config file the class strategy was never enabled — so every `dark:`
+   utility compiled as a plain class and applied in both themes. The app drives
+   the theme by toggling .dark on <html>, so bind the variant to that. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @layer base {
   :root {
     --font-size: 16px;
