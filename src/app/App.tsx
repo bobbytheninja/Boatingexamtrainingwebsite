@@ -203,13 +203,19 @@ function AccountPageWrapper() {
     navigate('/');
   };
 
-  const handleStartExam = (examType: any, mode?: 'exam' | 'study') => {
+  const handleStartExam = (examType: any, mode?: 'exam' | 'study' | 'learn') => {
+    // Learn has no exam runner yet — send them to the mode page with Learn
+    // preselected so they land on the topic list.
+    if (mode === 'learn') {
+      navigate(`/exam-mode/${examType}`, { state: { mode: 'learn' } });
+      return;
+    }
     // Navigate directly to the exam with full access (paid tier) and specified mode
-    navigate(`/exam/${examType}`, { 
-      state: { 
+    navigate(`/exam/${examType}`, {
+      state: {
         mode: mode || 'exam',
-        tier: 'paid' 
-      } 
+        tier: 'paid'
+      }
     });
   };
 

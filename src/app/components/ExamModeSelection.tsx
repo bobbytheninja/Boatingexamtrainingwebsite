@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import { Check, BookOpen, FileText, ArrowLeft, GraduationCap, Lightbulb, Flag, Volume2, Anchor } from 'lucide-react';
+import { Check, BookOpen, FileText, GraduationCap, Lightbulb, Flag, Volume2, Anchor } from 'lucide-react';
 import { ExamType, examData } from '../data/examQuestions';
 import { getTranslation } from '../data/translations';
 import { Navigation } from './Navigation';
@@ -29,11 +29,14 @@ export type ExamTier = 'mock' | 'paid';
 export function ExamModeSelection() {
   const { examType: examTypeParam } = useParams<{ examType: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { darkMode } = useDarkMode();
   const { language } = useLanguage();
   const t = getTranslation(language);
-  const [selectedMode, setSelectedMode] = useState<ExamMode>('exam');
+  // Callers can preselect a mode (the account page links straight to Learn)
+  const initialMode = (location.state as { mode?: ExamMode } | null)?.mode;
+  const [selectedMode, setSelectedMode] = useState<ExamMode>(initialMode ?? 'exam');
   const [examCategory, setExamCategory] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   
@@ -136,10 +139,6 @@ export function ExamModeSelection() {
     return null;
   }
 
-  const handleBack = () => {
-    navigate('/home');
-  };
-
   const handleStart = (mode: ExamMode, tier: ExamTier) => {
     // Only require login for paid tier
     if (tier === 'paid' && !user) {
@@ -176,21 +175,6 @@ export function ExamModeSelection() {
         }}
       >
         <div className="container mx-auto max-w-5xl">
-          <Button 
-            onClick={handleBack} 
-            variant="ghost" 
-            className="mb-6 transition-all duration-200 hover:scale-105"
-            style={{ 
-              color: darkMode ? '#e5e7eb' : '#0f172a',
-              backgroundColor: darkMode ? 'transparent' : '#ffffff',
-              border: darkMode ? 'none' : '1px solid #e2e8f0',
-              boxShadow: darkMode ? 'none' : '0 1px 3px 0 rgb(0 0 0 / 0.1)'
-            }}
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            {t.backToHome}
-          </Button>
-
           <div className="text-center mb-12">
             <h2 className="bg-gradient-to-r from-blue-900 to-blue-700 dark:from-blue-400 dark:to-blue-300 bg-clip-text text-transparent mb-2">
               {examCategory.name}
@@ -297,7 +281,6 @@ export function ExamModeSelection() {
                   <>
                     <Badge variant="secondary" className="px-4 py-2">{language === 'English' ? 'No Timer' : 'Без Таймер'}</Badge>
                     <Badge variant="secondary" className="px-4 py-2">{language === 'English' ? 'One Topic at a Time' : 'Тема по тема'}</Badge>
-                    <Badge variant="secondary" className="px-4 py-2">{language === 'English' ? 'Practise Until It Sticks' : 'Упражнявай до затвърждаване'}</Badge>
                   </>
                 ) : selectedMode === 'study' ? (
                   <>

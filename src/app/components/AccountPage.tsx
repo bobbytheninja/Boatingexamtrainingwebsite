@@ -22,7 +22,7 @@ interface AccountPageProps {
   paidExams: ExamType[];
   subscriptionExpiresAt?: number | null;
   onNavigate: (page: string) => void;
-  onStartExam: (examType: ExamType, mode?: 'exam' | 'study') => void;
+  onStartExam: (examType: ExamType, mode?: 'exam' | 'study' | 'learn') => void;
   onLogout: () => void;
 }
 
@@ -616,6 +616,18 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
                                     }}
                                   >
                                     {t.startStudy}
+                                  </Button>
+                                  <Button
+                                    onClick={() => onStartExam(examType, 'learn')}
+                                    variant="outline"
+                                    className="flex-1 sm:flex-none border-2 font-semibold whitespace-nowrap hover:opacity-70 transition-opacity"
+                                    style={{
+                                      borderColor: darkMode ? '#d4a017' : '#d4a017',
+                                      backgroundColor: darkMode ? 'rgba(212,160,23,0.12)' : 'rgba(212,160,23,0.08)',
+                                      color: darkMode ? '#e0b83a' : '#a97a0f',
+                                    }}
+                                  >
+                                    {language === 'English' ? 'Start Learning' : 'Започни Учене'}
                                   </Button>
                                 </div>
                               </div>
