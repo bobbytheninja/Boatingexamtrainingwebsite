@@ -110,9 +110,6 @@ export function Navigation({
           }),
           transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)',
           paddingTop: 'env(safe-area-inset-top)',
-          // Captured as its own layer during a theme switch, so the bar keeps
-          // its blur and the falling sheet passes behind it.
-          viewTransitionName: 'site-nav',
           // The accent overrides the default edge; the colour transitions with
           // everything else so switching modes slides rather than snaps.
           ...((accentColor || isLoggedIn) ? { borderBottomColor: accentColor ?? defaultEdge } : {}),

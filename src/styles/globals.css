@@ -440,48 +440,81 @@
   .hero-pan { transition: none; }
 }
 
-/* ── View Transitions: the theme switch ────────────────────────────────────
-   The navigation bar is lifted out as its own layer, so it is captured and
-   animated separately from the page. Two things follow from that: it can
-   finish changing before the page starts, and its blur is baked into its own
-   snapshot rather than sampling whichever page snapshot happens to sit behind
-   it — which is what made the earlier version smear.
+/* ── Theme switch: a wave down the page ────────────────────────────────────
+   Darkness falls from the top — the bar first, then the page, then the
+   footer — the way dusk arrives overhead before it reaches the ground. Light
+   comes back the other way, rising from the bottom and pushing the dark up
+   and out.
 
-   The bar settles first. Then a sheet of the new theme falls straight down
-   the page *behind* the bar, which stays put and keeps its blur throughout. */
-::view-transition-old(root),
-::view-transition-new(root) {
-  animation: none;
-  mix-blend-mode: normal;
+   Only the three bands each screen is built from are targeted: the nav, the
+   page wrapper, and the footer. Everything inside a band moves with it, so
+   there is nothing to annotate per component.
+
+   The nav holds the original pace; the bands after it move faster and follow
+   closer, so the wave reads as one gesture that starts deliberately and then
+   carries, rather than three evenly spaced steps.
+
+   Applied to <html> only while a switch is in flight, then removed, so hover
+   and focus states are never left slowed down. */
+html.theme-wave *,
+html.theme-wave *::before,
+html.theme-wave *::after {
+  transition-property: background-color, background-image, border-color, color, fill, stroke, box-shadow !important;
+  transition-timing-function: cubic-bezier(0.4, 0.0, 0.2, 1) !important;
 }
 
-::view-transition-old(root) { z-index: 1; }
-::view-transition-new(root) { z-index: 2; }
-
-/* The bar rides above both page snapshots so the sheet passes under it. */
-::view-transition-group(site-nav) { z-index: 20; }
-
-@keyframes themeNavIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+/* The strip above the nav is painted by the browser from the document
+   background, not by the page. Dragging it along with the wave made the very
+   top of the screen lag behind the bar beneath it, so it is left to change at
+   once and the wave starts at the nav. */
+html.theme-wave,
+html.theme-wave body {
+  transition: none !important;
 }
 
-::view-transition-new(site-nav) { animation: themeNavIn 200ms ease-out; }
-::view-transition-old(site-nav) { animation: none; }
-
-/* A flat edge, straight down, starting once the bar has settled. */
-@keyframes themeSheetDown {
-  from { clip-path: inset(0 0 100% 0); }
-  to   { clip-path: inset(0 0 0 0); }
+/* Falling dark: the bar leads at full length, the rest follows quicker. */
+html.theme-wave-dark nav,
+html.theme-wave-dark nav * {
+  transition-duration: 420ms !important;
+  transition-delay: 0ms !important;
 }
 
-::view-transition-new(root) {
-  animation: themeSheetDown 480ms cubic-bezier(0.36, 0, 0.2, 1) 200ms both;
+html.theme-wave-dark .min-h-screen,
+html.theme-wave-dark .min-h-screen * {
+  transition-duration: 300ms !important;
+  transition-delay: 110ms !important;
+}
+
+html.theme-wave-dark footer,
+html.theme-wave-dark footer * {
+  transition-duration: 300ms !important;
+  transition-delay: 200ms !important;
+}
+
+/* Rising light: same pacing, read from the bottom up. */
+html.theme-wave-light footer,
+html.theme-wave-light footer * {
+  transition-duration: 300ms !important;
+  transition-delay: 0ms !important;
+}
+
+html.theme-wave-light .min-h-screen,
+html.theme-wave-light .min-h-screen * {
+  transition-duration: 300ms !important;
+  transition-delay: 110ms !important;
+}
+
+html.theme-wave-light nav,
+html.theme-wave-light nav * {
+  transition-duration: 420ms !important;
+  transition-delay: 200ms !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  ::view-transition-old(root),
-  ::view-transition-new(root),
-  ::view-transition-old(site-nav),
-  ::view-transition-new(site-nav) { animation: none !important; }
+  html.theme-wave *,
+  html.theme-wave *::before,
+  html.theme-wave *::after {
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
+  }
 }
