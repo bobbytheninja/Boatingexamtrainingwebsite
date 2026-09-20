@@ -1,0 +1,15 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Deploy / env
+.vercel
+.env*.local
+
+# Supabase CLI scratch state (contains a pooler connection string)
+**/supabase/.temp/
+
+# macOS
+.DS_Store

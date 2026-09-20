@@ -37,6 +37,15 @@ export function AdminPage({ onBack, onNavigate }: AdminPageProps) {
   const [language, setLanguage] = useState<Language>('English');
   const [region, setRegion] = useState('Bulgaria');
   const t = getTranslation(language);
+  // Remember which tab was open so a reload doesn't bounce back to the first one
+  const [activeTab, setActiveTab] = useState<string>(() => {
+    try {
+      return localStorage.getItem('admin_active_tab') || '';
+    } catch {
+      return '';
+    }
+  });
+
   const [adminKeyInput, setAdminKeyInput] = useState('');
   const [makingAdmin, setMakingAdmin] = useState(false);
   const [isAlreadyAdmin, setIsAlreadyAdmin] = useState(false);
@@ -359,7 +368,22 @@ export function AdminPage({ onBack, onNavigate }: AdminPageProps) {
 
         {/* Show admin panel to all logged-in users, but limit features based on admin status */}
         {user && (
-        <Tabs defaultValue={userIsAdmin ? "diagnostics" : "keys"} className="space-y-8">
+        <Tabs
+          value={(() => {
+            const fallback = userIsAdmin ? 'diagnostics' : 'keys';
+            if (!activeTab) return fallback;
+            // Non-admins only ever have the "keys" tab available
+            if (!userIsAdmin && activeTab !== 'keys') return 'keys';
+            return activeTab;
+          })()}
+          onValueChange={(v) => {
+            setActiveTab(v);
+            try {
+              localStorage.setItem('admin_active_tab', v);
+            } catch {}
+          }}
+          className="space-y-8"
+        >
           <TabsList className={`grid w-full max-w-6xl mx-auto gap-2.5 ${userIsAdmin ? 'grid-cols-3 sm:grid-cols-5 lg:grid-cols-9' : 'grid-cols-1 sm:grid-cols-1'} h-auto p-3 ${darkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-slate-50 border-slate-200'} border shadow-lg rounded-lg backdrop-blur-sm`}>
             {userIsAdmin && (
               <>

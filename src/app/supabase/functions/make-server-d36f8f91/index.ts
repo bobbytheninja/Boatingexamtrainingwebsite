@@ -8,6 +8,13 @@ import * as questions from "./questions.ts";
 
 const app = new Hono();
 
+// Upper bound on how much time a single session may contribute to a user's
+// totalTimeSpent. Sessions are only closed out on an explicit logout, so a user
+// who just closes the browser leaves sessionStart set; without this cap the
+// entire wall-clock gap until their next login (potentially days) gets counted
+// as time spent, which inflates the figure to hundreds of hours.
+const MAX_SESSION_SECONDS = 2 * 60 * 60; // 2 hours
+
 // Safely get environment variables
 function getEnv(key: string, defaultValue: string = ''): string {
   const value = Deno.env.get(key);
@@ -749,10 +756,12 @@ app.post("/make-server-d36f8f91/invalidate-sessions", async (c) => {
     // Record login activity
     const activityKey = `activity:${user.id}`;
     const prevActivity = (await kv.get(activityKey)) || {};
-    // If there was a session that never got a logout (e.g. browser closed), estimate its duration
+    // If there was a session that never got a logout (e.g. browser closed), the
+    // gap to now is not time the user was actually present, so cap what it adds.
     let totalTimeSpent = prevActivity.totalTimeSpent || 0;
     if (prevActivity.sessionStart) {
-      totalTimeSpent += Math.floor((Date.now() - prevActivity.sessionStart) / 1000);
+      const elapsed = Math.floor((Date.now() - prevActivity.sessionStart) / 1000);
+      totalTimeSpent += Math.min(Math.max(elapsed, 0), MAX_SESSION_SECONDS);
     }
     await kv.set(activityKey, {
       ...prevActivity,
@@ -797,7 +806,9 @@ app.post("/make-server-d36f8f91/logout", async (c) => {
     const activityKey = `activity:${user.id}`;
     const activity = (await kv.get(activityKey)) || {};
     if (activity.sessionStart) {
-      const duration = Math.floor((Date.now() - activity.sessionStart) / 1000);
+      // Capped too: a tab left open overnight is not two-digit hours of usage.
+      const elapsed = Math.floor((Date.now() - activity.sessionStart) / 1000);
+      const duration = Math.min(Math.max(elapsed, 0), MAX_SESSION_SECONDS);
       await kv.set(activityKey, {
         ...activity,
         sessionStart: null,
