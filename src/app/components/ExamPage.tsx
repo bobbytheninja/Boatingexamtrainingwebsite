@@ -119,13 +119,13 @@ export function ExamPage({ examType, mode, tier, topic, onBackToHome, onNavigate
         return;
       }
 
-      // Serve from session cache so remounts are instant. The cache holds the
-      // full set, so a Learn run still has to narrow it to its topic.
-      const cached = getCachedQuestions();
-      if (cached && cached.length > 0) {
-        const forRun = topic ? filterByTopic(cached, topic) : cached;
-        if (forRun.length > 0) {
-          setExamQuestions(forRun);
+      // Serve from session cache so remounts are instant. Skipped for Learn:
+      // the cache holds a 40-question exam draw, so filtering it by topic would
+      // yield a fraction of that topic's questions rather than all of them.
+      if (!topic) {
+        const cached = getCachedQuestions();
+        if (cached && cached.length > 0) {
+          setExamQuestions(cached);
           setLoadingQuestions(false);
           return;
         }
@@ -144,8 +144,12 @@ export function ExamPage({ examType, mode, tier, topic, onBackToHome, onNavigate
         }
 
         try {
-          const response = await api.getQuestions(examType, accessToken);
-          
+          // A Learn run drills a whole topic, so it needs the full bank rather
+          // than the 40-question exam draw.
+          const response = topic
+            ? await api.getAllQuestions(examType, accessToken)
+            : await api.getQuestions(examType, accessToken);
+
           if (!response.questions || response.questions.length === 0) {
             setQuestionLoadError(`No questions available for ${examType} exam. Please check the Admin Panel > Diagnostics tab to verify questions were imported.`);
             setLoadingQuestions(false);
@@ -176,7 +180,9 @@ export function ExamPage({ examType, mode, tier, topic, onBackToHome, onNavigate
             };
           });
 
-          setCachedQuestions(dbQuestions);
+          // Only cache an exam draw — caching the full bank from a Learn run
+          // would make the next exam use every question instead of 40.
+          if (!topic) setCachedQuestions(dbQuestions);
           // Learn mode drills a single topic, so narrow the set to it.
           const forRun = topic ? filterByTopic(dbQuestions, topic) : dbQuestions;
           if (topic && forRun.length === 0) {
@@ -244,7 +250,9 @@ export function ExamPage({ examType, mode, tier, topic, onBackToHome, onNavigate
             };
           });
 
-          setCachedQuestions(dbQuestions);
+          // Only cache an exam draw — caching the full bank from a Learn run
+          // would make the next exam use every question instead of 40.
+          if (!topic) setCachedQuestions(dbQuestions);
           // Learn mode drills a single topic, so narrow the set to it.
           const forRun = topic ? filterByTopic(dbQuestions, topic) : dbQuestions;
           if (topic && forRun.length === 0) {

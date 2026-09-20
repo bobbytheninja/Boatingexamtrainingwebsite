@@ -95,6 +95,16 @@ export const api = {
     );
   },
 
+  // Every question for an exam type, not the 40-question exam draw. Learn mode
+  // needs the whole bank to count topics and to drill one of them properly.
+  getAllQuestions: async (examType: string, token: string) => {
+    return apiCall<{ questions: any[] }>(
+      `/questions/${examType}/all`,
+      { method: 'GET' },
+      token
+    );
+  },
+
   getMockQuestions: async (examType: string) => {
     return apiCall<{ questions: any[] }>(
       `/questions/${examType}/mock`,

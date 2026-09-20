@@ -136,7 +136,7 @@ export function ExamModeSelection() {
     let cancelled = false;
     setCountsLoading(true);
     setCountsError(false);
-    api.getQuestions(examType, accessToken)
+    api.getAllQuestions(examType, accessToken)
       .then(res => {
         if (!cancelled) setTopicCounts(countByTopic(res.questions || []));
       })

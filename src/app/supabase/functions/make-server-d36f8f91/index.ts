@@ -2565,12 +2565,59 @@ app.post("/make-server-d36f8f91/diagnostics/check-question", async (c) => {
 });
 
 // Get ALL questions for an exam type (admin only — for the question editor)
+// Whether a user may read the questions for an exam type: free categories are
+// open to any signed-in user, everything else needs a live paid subscription.
+// Mirrors the check in GET /questions/:examType.
+async function hasExamAccess(userId: string, examType: string): Promise<{ ok: boolean; message?: string }> {
+  const allCategories = await kv.get('exam_categories') || [];
+  const freeTypes: string[] = Array.isArray(allCategories)
+    ? allCategories.filter((cat: any) => cat.isFree).map((cat: any) => (cat.type as string).toLowerCase().trim())
+    : [];
+  if (freeTypes.includes(examType.toLowerCase().trim())) return { ok: true };
+
+  const subscription = await kv.get(`subscription:${userId}`);
+  const now = Date.now();
+  const FREE_EXPIRY_THRESHOLD = 9000000000000;
+
+  let hasAccess = false;
+  let isExpired = false;
+  if (subscription?.examTypes) {
+    if (Array.isArray(subscription.examTypes)) {
+      const storedExpiry = subscription.expiresAt || 0;
+      if (storedExpiry < FREE_EXPIRY_THRESHOLD) {
+        hasAccess = subscription.examTypes.includes(examType);
+        isExpired = storedExpiry > 0 && storedExpiry < now;
+      }
+    } else if (typeof subscription.examTypes === 'object') {
+      const expiry = subscription.examTypes[examType];
+      if (expiry !== undefined && expiry < FREE_EXPIRY_THRESHOLD) {
+        hasAccess = true;
+        isExpired = expiry < now;
+      }
+    }
+  }
+
+  if (!hasAccess) return { ok: false, message: 'Subscription required for this exam type' };
+  if (isExpired) return { ok: false, message: 'Subscription expired' };
+  return { ok: true };
+}
+
+// Every question for an exam type. Admins use this in the question editor;
+// subscribers need it for Learn mode, which counts and drills whole topics and
+// so cannot work from the 40-question exam draw.
 app.get("/make-server-d36f8f91/questions/:examType/all", async (c) => {
-  const { error, user, isAdmin: adminStatus } = await verifyAdmin(c.req.header('Authorization'));
-  if (error || !user || !adminStatus) return c.json({ message: 'Admin required' }, 403);
+  // verifyAdmin reports an error for a non-admin even though it returns the
+  // user, so identity and admin status are checked separately here.
+  const { error, user } = await verifyUser(c.req.header('Authorization'));
+  if (error || !user) return c.json({ message: error || 'Unauthorized' }, 401);
 
   try {
     const examType = c.req.param('examType');
+
+    if (!(await isAdmin(user))) {
+      const access = await hasExamAccess(user.id, examType);
+      if (!access.ok) return c.json({ message: access.message }, 403);
+    }
     const questionIds = await questions.getQuestionIds(examType);
     if (questionIds.length === 0) return c.json({ questions: [] });
 
