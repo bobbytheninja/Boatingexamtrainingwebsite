@@ -191,6 +191,9 @@ export interface Translations {
   passed: string;
   perfectScore: string;
   keepPractising: string;
+  learnUnavailable: string;
+  learnRequestHint: string;
+  noQuestionsInCategory: string;
   notPassed: string;
   failed: string;
   correctAnswers: string;
@@ -435,6 +438,9 @@ export const translations: Record<Language, Translations> = {
     passed: 'Passed',
     perfectScore: 'Perfect! 🎉',
     keepPractising: "Keep going — you'll learn them.",
+    learnUnavailable: 'Learn mode is not available for this exam yet.',
+    learnRequestHint: 'Request it from our admin and we can usually add it within a few days. In the meantime, take a look at our other exams.',
+    noQuestionsInCategory: 'No questions in this category',
     notPassed: 'Not Passed',
     failed: 'Failed',
     correctAnswers: 'Correct Answers',
@@ -677,6 +683,9 @@ export const translations: Record<Language, Translations> = {
     passed: 'Издържан',
     perfectScore: 'Перфектно! 🎉',
     keepPractising: 'Продължавайте — ще ги научите.',
+    learnUnavailable: 'Режим Учи още не е достъпен за този изпит.',
+    learnRequestHint: 'Заявете го от нашия администратор и обикновено можем да го добавим в рамките на няколко дни. Междувременно разгледайте другите ни изпити.',
+    noQuestionsInCategory: 'Няма въпроси в тази категория',
     notPassed: 'Неиздържан',
     failed: 'Неиздържан',
     correctAnswers: 'Верни Отговори',
@@ -919,6 +928,9 @@ export const translations: Record<Language, Translations> = {
     passed: 'Aprobado',
     perfectScore: '¡Perfecto! 🎉',
     keepPractising: 'Sigue así — los aprenderás.',
+    learnUnavailable: 'El modo Aprender aún no está disponible para este examen.',
+    learnRequestHint: 'Solicítelo a nuestro administrador y normalmente podemos añadirlo en unos días. Mientras tanto, eche un vistazo a nuestros otros exámenes.',
+    noQuestionsInCategory: 'No hay preguntas en esta categoría',
     notPassed: 'No Aprobado',
     failed: 'Reprobado',
     correctAnswers: 'Respuestas Correctas',
@@ -1161,6 +1173,9 @@ export const translations: Record<Language, Translations> = {
     passed: 'Πέρασε',
     perfectScore: 'Τέλεια! 🎉',
     keepPractising: 'Συνέχισε — θα τα μάθεις.',
+    learnUnavailable: 'Η λειτουργία Μάθησης δεν είναι ακόμη διαθέσιμη για αυτή την εξέταση.',
+    learnRequestHint: 'Ζητήστε το από τον διαχειριστή μας και συνήθως μπορούμε να το προσθέσουμε μέσα σε λίγες ημέρες. Στο μεταξύ, δείτε τις άλλες εξετάσεις μας.',
+    noQuestionsInCategory: 'Δεν υπάρχουν ερωτήσεις σε αυτή την κατηγορία',
     notPassed: 'Δεν Πέρασε',
     failed: 'Απέτυχε',
     correctAnswers: 'Σωστές Απαντήσεις',
@@ -1403,6 +1418,9 @@ export const translations: Record<Language, Translations> = {
     passed: 'Superato',
     perfectScore: 'Perfetto! 🎉',
     keepPractising: 'Continua così — li imparerai.',
+    learnUnavailable: 'La modalità Impara non è ancora disponibile per questo esame.',
+    learnRequestHint: 'Richiedila al nostro amministratore e di solito possiamo aggiungerla in pochi giorni. Nel frattempo, dai un’occhiata agli altri nostri esami.',
+    noQuestionsInCategory: 'Nessuna domanda in questa categoria',
     notPassed: 'Non Superato',
     failed: 'Bocciato',
     correctAnswers: 'Risposte Corrette',

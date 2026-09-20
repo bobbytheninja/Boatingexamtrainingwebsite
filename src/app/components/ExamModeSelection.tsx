@@ -150,6 +150,12 @@ export function ExamModeSelection() {
     return () => { cancelled = true; };
   }, [selectedMode, examType, accessToken]);
 
+  // Every question falls into some topic (General Theory is a catch-all), so a
+  // zero across the board means the exam has no questions loaded at all rather
+  // than merely lacking a category.
+  const learnUnavailable =
+    topicCounts !== null && Object.values(topicCounts).every(n => n === 0);
+
   const handleStartTopic = (topic: LearnTopic) => {
     if (!user) {
       toast.error(language === 'English'
@@ -352,6 +358,36 @@ export function ExamModeSelection() {
 
             {selectedMode === 'learn' ? (
               <div className="max-w-2xl mx-auto">
+                {learnUnavailable ? (
+                  <div
+                    className="rounded-lg border-2 border-dashed px-6 py-10 text-center"
+                    style={{
+                      borderColor: darkMode ? '#3f4652' : '#e2e8f0',
+                      background: darkMode ? 'rgba(51,65,85,0.3)' : '#f8fafc',
+                    }}
+                  >
+                    <GraduationCap className="w-10 h-10 mx-auto mb-3" style={{ color: darkMode ? '#64748b' : '#94a3b8' }} />
+                    <p className="font-semibold mb-2" style={{ color: darkMode ? '#e2e8f0' : '#1e293b' }}>
+                      {t.learnUnavailable}
+                    </p>
+                    <p className="text-sm max-w-md mx-auto" style={{ color: darkMode ? '#94a3b8' : '#64748b' }}>
+                      {t.learnRequestHint}
+                    </p>
+                    <Button
+                      onClick={() => navigate('/')}
+                      variant="outline"
+                      className="mt-5"
+                      style={{
+                        borderColor: darkMode ? '#475569' : '#cbd5e1',
+                        color: darkMode ? '#e2e8f0' : '#334155',
+                        background: 'transparent',
+                      }}
+                    >
+                      {t.backToExams}
+                    </Button>
+                  </div>
+                ) : (
+                <>
                 <p className="text-center text-sm mb-5" style={{ color: darkMode ? '#94a3b8' : '#64748b' }}>
                   {language === 'English'
                     ? 'Pick a topic to practise on its own. No timer, no pass mark.'
@@ -398,7 +434,7 @@ export function ExamModeSelection() {
                           {count !== null
                             ? (count > 0
                                 ? `${count} ${language === 'English' ? 'questions' : 'въпроса'}`
-                                : (language === 'English' ? 'Coming soon' : 'Очаквайте скоро'))
+                                : t.noQuestionsInCategory)
                             : countsLoading
                             ? (language === 'English' ? 'Checking…' : 'Проверка…')
                             : countsError
@@ -409,6 +445,8 @@ export function ExamModeSelection() {
                     );
                   })}
                 </div>
+                </>
+                )}
               </div>
             ) : (
             <div>
