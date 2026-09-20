@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { flushSync } from 'react-dom';
-import { runThemeTransition, getVariant } from '../utils/themeTransition';
+import { runThemeTransition } from '../utils/themeTransition';
 import { setThemeTopColor, THEME_TOP_COLOR } from '../utils/topBarColor';
 
 interface DarkModeContextType {
@@ -25,27 +25,8 @@ export function DarkModeProvider({ children }: { children: React.ReactNode }) {
   });
   const [isAnimating, setIsAnimating] = useState(false);
 
-  // Nothing to animate from on the first paint; animating it only delays
-  // the initial render.
-  const firstRun = useRef(true);
-
   useEffect(() => {
     const root = document.documentElement;
-
-    // The wave runs top-down into dark and bottom-up back into light. The
-    // classes carry both "a switch is happening" and which way it travels;
-    // the delays per band live in the stylesheet.
-    let timer: number | undefined;
-    const bandFallback = getVariant() === 'wave'
-      || typeof (document as any).startViewTransition !== 'function';
-    if (!firstRun.current && bandFallback && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      root.classList.add('theme-wave', darkMode ? 'theme-wave-dark' : 'theme-wave-light');
-      // Outlast the last band: 200ms delay + 420ms travel.
-      timer = window.setTimeout(() => {
-        root.classList.remove('theme-wave', 'theme-wave-dark', 'theme-wave-light');
-      }, 640);
-    }
-    firstRun.current = false;
 
     if (darkMode) {
       root.classList.add('dark');
@@ -57,9 +38,6 @@ export function DarkModeProvider({ children }: { children: React.ReactNode }) {
       setThemeTopColor(THEME_TOP_COLOR.light);
     }
 
-    return () => {
-      if (timer) window.clearTimeout(timer);
-    };
   }, [darkMode]);
 
   useEffect(() => {

@@ -3,40 +3,23 @@
  *
  * The browser snapshots the page before and after the theme changes and
  * animates between the two, so the whole switch is one composited animation
- * rather than dozens of properties transitioning in loose formation. That also
- * removes the need to stagger bands by hand — the old wave could not account
- * for a footer that was off-screen, or a fixed nav that never moved.
+ * rather than dozens of properties transitioning in loose formation. It also
+ * handles what a hand-staggered version could not: a footer that is off-screen
+ * when you toggle, and a fixed nav that never moves with the page.
  *
- * Three variants are available while a direction is being chosen. The active
- * one is read from ?tx= and remembered, so it can be switched on a phone
- * without a rebuild.
+ * The motion itself lives in globals.css — a straight-edged sheet falling from
+ * the top of the screen.
+ *
+ * Where View Transitions are unavailable, or motion is not wanted, the theme
+ * simply changes; each component's own transition still carries the colours.
  */
 
-export type ThemeTransitionVariant = 'blur' | 'radial' | 'polygon' | 'wave';
-
-const STORAGE_KEY = 'theme_transition_variant';
-const VALID: ThemeTransitionVariant[] = ['blur', 'radial', 'polygon', 'wave'];
-
-export function getVariant(): ThemeTransitionVariant {
-  try {
-    const fromUrl = new URLSearchParams(window.location.search).get('tx');
-    if (fromUrl && (VALID as string[]).includes(fromUrl)) {
-      localStorage.setItem(STORAGE_KEY, fromUrl);
-      return fromUrl as ThemeTransitionVariant;
-    }
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved && (VALID as string[]).includes(saved)) return saved as ThemeTransitionVariant;
-  } catch {
-    // Fall through to the default.
-  }
-  return 'blur';
+function supportsViewTransitions(): boolean {
+  return typeof document !== 'undefined'
+    && typeof (document as any).startViewTransition === 'function';
 }
 
-export function supportsViewTransitions(): boolean {
-  return typeof document !== 'undefined' && typeof (document as any).startViewTransition === 'function';
-}
-
-export function prefersReducedMotion(): boolean {
+function prefersReducedMotion(): boolean {
   return typeof window !== 'undefined'
     && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
@@ -50,18 +33,9 @@ export function prefersReducedMotion(): boolean {
  * frames.
  */
 export function runThemeTransition(apply: () => void): void {
-  const variant = getVariant();
-
-  if (variant === 'wave' || !supportsViewTransitions() || prefersReducedMotion()) {
+  if (!supportsViewTransitions() || prefersReducedMotion()) {
     apply();
     return;
   }
-
-  document.documentElement.dataset.tx = variant;
-  const transition = (document as any).startViewTransition(apply);
-  transition.finished
-    .catch(() => {})
-    .finally(() => {
-      delete document.documentElement.dataset.tx;
-    });
+  (document as any).startViewTransition(apply);
 }
