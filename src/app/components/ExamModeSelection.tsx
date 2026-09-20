@@ -3,7 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import { Check, BookOpen, FileText, GraduationCap, Lightbulb, Flag, Volume2, Anchor } from 'lucide-react';
+import { Check, BookOpen, FileText, GraduationCap, Lightbulb, Flag, Volume2, Anchor, Map, Circle } from 'lucide-react';
 import { ExamType, examData } from '../data/examQuestions';
 import { getTranslation } from '../data/translations';
 import { Navigation } from './Navigation';
@@ -11,26 +11,28 @@ import { Footer } from './Footer';
 import { useDarkMode } from '../contexts/DarkModeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
+import { api } from '../utils/api';
+import { LEARN_TOPICS, countByTopic, type LearnTopic } from '../utils/questionTopics';
 import { toast } from 'sonner';
 import { projectId, publicAnonKey } from '../utils/supabase/info';
 
 export type ExamMode = 'study' | 'exam' | 'learn';
 
-// Learn mode topics. Each drills one category of exam content on its own.
-// Not built yet — the cards render disabled under a "coming soon" heading.
-const LEARN_TOPICS = [
-  { key: 'lights',  en: 'Lights',  bg: 'Светлини' },
-  { key: 'flags',   en: 'Flags',   bg: 'Флагове' },
-  { key: 'sounds',  en: 'Sounds',  bg: 'Звуци' },
-  { key: 'buoys',   en: 'Buoys',   bg: 'Буйове' },
-] as const;
+const TOPIC_ICONS: Record<LearnTopic, typeof Lightbulb> = {
+  lights: Lightbulb,
+  shapes: Circle,
+  sounds: Volume2,
+  flags: Flag,
+  buoys: Anchor,
+  charts: Map,
+};
 export type ExamTier = 'mock' | 'paid';
 
 export function ExamModeSelection() {
   const { examType: examTypeParam } = useParams<{ examType: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, accessToken } = useAuth();
   const { darkMode } = useDarkMode();
   const { language } = useLanguage();
   const t = getTranslation(language);
@@ -39,6 +41,8 @@ export function ExamModeSelection() {
   const [selectedMode, setSelectedMode] = useState<ExamMode>(initialMode ?? 'exam');
   const [examCategory, setExamCategory] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [topicCounts, setTopicCounts] = useState<Record<LearnTopic, number> | null>(null);
+  const [countsLoading, setCountsLoading] = useState(false);
   
   const examType = examTypeParam as ExamType;
 
@@ -108,6 +112,42 @@ export function ExamModeSelection() {
       navigate('/');
     }
   }, [examType, navigate]);
+
+  // Work out which topics actually have questions in this exam. Needs the full
+  // question set, so it only runs for signed-in users; everyone else sees the
+  // topics enabled and gets the usual login prompt on click.
+  useEffect(() => {
+    if (selectedMode !== 'learn' || !examType) return;
+    if (topicCounts || countsLoading || !accessToken) return;
+
+    let cancelled = false;
+    setCountsLoading(true);
+    api.getQuestions(examType, accessToken)
+      .then(res => {
+        if (!cancelled) setTopicCounts(countByTopic(res.questions || []));
+      })
+      .catch(() => {
+        // No access or the request failed — leave counts unknown rather than
+        // greying out topics that may well have questions.
+        if (!cancelled) setTopicCounts(null);
+      })
+      .finally(() => {
+        if (!cancelled) setCountsLoading(false);
+      });
+
+    return () => { cancelled = true; };
+  }, [selectedMode, examType, accessToken, topicCounts, countsLoading]);
+
+  const handleStartTopic = (topic: LearnTopic) => {
+    if (!user) {
+      toast.error(language === 'English'
+        ? 'Please log in to use Learn mode.'
+        : 'Моля, влезте в профила си, за да използвате режим Учи.');
+      navigate('/login');
+      return;
+    }
+    navigate(`/exam/${examType}`, { state: { mode: 'learn', tier: 'paid', topic } });
+  };
 
   if (loading) {
     return (
@@ -300,35 +340,55 @@ export function ExamModeSelection() {
 
             {selectedMode === 'learn' ? (
               <div className="max-w-2xl mx-auto">
-                <p
-                  className="text-center font-semibold tracking-wide uppercase text-sm mb-4"
-                  style={{ color: darkMode ? '#d4a017' : '#a97a0f' }}
-                >
-                  {language === 'English' ? 'Coming soon' : 'Очаквайте скоро'}
+                <p className="text-center text-sm mb-5" style={{ color: darkMode ? '#94a3b8' : '#64748b' }}>
+                  {language === 'English'
+                    ? 'Pick a topic to practise on its own. No timer, no pass mark.'
+                    : 'Изберете тема за упражнение. Без таймер и без праг за преминаване.'}
                 </p>
                 <div className="grid grid-cols-2 gap-4">
                   {LEARN_TOPICS.map(topic => {
-                    const Icon = topic.key === 'lights' ? Lightbulb
-                      : topic.key === 'flags' ? Flag
-                      : topic.key === 'sounds' ? Volume2
-                      : Anchor;
+                    const Icon = TOPIC_ICONS[topic.key];
+                    const count = topicCounts ? topicCounts[topic.key] : null;
+                    // Unknown counts stay enabled — better to let someone try than
+                    // to grey out a topic that does have questions.
+                    const available = count === null ? true : count > 0;
+                    const label = language === 'English' ? topic.en : topic.bg;
+
                     return (
-                      <div
+                      <button
                         key={topic.key}
-                        aria-disabled="true"
-                        className="flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed p-8 cursor-not-allowed select-none"
+                        onClick={() => available && handleStartTopic(topic.key)}
+                        disabled={!available}
+                        className={`flex flex-col items-center justify-center gap-2 rounded-lg border-2 p-6 select-none transition-all duration-200 ${
+                          available
+                            ? 'cursor-pointer hover:-translate-y-0.5 hover:shadow-lg'
+                            : 'cursor-not-allowed border-dashed'
+                        }`}
                         style={{
-                          borderColor: darkMode ? '#7a5c12' : '#e6cf92',
-                          backgroundColor: darkMode ? 'rgba(212,160,23,0.06)' : 'rgba(212,160,23,0.05)',
-                          color: darkMode ? '#d4a017' : '#a97a0f',
-                          opacity: 0.85,
+                          borderColor: available
+                            ? (darkMode ? '#d4a017' : '#e0b83a')
+                            : (darkMode ? '#3f4652' : '#e2e8f0'),
+                          backgroundColor: available
+                            ? (darkMode ? 'rgba(212,160,23,0.12)' : 'rgba(212,160,23,0.08)')
+                            : (darkMode ? 'rgba(51,65,85,0.35)' : '#f8fafc'),
+                          color: available
+                            ? (darkMode ? '#e0b83a' : '#a97a0f')
+                            : (darkMode ? '#6b7280' : '#94a3b8'),
+                          opacity: available ? 1 : 0.7,
                         }}
                       >
                         <Icon className="w-8 h-8" />
-                        <span className="font-semibold text-base">
-                          {language === 'English' ? topic.en : topic.bg}
+                        <span className="font-semibold text-base text-center">{label}</span>
+                        <span className="text-xs font-medium">
+                          {countsLoading && count === null
+                            ? (language === 'English' ? 'Checking…' : 'Проверка…')
+                            : count === null
+                            ? (language === 'English' ? 'Practise' : 'Упражнение')
+                            : available
+                            ? `${count} ${language === 'English' ? 'questions' : 'въпроса'}`
+                            : (language === 'English' ? 'Coming soon' : 'Очаквайте скоро')}
                         </span>
-                      </div>
+                      </button>
                     );
                   })}
                 </div>

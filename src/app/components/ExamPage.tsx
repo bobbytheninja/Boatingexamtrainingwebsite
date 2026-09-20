@@ -23,6 +23,7 @@ import { ExamType, examData, Question } from '../data/examQuestions';
 import { ExamMode, ExamTier } from './ExamModeSelection';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { getTranslation } from '../data/translations';
+import { filterByTopic, LEARN_TOPICS, type LearnTopic } from '../utils/questionTopics';
 import { useAuth } from '../contexts/AuthContext';
 import { useDarkMode } from '../contexts/DarkModeContext';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -37,6 +38,8 @@ interface ExamPageProps {
   examType: ExamType;
   mode: ExamMode;
   tier: ExamTier;
+  /** Learn mode only: restricts the run to one topic. */
+  topic?: LearnTopic;
   onBackToHome: () => void;
   onNavigate?: (page: string) => void;
   onNeedPayment?: () => void;
@@ -48,11 +51,18 @@ interface AnswerData {
   pointsLost: number;
 }
 
-export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNeedPayment }: ExamPageProps) {
+export function ExamPage({ examType, mode, tier, topic, onBackToHome, onNavigate, onNeedPayment }: ExamPageProps) {
   const { language } = useLanguage();
   const t = getTranslation(language);
   const { accessToken, user, triggerForcedLogout } = useAuth();
   const { darkMode } = useDarkMode();
+  // Learn mode shares Study's rhythm: submit, see the answer, continue.
+  const instantFeedback = mode === 'study' || mode === 'learn';
+  const topicLabel = topic
+    ? (language === 'English'
+        ? LEARN_TOPICS.find(tp => tp.key === topic)?.en
+        : LEARN_TOPICS.find(tp => tp.key === topic)?.bg) ?? 'Learn'
+    : 'Learn';
   const [examQuestions, setExamQuestions] = useState<Question[]>([]);
   const [loadingQuestions, setLoadingQuestions] = useState(true); // Always start with loading state
   const [questionLoadError, setQuestionLoadError] = useState<string | null>(null);
@@ -109,12 +119,16 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
         return;
       }
 
-      // Serve from session cache so remounts are instant
+      // Serve from session cache so remounts are instant. The cache holds the
+      // full set, so a Learn run still has to narrow it to its topic.
       const cached = getCachedQuestions();
       if (cached && cached.length > 0) {
-        setExamQuestions(cached);
-        setLoadingQuestions(false);
-        return;
+        const forRun = topic ? filterByTopic(cached, topic) : cached;
+        if (forRun.length > 0) {
+          setExamQuestions(forRun);
+          setLoadingQuestions(false);
+          return;
+        }
       }
 
       setLoadingQuestions(true);
@@ -163,7 +177,14 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
           });
 
           setCachedQuestions(dbQuestions);
-          setExamQuestions(dbQuestions);
+          // Learn mode drills a single topic, so narrow the set to it.
+          const forRun = topic ? filterByTopic(dbQuestions, topic) : dbQuestions;
+          if (topic && forRun.length === 0) {
+            setQuestionLoadError(`No questions available for this topic yet.`);
+            setLoadingQuestions(false);
+            return;
+          }
+          setExamQuestions(forRun);
           setLoadingQuestions(false);
         } catch (error: any) {
           console.error('[ExamPage] Failed to load questions:', error);
@@ -224,7 +245,14 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
           });
 
           setCachedQuestions(dbQuestions);
-          setExamQuestions(dbQuestions);
+          // Learn mode drills a single topic, so narrow the set to it.
+          const forRun = topic ? filterByTopic(dbQuestions, topic) : dbQuestions;
+          if (topic && forRun.length === 0) {
+            setQuestionLoadError(`No questions available for this topic yet.`);
+            setLoadingQuestions(false);
+            return;
+          }
+          setExamQuestions(forRun);
           setLoadingQuestions(false);
         } catch (error: any) {
           console.error('[ExamPage] Failed to load mock questions:', error);
@@ -264,7 +292,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
 
   // Timer effect
   useEffect(() => {
-    if (!examStarted || showResults || mode === 'study') return;
+    if (!examStarted || showResults || instantFeedback || mode === 'learn') return;
 
     const timer = setInterval(() => {
       setTimeRemaining((prev) => {
@@ -361,7 +389,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
           break;
         case 'ArrowRight':
           e.preventDefault();
-          if (showAnswerFeedback && mode === 'study') {
+          if (showAnswerFeedback && instantFeedback) {
             // Continue after feedback
             if (currentQuestionIndex < totalQuestions - 1) {
               setCurrentQuestionIndex(currentQuestionIndex + 1);
@@ -446,7 +474,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
     });
 
     // In study mode, show immediate feedback
-    if (mode === 'study') {
+    if (instantFeedback) {
       setShowAnswerFeedback(true);
       // Auto-advance after showing feedback (or user can click Next again)
       return;
@@ -526,7 +554,8 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
 
   if (showResults) {
     const { wrongCount, correctCount, submittedCount } = calculateResults();
-    const passed = wrongCount < MAX_WRONG_ANSWERS;
+    // Learn is practice — there is no pass mark, so never show it as a failure.
+    const passed = mode === 'learn' ? true : wrongCount < MAX_WRONG_ANSWERS;
     const percentage = Math.round((correctCount / totalQuestions) * 100);
 
     return (
@@ -1195,7 +1224,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
               className="h-9 px-3 flex items-center gap-1.5 shadow-sm text-xs rounded-md flex-shrink-0"
             >
               <BookOpen className="w-4 h-4 flex-shrink-0" />
-              <span className="truncate">{mode === 'study' ? t.studyMode : t.examMode}</span>
+              <span className="truncate">{mode === 'learn' ? topicLabel : mode === 'study' ? t.studyMode : t.examMode}</span>
             </Badge>
             {mode === 'exam' && (
               <Badge
@@ -1373,8 +1402,8 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                 {currentQuestion.answers.map((answer, index) => {
                   const isSelected = selectedAnswers.includes(index);
                   const isCorrectAnswer = currentQuestion.correctAnswers?.includes(index);
-                  const showCorrect = mode === 'study' && showAnswerFeedback && isCorrectAnswer;
-                  const showWrong = mode === 'study' && showAnswerFeedback && isSelected && !isCorrectAnswer;
+                  const showCorrect = instantFeedback && showAnswerFeedback && isCorrectAnswer;
+                  const showWrong = instantFeedback && showAnswerFeedback && isSelected && !isCorrectAnswer;
 
                   return (
                     <div
@@ -1396,13 +1425,13 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                           ? '#3b82f6' 
                           : (darkMode ? '#475569' : '#cbd5e1')
                       }}
-                      onClick={() => !(mode === 'study' && showAnswerFeedback) && handleMultipleAnswerToggle(index)}
+                      onClick={() => !(instantFeedback && showAnswerFeedback) && handleMultipleAnswerToggle(index)}
                     >
                       <Checkbox 
                         id={`answer-${index}`}
                         checked={isSelected}
                         onCheckedChange={() => handleMultipleAnswerToggle(index)}
-                        disabled={mode === 'study' && showAnswerFeedback}
+                        disabled={instantFeedback && showAnswerFeedback}
                       />
                       <Label htmlFor={`answer-${index}`} className="flex-1 cursor-pointer text-xs md:text-sm max-h-[100px] overflow-y-auto font-medium transition-colors duration-200" style={{ color: darkMode ? '#e2e8f0' : '#334155' }}>
                         {answer}
@@ -1418,14 +1447,14 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                 {currentQuestion.answers.map((answer, index) => {
                   const isSelected = selectedAnswer === index;
                   const isCorrectAnswer = index === currentQuestion.correctAnswer;
-                  const showCorrect = mode === 'study' && showAnswerFeedback && isCorrectAnswer;
-                  const showWrong = mode === 'study' && showAnswerFeedback && isSelected && !isCorrectAnswer;
+                  const showCorrect = instantFeedback && showAnswerFeedback && isCorrectAnswer;
+                  const showWrong = instantFeedback && showAnswerFeedback && isSelected && !isCorrectAnswer;
 
                   return (
                     <div
                       key={index}
-                      onClick={() => !(mode === 'study' && showAnswerFeedback) && handleAnswerSelect(index)}
-                      className={`flex items-center p-3 md:p-4 rounded-lg border-2 transition-all duration-200 ${mode === 'study' && showAnswerFeedback ? 'cursor-default' : 'cursor-pointer'}`}
+                      onClick={() => !(instantFeedback && showAnswerFeedback) && handleAnswerSelect(index)}
+                      className={`flex items-center p-3 md:p-4 rounded-lg border-2 transition-all duration-200 ${instantFeedback && showAnswerFeedback ? 'cursor-default' : 'cursor-pointer'}`}
                       style={{ 
                         backgroundColor: showCorrect 
                           ? (darkMode ? '#064e3b' : '#f0fdf4')
@@ -1454,7 +1483,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
               </div>
             )}
 
-            {mode === 'study' && showAnswerFeedback && (
+            {instantFeedback && showAnswerFeedback && (
               <Alert className={`${answeredData?.isCorrect ? 'border-green-500 bg-green-50 dark:bg-green-900/30' : 'border-red-500 bg-red-50 dark:bg-red-900/30'} shadow-lg`}>
                 <AlertCircle className={answeredData?.isCorrect ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'} />
                 <AlertDescription className={answeredData?.isCorrect ? 'text-green-800 dark:text-green-200' : 'text-red-800 dark:text-red-200'}>
@@ -1494,11 +1523,11 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
             </Button>
             <Button
               id="next-button"
-              onClick={mode === 'study' && showAnswerFeedback ? handleContinueAfterFeedback : handleNext}
+              onClick={instantFeedback && showAnswerFeedback ? handleContinueAfterFeedback : handleNext}
               disabled={tier !== 'mock' && (isMultipleChoice ? selectedAnswers.length === 0 : selectedAnswer === null)}
               className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg"
             >
-              {mode === 'study' && showAnswerFeedback
+              {instantFeedback && showAnswerFeedback
                 ? (currentQuestionIndex === totalQuestions - 1 ? t.finish : t.continue)
                 : (isMultipleChoice ? selectedAnswers.length > 0 : selectedAnswer !== null)
                 ? (currentQuestionIndex === totalQuestions - 1 ? t.finishExam : t.submitAndNext)
@@ -1558,12 +1587,12 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
             <ArrowLeft className="w-4 h-4" />
           </Button>
           <Button
-            onClick={mode === 'study' && showAnswerFeedback ? handleContinueAfterFeedback : handleNext}
+            onClick={instantFeedback && showAnswerFeedback ? handleContinueAfterFeedback : handleNext}
             disabled={tier !== 'mock' && (isMultipleChoice ? selectedAnswers.length === 0 : selectedAnswer === null)}
             size="sm"
             className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg text-xs font-semibold"
           >
-            {mode === 'study' && showAnswerFeedback
+            {instantFeedback && showAnswerFeedback
               ? (currentQuestionIndex === totalQuestions - 1 ? t.finish : t.continue)
               : (isMultipleChoice ? selectedAnswers.length > 0 : selectedAnswer !== null)
               ? (currentQuestionIndex === totalQuestions - 1 ? t.finishExam : t.submitAndNext)
@@ -1649,18 +1678,18 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
                               style={{
                                 backgroundColor: isCurrentQuestion
                                   ? '#3b82f6'
-                                  : answer && mode === 'study' && answer.isCorrect
+                                  : answer && instantFeedback && answer.isCorrect
                                   ? '#22c55e'
-                                  : answer && mode === 'study'
+                                  : answer && instantFeedback
                                   ? '#ef4444'
                                   : answer
                                   ? (darkMode ? '#0284c7' : '#38bdf8')
                                   : (darkMode ? '#334155' : '#ffffff'),
                                 borderColor: isCurrentQuestion
                                   ? '#3b82f6'
-                                  : answer && mode === 'study' && answer.isCorrect
+                                  : answer && instantFeedback && answer.isCorrect
                                   ? '#16a34a'
-                                  : answer && mode === 'study'
+                                  : answer && instantFeedback
                                   ? '#dc2626'
                                   : answer
                                   ? '#0ea5e9'
@@ -1705,7 +1734,7 @@ export function ExamPage({ examType, mode, tier, onBackToHome, onNavigate, onNee
               </div>
             </div>
             <div className="flex items-center justify-center gap-3 mt-1.5 pt-1.5 border-t dark:border-t-slate-500 flex-wrap">
-              {mode === 'study' ? (
+              {instantFeedback ? (
                 <>
                   <div className="flex items-center gap-1">
                     <div className="w-3.5 h-3.5 rounded-full border-2 border-green-600 bg-green-500"></div>

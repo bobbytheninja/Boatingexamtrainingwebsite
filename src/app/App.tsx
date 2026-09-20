@@ -110,13 +110,15 @@ function ExamPageWrapper() {
 
   let mode: string;
   let tier: string;
+  let topic: string | undefined;
 
   if (locationState?.mode && locationState?.tier) {
     // Fresh navigation — save to sessionStorage for refresh recovery
     mode = locationState.mode;
     tier = locationState.tier;
+    topic = locationState.topic;
     try {
-      sessionStorage.setItem(sessionKey, JSON.stringify({ mode, tier }));
+      sessionStorage.setItem(sessionKey, JSON.stringify({ mode, tier, topic }));
     } catch {}
   } else {
     // Page was refreshed — try to recover from sessionStorage
@@ -125,6 +127,7 @@ function ExamPageWrapper() {
       const parsed = saved ? JSON.parse(saved) : null;
       mode = parsed?.mode || 'study';
       tier = parsed?.tier || 'mock';
+      topic = parsed?.topic;
     } catch {
       mode = 'study';
       tier = 'mock';
@@ -169,6 +172,7 @@ function ExamPageWrapper() {
       examType={examType as any}
       mode={mode}
       tier={tier}
+      topic={topic as any}
       onBackToHome={handleBackToHome}
       onNavigate={handleNavigate}
       onNeedPayment={handleNeedPayment}

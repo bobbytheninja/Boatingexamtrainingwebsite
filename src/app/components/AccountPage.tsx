@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import { User, Calendar, CreditCard, Package, ArrowLeft, Trash2, KeyRound, Eye, EyeOff } from 'lucide-react';
+import { User, Calendar, CreditCard, Package, Trash2, KeyRound, Eye, EyeOff } from 'lucide-react';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { ExamType, examData } from '../data/examQuestions';
@@ -175,26 +175,6 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
         }}
       >
         <div className="container mx-auto px-4 md:px-6 lg:px-8 max-w-6xl">
-          {/* Back Button */}
-          <Button
-            onClick={() => onNavigate('home')}
-            variant="ghost"
-            className="mb-8 font-medium transition-all duration-200"
-            style={{
-              color: darkMode ? '#d1d5db' : '#374151',
-              backgroundColor: 'transparent'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = darkMode ? '#334155' : '#f0f9ff';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent';
-            }}
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            {t.backToHome}
-          </Button>
-
           <div className="mb-12 animate-fadeIn">
             <h2 className="gradient-ocean mb-2 tracking-tight" style={{ fontSize: 'clamp(2rem, 4vw, 2.5rem)', fontWeight: '800' }}>
               {t.myAccount}
