@@ -21,27 +21,11 @@ export function DarkModeProvider({ children }: { children: React.ReactNode }) {
       return false;
     }
   });
-  const [isAnimating, setIsAnimating] = useState(false);
 
-  // Nothing to animate from on the first paint; animating it only delays
-  // the initial render.
-  const firstRun = useRef(true);
+  const waveTimer = useRef<number | undefined>(undefined);
 
   useEffect(() => {
     const root = document.documentElement;
-
-    // The wave runs top-down into dark and bottom-up back into light. The
-    // classes carry both "a switch is happening" and which way it travels;
-    // the delays per band live in the stylesheet.
-    let timer: number | undefined;
-    if (!firstRun.current && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      root.classList.add('theme-wave', darkMode ? 'theme-wave-dark' : 'theme-wave-light');
-      // Outlast the last band: 150ms delay + 280ms travel.
-      timer = window.setTimeout(() => {
-        root.classList.remove('theme-wave', 'theme-wave-dark', 'theme-wave-light');
-      }, 460);
-    }
-    firstRun.current = false;
 
     if (darkMode) {
       root.classList.add('dark');
@@ -53,9 +37,6 @@ export function DarkModeProvider({ children }: { children: React.ReactNode }) {
       setThemeTopColor(THEME_TOP_COLOR.light);
     }
 
-    return () => {
-      if (timer) window.clearTimeout(timer);
-    };
   }, [darkMode]);
 
   useEffect(() => {
@@ -64,11 +45,44 @@ export function DarkModeProvider({ children }: { children: React.ReactNode }) {
     } catch {}
   }, [darkMode]);
 
-  const toggleDarkMode = () => setDarkModeState(prev => !prev);
+  /**
+   * Puts the wave classes on <html> *before* the state change.
+   *
+   * This used to live in the effect below, which runs after React has
+   * committed the new colours — by then the browser has already started
+   * transitioning them using each component's own `transition-all
+   * duration-[400ms]`, and a class arriving afterwards cannot retime a
+   * transition already in flight. That is why text kept easing however low the
+   * duration went, and why two cards on the same page could move at different
+   * speeds: it depended on when each one committed relative to the class.
+   *
+   * Setting it synchronously first means the rules are in place before a
+   * single colour changes.
+   */
+  const armThemeWave = (goingDark: boolean) => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const root = document.documentElement;
+    if (waveTimer.current) window.clearTimeout(waveTimer.current);
+    root.classList.remove('theme-wave-dark', 'theme-wave-light');
+    root.classList.add('theme-wave', goingDark ? 'theme-wave-dark' : 'theme-wave-light');
+    // Outlast the last band: 150ms delay + 280ms travel.
+    waveTimer.current = window.setTimeout(() => {
+      root.classList.remove('theme-wave', 'theme-wave-dark', 'theme-wave-light');
+    }, 460);
+  };
+
+  const toggleDarkMode = () => {
+    // Read from this render's value rather than the updater: a side effect
+    // inside an updater runs twice under StrictMode.
+    armThemeWave(!darkMode);
+    setDarkModeState(prev => !prev);
+  };
 
   const setDarkMode = (value: boolean) => {
+    armThemeWave(value);
     setDarkModeState(value);
   };
+
 
   return (
     <DarkModeContext.Provider value={{ darkMode, toggleDarkMode, setDarkMode }}>

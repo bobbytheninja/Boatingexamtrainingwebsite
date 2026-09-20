@@ -377,29 +377,6 @@ ${examRows}
 </div></td></tr>`);
 }
 
-function buildContactEmail(name: string, email: string, phone: string, message: string): string {
-  return emailShell(`<tr><td style="background:#ffffff;border-radius:16px;box-shadow:0 4px 24px rgba(14,165,233,0.10);overflow:hidden;">
-<div style="height:4px;background:linear-gradient(90deg,#0ea5e9,#06b6d4,#0d9488);"></div>
-<div style="padding:40px 40px 36px;">
-<h1 style="margin:0 0 24px;font-size:22px;font-weight:700;color:#0f172a;letter-spacing:-0.5px;">📧 New Contact Enquiry</h1>
-<div style="background:#f0f9ff;border-radius:12px;padding:20px 24px;margin-bottom:20px;">
-<table width="100%" cellpadding="0" cellspacing="0">
-<tr><td style="padding-bottom:4px;"><span style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.6px;">Name</span></td></tr>
-<tr><td style="padding-bottom:14px;border-bottom:1px solid #e2e8f0;"><span style="font-size:15px;color:#0f172a;">${name}</span></td></tr>
-<tr><td style="height:12px;"></td></tr>
-<tr><td style="padding-bottom:4px;"><span style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.6px;">Email</span></td></tr>
-<tr><td style="padding-bottom:14px;border-bottom:1px solid #e2e8f0;"><a href="mailto:${email}" style="font-size:15px;color:#0ea5e9;text-decoration:none;">${email}</a></td></tr>
-<tr><td style="height:12px;"></td></tr>
-<tr><td style="padding-bottom:4px;"><span style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.6px;">Phone</span></td></tr>
-<tr><td><a href="tel:${phone}" style="font-size:15px;color:#0ea5e9;text-decoration:none;">${phone}</a></td></tr>
-</table>
-</div>
-<div style="border-left:3px solid #0ea5e9;padding:16px 20px;background:#f8fafc;border-radius:0 8px 8px 0;">
-<p style="margin:0 0 8px;font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.6px;">Message</p>
-<p style="margin:0;font-size:14px;color:#334155;line-height:1.7;">${message.replace(/\n/g, '<br/>')}</p>
-</div>
-</div></td></tr>`);
-}
 
 // ============== END EMAIL HELPERS ==============
 
@@ -936,71 +913,6 @@ async function withinDailyLimit(scope: string, maxPerDay: number): Promise<boole
   }
 }
 
-// Contact form submission - send email
-app.post("/make-server-d36f8f91/contact", async (c) => {
-  console.log('[Contact] ===== NEW CONTACT FORM SUBMISSION =====');
-
-  const clientIp = c.req.header('x-forwarded-for') || 'unknown';
-  if (!await checkRateLimit(clientIp, 'contact')) {
-    return c.json({ message: 'Too many requests. Please try again in a minute.' }, 429);
-  }
-  // The contact form was replaced by a plain mailto: link, so nothing in the
-  // site calls this any more — but it is still reachable and still sends mail
-  // on the shared quota, so it gets the same daily ceilings as the reset path.
-  if (!await withinDailyLimit(`contact:ip:${clientIp}`, 5)
-      || !await withinDailyLimit('contact:site', 100)) {
-    return c.json({ message: 'Too many requests today. Please email us directly.' }, 429);
-  }
-
-  try {
-    const resendApiKey = getEnv('RESEND_API_KEY');
-    
-    console.log('[Contact] Checking RESEND_API_KEY...', resendApiKey ? '✅ Present' : '❌ Missing');
-    
-    if (!resendApiKey) {
-      console.error('[Contact] ❌ RESEND_API_KEY environment variable is not set!');
-      return c.json({ message: 'Email service not configured' }, 503);
-    }
-
-    const body = await c.req.json();
-    const { name, email, phone, message } = body;
-
-    console.log('[Contact] Form data received:', { 
-      name, 
-      email,
-      phone,
-      messageLength: message?.length || 0 
-    });
-
-    if (!name || !email || !phone || !message) {
-      console.error('[Contact] ❌ Missing required fields:', { 
-        name: !!name, 
-        email: !!email, 
-        phone: !!phone,
-        message: !!message 
-      });
-      return c.json({ message: 'Name, email, phone, and message are required' }, 400);
-    }
-
-    console.log('[Contact] Sending contact email via Resend...');
-
-    await sendEmail(
-      '88xgdgbckn@privaterelay.appleid.com',
-      `New Contact Enquiry from ${name}`,
-      buildContactEmail(name, email, phone, message),
-    );
-
-    console.log('[Contact] ✅ Contact email sent');
-    return c.json({ message: 'Email sent successfully' });
-  } catch (error: any) {
-    console.error('[Contact] ❌ Unexpected error while sending email:', error);
-    console.error('[Contact] Error stack:', error.stack);
-    return c.json({ 
-      message: 'Internal server error while sending email',
-      error: error.message 
-    }, 500);
-  }
-});
 
 // Send password reset email via Resend (bypasses Supabase rate limit)
 app.post("/make-server-d36f8f91/send-reset-email", async (c) => {
