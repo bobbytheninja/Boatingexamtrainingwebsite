@@ -12,6 +12,12 @@ export interface Question {
   difficulty: number;
   imageUrl?: string;
   examType: string;
+  /**
+   * Optional Learn-mode category. Set from a Category column in the imported
+   * file or by an admin; when absent the question is classified by keyword at
+   * read time instead.
+   */
+  topic?: string | null;
 }
 
 // Get a single question by ID

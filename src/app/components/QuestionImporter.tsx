@@ -19,6 +19,7 @@ import {
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
 import { Button } from './ui/button';
+import { parseTopicValue, LEARN_TOPICS, type LearnTopic } from '../utils/questionTopics';
 
 interface QuestionRow {
   questionNumber?: number;
@@ -32,6 +33,8 @@ interface QuestionRow {
   difficulty: number;
   imageUrl?: string;
   language?: string;
+  /** Optional category from the file; null when absent or unrecognised. */
+  topic?: LearnTopic | null;
   embeddedImageIndex?: number; // Index of the embedded image in the workbook
 }
 
@@ -42,6 +45,8 @@ export function QuestionImporter() {
   const [importing, setImporting] = useState(false);
   const [result, setResult] = useState<{ success: boolean; message: string; imageStats?: { withImages: number, withoutImages: number, percentage: string } } | null>(null);
   const [preview, setPreview] = useState<QuestionRow[]>([]);
+  const [topicColumnFound, setTopicColumnFound] = useState(false);
+  const [unknownTopics, setUnknownTopics] = useState<string[]>([]);
   const [examTypes, setExamTypes] = useState<{ value: string; label: string }[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const supabase = createClient();
@@ -128,6 +133,51 @@ export function QuestionImporter() {
     }
   };
 
+  /**
+   * Work out which column holds what.
+   *
+   * Columns are matched by header name where a header exists, so an optional
+   * Category column can sit anywhere without shifting the others. Files with no
+   * recognisable header fall back to the original fixed positions, which keeps
+   * every spreadsheet that already imports working untouched.
+   */
+  const resolveColumns = (header: string[] | null) => {
+    const fallback = { number: 0, question: 1, image: 2, a: 3, b: 4, c: 5, d: 6, correct: 7, topic: -1 };
+    if (!header) return fallback;
+
+    const norm = (s: string) => (s || '').toLowerCase().replace(/[\s_\-.]+/g, '');
+    const find = (...needles: string[]) =>
+      header.findIndex(h => needles.some(n => norm(h) === n || norm(h).includes(n)));
+
+    const pick = (fb: number, ...needles: string[]) => {
+      const i = find(...needles);
+      return i >= 0 ? i : fb;
+    };
+
+    return {
+      number:   pick(fallback.number, 'questionnumber', 'number', 'no', '#'),
+      question: pick(fallback.question, 'questiontext', 'question'),
+      image:    pick(fallback.image, 'imageurl', 'image', 'picture'),
+      a:        pick(fallback.a, 'answera', 'optiona'),
+      b:        pick(fallback.b, 'answerb', 'optionb'),
+      c:        pick(fallback.c, 'answerc', 'optionc'),
+      d:        pick(fallback.d, 'answerd', 'optiond'),
+      correct:  pick(fallback.correct, 'correctanswer', 'correct'),
+      // Optional: absent unless the file actually declares it.
+      topic:    find('category', 'topic', 'категория', 'тема'),
+    };
+  };
+
+  /** Category values in the file that map to no known topic, for reporting. */
+  const collectUnknownTopics = (rows: string[][], topicIndex: number): string[] => {
+    const unknown = new Set<string>();
+    for (const row of rows) {
+      const raw = (row[topicIndex] || '').trim();
+      if (raw && !parseTopicValue(raw)) unknown.add(raw);
+    }
+    return Array.from(unknown).slice(0, 8);
+  };
+
   const parseCSV = (file: File) => {
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -141,24 +191,27 @@ export function QuestionImporter() {
 
       // Skip header row if first cell mentions "question" or "number"
       const firstRow = rows[0];
-      const dataRows = (firstRow[0]?.toLowerCase().includes('question') || firstRow[0]?.toLowerCase().includes('number'))
-        ? rows.slice(1)
-        : rows;
+      const hasHeader = firstRow[0]?.toLowerCase().includes('question') || firstRow[0]?.toLowerCase().includes('number');
+      const dataRows = hasHeader ? rows.slice(1) : rows;
+      const cols = resolveColumns(hasHeader ? firstRow : null);
 
       const parsed: QuestionRow[] = dataRows.map((columns) => ({
-        questionNumber: parseInt(columns[0]) || undefined,
+        questionNumber: parseInt(columns[cols.number]) || undefined,
         examType: selectedExamType,
-        questionText: columns[1] || '',
-        imageUrl: columns[2] || undefined,
-        answerA: columns[3] || '',
-        answerB: columns[4] || '',
-        answerC: columns[5] || '',
-        answerD: columns[6] || '',
-        correctAnswer: (columns[7] || 'a').toLowerCase(),
+        questionText: columns[cols.question] || '',
+        imageUrl: cols.image >= 0 ? (columns[cols.image] || undefined) : undefined,
+        answerA: columns[cols.a] || '',
+        answerB: columns[cols.b] || '',
+        answerC: columns[cols.c] || '',
+        answerD: columns[cols.d] || '',
+        correctAnswer: (columns[cols.correct] || 'a').toLowerCase(),
         difficulty: 2,
         language: 'English',
+        topic: cols.topic >= 0 ? parseTopicValue(columns[cols.topic]) : null,
       })).filter(q => q.questionText);
 
+      setTopicColumnFound(cols.topic >= 0);
+      setUnknownTopics(cols.topic >= 0 ? collectUnknownTopics(dataRows, cols.topic) : []);
       setPreview(parsed.slice(0, 5));
     };
     reader.readAsText(file);
@@ -239,30 +292,32 @@ export function QuestionImporter() {
         const worksheet = workbook.Sheets[firstSheetName];
         const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
         
-        const dataRows = jsonData[0] && typeof jsonData[0][0] === 'string' && 
-                        jsonData[0][0].toLowerCase().includes('question') 
-                        ? jsonData.slice(1) 
-                        : jsonData;
-        
+        const xHasHeader = jsonData[0] && typeof jsonData[0][0] === 'string' &&
+                        jsonData[0][0].toLowerCase().includes('question');
+        const dataRows = xHasHeader ? jsonData.slice(1) : jsonData;
+        const cols = resolveColumns(xHasHeader ? jsonData[0].map((c: any) => String(c ?? '')) : null);
+
         questions = dataRows
-          .filter(row => row && row.length > 1 && row[1])
+          .filter(row => row && row.length > 1 && row[cols.question])
           .map((row, index) => {
-            const questionNumber = parseInt(row[0]?.toString()) || (index + 1);
+            const questionNumber = parseInt(row[cols.number]?.toString()) || (index + 1);
             const paddedNumber = String(questionNumber).padStart(3, '0');
+            const topic = cols.topic >= 0 ? parseTopicValue(row[cols.topic]?.toString()) : null;
             return {
               // Use deterministic ID based on exam type and question number (prevents duplicates!)
               id: `${selectedExamType}_${paddedNumber}`,
               questionNumber,
               examType: selectedExamType,
-              questionText: row[1]?.toString() || '', // Column 2: question
-              answerA: row[3]?.toString() || '', // Column 4: answer A
-              answerB: row[4]?.toString() || '', // Column 5: answer B
-              answerC: row[5]?.toString() || '', // Column 6: answer C
-              answerD: row[6]?.toString() || '', // Column 7: answer D
-              correctAnswer: (row[7]?.toString() || 'a').toLowerCase(), // Column 8: correct answer
+              questionText: row[cols.question]?.toString() || '',
+              answerA: row[cols.a]?.toString() || '',
+              answerB: row[cols.b]?.toString() || '',
+              answerC: row[cols.c]?.toString() || '',
+              answerD: row[cols.d]?.toString() || '',
+              correctAnswer: (row[cols.correct]?.toString() || 'a').toLowerCase(),
               difficulty: 2 as 1 | 2 | 3, // Default difficulty
-              imageUrl: row[2]?.toString() || undefined, // Column 3: image
+              imageUrl: cols.image >= 0 ? (row[cols.image]?.toString() || undefined) : undefined,
               language: 'English',
+              ...(topic ? { topic } : {}),
             };
           });
       } else {
@@ -270,28 +325,32 @@ export function QuestionImporter() {
         const text = await file.text();
         const rows = parseCSVText(text);
         const firstRow = rows[0] || [];
-        const dataRows = (firstRow[0]?.toLowerCase().includes('question') || firstRow[0]?.toLowerCase().includes('number'))
-          ? rows.slice(1)
-          : rows;
+        const hasHeader = firstRow[0]?.toLowerCase().includes('question') || firstRow[0]?.toLowerCase().includes('number');
+        const dataRows = hasHeader ? rows.slice(1) : rows;
+        const cols = resolveColumns(hasHeader ? firstRow : null);
 
         questions = dataRows
-          .filter(columns => columns[1]?.trim())
+          .filter(columns => columns[cols.question]?.trim())
           .map((columns, index) => {
-            const questionNumber = parseInt(columns[0]) || (index + 1);
+            const questionNumber = parseInt(columns[cols.number]) || (index + 1);
             const paddedNumber = String(questionNumber).padStart(3, '0');
+            const topic = cols.topic >= 0 ? parseTopicValue(columns[cols.topic]) : null;
             return {
               id: `${selectedExamType}_${paddedNumber}`,
               questionNumber,
               examType: selectedExamType,
-              questionText: columns[1] || '',
-              imageUrl: columns[2] || undefined,
-              answerA: columns[3] || '',
-              answerB: columns[4] || '',
-              answerC: columns[5] || '',
-              answerD: columns[6] || '',
-              correctAnswer: (columns[7] || 'a').toLowerCase(),
+              questionText: columns[cols.question] || '',
+              imageUrl: cols.image >= 0 ? (columns[cols.image] || undefined) : undefined,
+              answerA: columns[cols.a] || '',
+              answerB: columns[cols.b] || '',
+              answerC: columns[cols.c] || '',
+              answerD: columns[cols.d] || '',
+              correctAnswer: (columns[cols.correct] || 'a').toLowerCase(),
               difficulty: 2 as 1 | 2 | 3,
               language: 'English',
+              // Only set when the file declared a category we recognise; otherwise
+              // the question falls back to automatic classification.
+              ...(topic ? { topic } : {}),
             };
           });
       }
@@ -430,6 +489,40 @@ export function QuestionImporter() {
         {preview.length > 0 && (
           <div>
             <h3 className="mb-2">Preview (first 5 questions)</h3>
+
+            {/* Report what was detected, so an ignored or misspelled Category
+                column is visible before the import rather than after. */}
+            <div className="mb-3 space-y-2">
+              {topicColumnFound ? (
+                <div className="flex items-start gap-2 text-sm rounded-md px-3 py-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
+                  <CheckCircle className="w-4 h-4 mt-0.5 flex-shrink-0 text-green-600 dark:text-green-400" />
+                  <span className="text-green-800 dark:text-green-200">
+                    Category column detected — these categories will be used instead of automatic detection.
+                  </span>
+                </div>
+              ) : (
+                <div className="flex items-start gap-2 text-sm rounded-md px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+                  <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0 text-gray-500" />
+                  <span className="text-gray-700 dark:text-gray-300">
+                    No Category column found — categories will be detected automatically.
+                    Add a <code className="font-mono">Category</code> column to set them yourself.
+                  </span>
+                </div>
+              )}
+
+              {unknownTopics.length > 0 && (
+                <div className="flex items-start gap-2 text-sm rounded-md px-3 py-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
+                  <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0 text-amber-600 dark:text-amber-400" />
+                  <span className="text-amber-800 dark:text-amber-200">
+                    Unrecognised categories, which will fall back to automatic detection:{' '}
+                    <strong>{unknownTopics.join(', ')}</strong>.
+                    <br />
+                    Valid values: {LEARN_TOPICS.map(t => t.en).join(', ')}.
+                  </span>
+                </div>
+              )}
+            </div>
+
             <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg overflow-x-auto">
               <TooltipProvider>
                 <table className="w-full text-sm">

@@ -412,7 +412,7 @@ export function ExamModeSelection() {
                         disabled={!available}
                         className={`flex flex-col items-center justify-center gap-2 rounded-lg border-2 p-6 select-none transition-all duration-200 ${
                           available
-                            ? 'cursor-pointer hover:-translate-y-0.5 hover:shadow-lg'
+                            ? 'cursor-pointer hover:-translate-y-0.5 learn-tile'
                             : 'cursor-not-allowed border-dashed'
                         }`}
                         style={{

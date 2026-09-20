@@ -116,6 +116,41 @@ export const TOPIC_BY_KEY: Record<LearnTopic, TopicDef> = Object.fromEntries(
   LEARN_TOPICS.map(t => [t.key, t]),
 ) as Record<LearnTopic, TopicDef>;
 
+/**
+ * Turn a free-text category from a spreadsheet into a topic key.
+ *
+ * Accepts the key itself ("buoys"), the English or Bulgarian display name, and
+ * a few spellings people actually type. Case, spacing, punctuation and the
+ * ampersand in names like "Buoys & Marks" are all ignored. Returns null for
+ * anything unrecognised so the importer can report it rather than guess.
+ */
+export function parseTopicValue(raw: string | undefined | null): LearnTopic | null {
+  if (!raw) return null;
+  const norm = (s: string) => s.toLowerCase().replace(/[&\s_\-.,()]+/g, '');
+  const v = norm(raw);
+  if (!v) return null;
+
+  for (const t of LEARN_TOPICS) {
+    if (v === norm(t.key) || v === norm(t.en) || v === norm(t.bg)) return t.key;
+  }
+
+  const aliases: Record<string, LearnTopic> = {
+    shape: 'shapes', dayshape: 'shapes', figures: 'shapes', znaci: 'shapes',
+    light: 'lights', svetlini: 'lights',
+    sound: 'sounds', soundsignal: 'sounds', signals: 'sounds', zvuk: 'sounds',
+    flag: 'flags', flagove: 'flags',
+    buoy: 'buoys', buoyage: 'buoys', marks: 'buoys', buoysandmarks: 'buoys',
+    chart: 'charts', chartsymbol: 'charts', symbols: 'charts', karti: 'charts',
+    colreg: 'colregs', collision: 'colregs', collisionregulations: 'colregs', rules: 'colregs',
+    nav: 'navigation', position: 'navigation', navigationposition: 'navigation',
+    instrument: 'instruments', devices: 'instruments', uredi: 'instruments',
+    weathersea: 'weather', sea: 'weather', vreme: 'weather',
+    local: 'localwaters', localwater: 'localwaters', geography: 'localwaters',
+    theory: 'general', generaltheory: 'general', other: 'general', misc: 'general',
+  };
+  return aliases[v] ?? null;
+}
+
 /** Anything with a question and answers — works for both DB and local shapes. */
 export interface ClassifiableQuestion {
   question?: string;
