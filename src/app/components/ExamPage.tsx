@@ -286,7 +286,12 @@ export function ExamPage({ examType, mode, tier, topic, onBackToHome, onNavigate
   const totalQuestions = examQuestions.length;
   const answeredCount = Object.keys(answeredQuestions).length;
   const progress = totalQuestions > 0 ? (answeredCount / totalQuestions) * 100 : 0;
-  const MAX_WRONG_ANSWERS = 2;
+  // Two wrong answers fail the exam, so one is the most you may have and still
+  // pass. The check below is `wrongCount < FAIL_AT_WRONG`; the figure shown to
+  // the candidate is the allowance, which is one lower — displaying the fail
+  // threshold instead read as though two mistakes were survivable.
+  const FAIL_AT_WRONG = 2;
+  const MAX_ALLOWED_WRONG = FAIL_AT_WRONG - 1;
   
   // Early safety check - must happen before using currentQuestion
   // Include loadingQuestions so we don't flash "not found" while re-fetching for a new exam
@@ -559,7 +564,7 @@ export function ExamPage({ examType, mode, tier, topic, onBackToHome, onNavigate
   if (showResults) {
     const { wrongCount, correctCount, submittedCount } = calculateResults();
     // Learn is practice — there is no pass mark, so never show it as a failure.
-    const passed = mode === 'learn' ? true : wrongCount < MAX_WRONG_ANSWERS;
+    const passed = mode === 'learn' ? true : wrongCount < FAIL_AT_WRONG;
     const allCorrect = wrongCount === 0;
     const percentage = Math.round((correctCount / totalQuestions) * 100);
 
@@ -653,7 +658,7 @@ export function ExamPage({ examType, mode, tier, topic, onBackToHome, onNavigate
                     <p className="text-3xl font-bold" style={{ color: passed ? (darkMode ? '#4ade80' : '#16a34a') : (darkMode ? '#f87171' : '#dc2626') }}>
                       {wrongCount}
                     </p>
-                    <p className="text-xs mt-1" style={{ color: darkMode ? '#64748b' : '#6b7280' }}>{t.maximum}: {MAX_WRONG_ANSWERS}</p>
+                    <p className="text-xs mt-1" style={{ color: darkMode ? '#64748b' : '#6b7280' }}>{t.maximum}: {MAX_ALLOWED_WRONG}</p>
                   </CardContent>
                 </Card>
                 <Card
@@ -890,8 +895,8 @@ export function ExamPage({ examType, mode, tier, topic, onBackToHome, onNavigate
                   </div>
                   <div className="text-center">
                     <p className="text-sm mb-1" style={{ color: darkMode ? '#94a3b8' : '#6b7280' }}>{t.questionsWrong}</p>
-                    <p className={`text-2xl font-bold`} style={{ color: wrongCount < MAX_WRONG_ANSWERS ? (darkMode ? '#4ade80' : '#16a34a') : (darkMode ? '#f87171' : '#dc2626') }}>
-                      {wrongCount}/{MAX_WRONG_ANSWERS}
+                    <p className={`text-2xl font-bold`} style={{ color: wrongCount < FAIL_AT_WRONG ? (darkMode ? '#4ade80' : '#16a34a') : (darkMode ? '#f87171' : '#dc2626') }}>
+                      {wrongCount}/{MAX_ALLOWED_WRONG}
                     </p>
                   </div>
                   <div className="text-center">

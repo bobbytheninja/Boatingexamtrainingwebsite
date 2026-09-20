@@ -363,6 +363,8 @@ export function CategoryManagement({ accessToken }: CategoryManagementProps) {
       }
       toast.success(isAddingNew ? '✅ Category added successfully!' : '✅ Category updated successfully!');
       handleCancel();
+      // Admin edits must reach the rest of the app, which reads from cache.
+      invalidateCategories();
       await loadCategories();
     } catch (error: any) {
       toast.error(`Failed to save category: ${error.message}`);
@@ -387,6 +389,8 @@ export function CategoryManagement({ accessToken }: CategoryManagementProps) {
         throw new Error(error.message || 'Failed to reset categories');
       }
       toast.success('✅ Categories reset to defaults successfully!');
+      // Admin edits must reach the rest of the app, which reads from cache.
+      invalidateCategories();
       await loadCategories();
     } catch (error: any) {
       toast.error(`Failed to reset categories: ${error.message}`);
@@ -417,6 +421,8 @@ export function CategoryManagement({ accessToken }: CategoryManagementProps) {
       }
 
       toast.success('✅ Category deleted successfully!');
+      // Admin edits must reach the rest of the app, which reads from cache.
+      invalidateCategories();
       await loadCategories();
     } catch (error: any) {
       console.error('Error deleting category:', error);

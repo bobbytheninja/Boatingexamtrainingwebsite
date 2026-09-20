@@ -5,7 +5,6 @@ import { projectId, publicAnonKey } from '../utils/supabase/info';
 import { createClient } from '../utils/supabase/client';
 import { useDarkMode } from '../contexts/DarkModeContext';
 import { loadExamCategories } from '../utils/categoryLoader';
-import * as XLSX from 'xlsx';
 import {
   Tooltip,
   TooltipContent,
@@ -219,6 +218,8 @@ export function QuestionImporter() {
 
   const parseExcel = async (file: File) => {
     try {
+      // Loaded only when an Excel file is actually chosen — see UserManagement.
+      const XLSX = await import('xlsx');
       const data = await file.arrayBuffer();
       const workbook = XLSX.read(data, { cellStyles: true, bookImages: true });
       
@@ -286,6 +287,7 @@ export function QuestionImporter() {
 
       if (fileExtension === 'xlsx' || fileExtension === 'xls') {
         // Parse Excel file
+        const XLSX = await import('xlsx');
         const data = await file.arrayBuffer();
         const workbook = XLSX.read(data, { cellStyles: true, bookImages: true });
         const firstSheetName = workbook.SheetNames[0];

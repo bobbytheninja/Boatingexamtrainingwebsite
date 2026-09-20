@@ -16,6 +16,7 @@ import { ButtonSpinner } from './LoadingSpinner';
 import { Navigation } from './Navigation';
 import { Footer } from './Footer';
 import { projectId } from '../utils/supabase/info';
+import { fetchCategories } from '../utils/categoriesCache';
 
 interface AccountPageProps {
   userEmail: string;
@@ -59,13 +60,9 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
   const fetchCategories = async () => {
     setFetchError(false);
     try {
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/categories`);
-      if (response.ok) {
-        const data = await response.json();
-        setCategories(data.categories || []);
-      } else {
-        setFetchError(true);
-      }
+      // Shared cache: usually already warm from the home page.
+      const list = await fetchCategories();
+      setCategories(list as any);
     } catch {
       setFetchError(true);
     } finally {

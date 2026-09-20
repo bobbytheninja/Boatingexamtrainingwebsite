@@ -2433,6 +2433,10 @@ app.post("/make-server-d36f8f91/images/upload", async (c) => {
 
 // Database diagnostics endpoint (helps debug question loading issues)
 app.get("/make-server-d36f8f91/diagnostics/questions", async (c) => {
+  // Admin only: the response embeds a sample question from the bank.
+  const { error: dErr, user: dUser, isAdmin: dAdmin } = await verifyAdmin(c.req.header('Authorization'));
+  if (dErr || !dUser || !dAdmin) return c.json({ message: 'Admin access required' }, 403);
+
   try {
     // Use registered categories, not a hardcoded list, so the UI matches what the admin set up.
     const categories = await kv.get('exam_categories') || [];
@@ -2482,6 +2486,12 @@ app.get("/make-server-d36f8f91/diagnostics/questions", async (c) => {
 
 // Check specific question and image status
 app.post("/make-server-d36f8f91/diagnostics/check-question", async (c) => {
+  // Admin only. This returns the question together with its correctAnswer,
+  // so while it was unauthenticated anyone could walk questionNumber from 1
+  // upward and copy the whole paid question bank, answers included.
+  const { error, user, isAdmin: adminStatus } = await verifyAdmin(c.req.header('Authorization'));
+  if (error || !user || !adminStatus) return c.json({ message: 'Admin access required' }, 403);
+
   try {
     const body = await c.req.json();
     const { examType, questionNumber } = body;
@@ -3199,12 +3209,27 @@ app.get("/make-server-d36f8f91/categories", async (c) => {
 // Public endpoint to force-initialize categories (no admin required)
 app.post("/make-server-d36f8f91/categories/force-init", async (c) => {
   try {
-    console.log('');
-    console.log('▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓');
-    console.log('[POST /categories/force-init] PUBLIC REQUEST RECEIVED');
-    console.log('▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓');
-    console.log('[POST /categories/force-init] Force initializing categories...');
-    
+    // Seed only. This endpoint takes no authentication because the client
+    // calls it to recover when the category list is missing, but it used to
+    // overwrite exam_categories unconditionally — so anyone who knew the URL
+    // could replace every title, price, free flag and ordering with defaults.
+    // Existing categories are now left exactly as they are.
+    const existing = await kv.get('exam_categories');
+    if (Array.isArray(existing) && existing.length > 0) {
+      return c.json({
+        success: true,
+        skipped: true,
+        message: 'Categories already exist; nothing was changed.',
+        count: existing.length,
+      });
+    }
+
+    // Also cap it, so the seed path cannot be used to hammer the store.
+    const clientIp = c.req.header('x-forwarded-for') || 'unknown';
+    if (!checkRateLimit(clientIp, 'force-init', 5, 60_000)) {
+      return c.json({ message: 'Too many requests. Please try again shortly.' }, 429);
+    }
+
     const defaultCategories = [
       {
         type: 'jet',

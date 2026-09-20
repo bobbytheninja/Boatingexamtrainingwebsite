@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Search, CheckCircle, XCircle, AlertCircle, Image as ImageIcon, Loader2 } from 'lucide-react';
-import { projectId, publicAnonKey } from '../utils/supabase/info';
+import { projectId } from '../utils/supabase/info';
+import { useAuth } from '../contexts/AuthContext';
 import { loadExamCategories } from '../utils/categoryLoader';
 
 export function ImageDiagnostics() {
+  const { accessToken } = useAuth();
   const [examType, setExamType] = useState('yacht');
   const [questionNumber, setQuestionNumber] = useState('1');
   const [checking, setChecking] = useState(false);
@@ -48,7 +50,7 @@ export function ImageDiagnostics() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${publicAnonKey}`,
+            'Authorization': `Bearer ${accessToken}`,
           },
           body: JSON.stringify({
             examType,

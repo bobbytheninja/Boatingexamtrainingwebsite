@@ -12,7 +12,8 @@ import {
   FileQuestion,
   Loader2
 } from 'lucide-react';
-import { projectId, publicAnonKey } from '../utils/supabase/info';
+import { projectId } from '../utils/supabase/info';
+import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'sonner';
 import { loadExamCategories } from '../utils/categoryLoader';
 import { useDarkMode } from '../contexts/DarkModeContext';
@@ -36,6 +37,7 @@ interface DiagnosticsData {
 }
 
 export function DatabaseDiagnostics() {
+  const { accessToken } = useAuth();
   const { darkMode } = useDarkMode();
   const [loading, setLoading] = React.useState(false);
   const [diagnosticsData, setDiagnosticsData] = React.useState<DiagnosticsData | null>(null);
@@ -63,7 +65,7 @@ export function DatabaseDiagnostics() {
         `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/diagnostics/questions`,
         {
           headers: {
-            'Authorization': `Bearer ${publicAnonKey}`,
+            'Authorization': `Bearer ${accessToken}`,
           },
         }
       );

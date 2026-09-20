@@ -94,6 +94,20 @@ export function subscribeCategories(fn: (categories: ExamCategoryRecord[]) => vo
 }
 
 /**
+ * Drop what is cached and refetch. Called after an admin edits categories, so
+ * the rest of the app does not keep serving the version from before the edit.
+ */
+export function invalidateCategories(): void {
+  memory = null;
+  try {
+    sessionStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // Nothing persisted; the in-memory reset above is enough.
+  }
+  fetchCategories().catch(() => {});
+}
+
+/**
  * Warm the cache before anything needs it — called at app start so the list is
  * usually in hand by the time the first page asks.
  */

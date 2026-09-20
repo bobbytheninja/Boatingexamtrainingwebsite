@@ -131,7 +131,6 @@ export function ResetPasswordPage({ onNavigate }: ResetPasswordPageProps) {
     setIsLoading(true);
 
     try {
-      console.log('[ResetPassword] Updating password...');
       
       // Security: This only works if user has a valid recovery session
       const { error: updateError } = await supabase.auth.updateUser({

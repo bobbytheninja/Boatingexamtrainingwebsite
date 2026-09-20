@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import * as XLSX from 'xlsx';
 import { useDarkMode } from '../contexts/DarkModeContext';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
@@ -412,7 +411,11 @@ export function UserManagement() {
     return `${seconds}s`;
   };
 
-  const exportToExcel = () => {
+  // xlsx is roughly 400KB minified and is only needed the moment someone
+  // actually exports, so it is fetched on demand rather than bundled into the
+  // admin page for everyone who merely opens it.
+  const exportToExcel = async () => {
+    const XLSX = await import('xlsx');
     const rows = users.map(u => ({
       'Email': u.email,
       'Name': u.name,
