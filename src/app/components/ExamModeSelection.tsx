@@ -412,7 +412,7 @@ export function ExamModeSelection() {
                     const available = count !== null
                       ? count > 0
                       : (!accessToken && !countsLoading && !countsError);
-                    const label = language === 'English' ? topic.en : topic.bg;
+                    const label = topic.names[language] ?? topic.names.English;
 
                     return (
                       <button

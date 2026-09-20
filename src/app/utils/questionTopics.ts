@@ -14,6 +14,8 @@
  *     question lands in exactly one topic.
  */
 
+import type { Language } from '../data/translations';
+
 export type LearnTopic =
   | 'shapes'
   | 'lights'
@@ -36,82 +38,142 @@ export type LearnTopic =
 
 export interface TopicDef {
   key: LearnTopic;
-  en: string;
-  bg: string;
+  /** Display name per UI language. */
+  names: Record<Language, string>;
   pattern: RegExp;
 }
 
 export const LEARN_TOPICS: TopicDef[] = [
   {
     key: 'shapes',
-    en: 'Day Shapes',
-    bg: 'Знаци (фигури)',
+    names: {
+      English: 'Day Shapes',
+      Bulgarian: 'Знаци (фигури)',
+      Spanish: 'Figuras Diurnas',
+      Greek: 'Σχήματα Ημέρας',
+      Italian: 'Figure Diurne',
+    },
     pattern: /these sh[as]pes?\b|\bday ?shapes?\b|\bshapes?\b|\bblack ball\b|\bcones?\b|\bcylinders?\b|\bdiamond\b|фигур|конус|цилиндър|ромб|signalk[öo]rper|\bkegel\b|zylinder|\bcono\b|pallone|cilindro|\brombo\b/i,
   },
   {
     key: 'lights',
-    en: 'Lights',
-    bg: 'Светлини',
+    names: {
+      English: 'Lights',
+      Bulgarian: 'Светлини',
+      Spanish: 'Luces',
+      Greek: 'Φώτα',
+      Italian: 'Luci',
+    },
     pattern: /\blights?\b|\bsidelights?\b|masthead light|\bsternlights?\b|all-?round light|\bflashing\b|\bocculting\b|\bisophase\b|светлин|фенер|проблясв|\blicht|\blichter\b|\bfeuer\b|leuchtfeuer|\bluce\b|\bluci\b|fanale|fanali|\bluz\b|\bluces\b/i,
   },
   {
     key: 'sounds',
-    en: 'Sound Signals',
-    bg: 'Звукови сигнали',
+    names: {
+      English: 'Sound Signals',
+      Bulgarian: 'Звукови сигнали',
+      Spanish: 'Señales Acústicas',
+      Greek: 'Ηχητικά Σήματα',
+      Italian: 'Segnali Acustici',
+    },
     pattern: /\bsound signals?\b|\bfog signals?\b|\bwhistles?\b|\bhorns?\b|\bblasts?\b|\bbells?\b|\bgongs?\b|manoeuvring and warning|звуков|звук|свирк|камбан|schallsignal|signalton|nebelhorn|\bglocke\b|segnale acustico|\bfischi|suono|se[ñn]al ac[úu]stica/i,
   },
   {
     key: 'flags',
-    en: 'Flags',
-    bg: 'Флагове',
+    names: {
+      English: 'Flags',
+      Bulgarian: 'Флагове',
+      Spanish: 'Banderas',
+      Greek: 'Σημαίες',
+      Italian: 'Bandiere',
+    },
     pattern: /\bflags?\b|\bpennants?\b|code letter|signal letter|\bensigns?\b|флаг|знаме|\bflagge|\bflaggen\b|bandiera|bandiere|\bbandera/i,
   },
   {
     key: 'buoys',
-    en: 'Buoys & Marks',
-    bg: 'Буйове и знаци',
+    names: {
+      English: 'Buoys & Marks',
+      Bulgarian: 'Буйове и знаци',
+      Spanish: 'Boyas y Marcas',
+      Greek: 'Σημαντήρες',
+      Italian: 'Boe e Segnali',
+    },
     pattern: /\bbuoys?\b|cardinal marks?|lateral marks?|safe water|isolated danger|special marks?|region [ab]\b|\btopmarks?\b|port hand|starboard hand|буй|кардинал|латерал|\btonne\b|\btonnen\b|betonnung|fahrwasser|\bboa\b|\bboe\b|\bmeda\b|baliza|\bboya\b/i,
   },
   {
     key: 'charts',
-    en: 'Chart Symbols',
-    bg: 'Символи от карти',
+    names: {
+      English: 'Chart Symbols',
+      Bulgarian: 'Символи от карти',
+      Spanish: 'Símbolos de Cartas',
+      Greek: 'Σύμβολα Χαρτών',
+      Italian: 'Simboli Nautici',
+    },
     pattern: /\bcharts?\b|admiralty|\bsymbols?\b|\bsoundings?\b|depth contour|\bisobath|карт|символ|seekarte|\bkarte\b|carta nautica|\bcarte\b|\bsimbolo\b|carta n[áa]utica/i,
   },
   {
     key: 'colregs',
-    en: 'Collision Rules',
-    bg: 'Правила за разминаване',
+    names: {
+      English: 'Collision Rules',
+      Bulgarian: 'Правила за разминаване',
+      Spanish: 'Reglas de Abordaje',
+      Greek: 'Κανόνες Σύγκρουσης',
+      Italian: 'Regole di Rotta',
+    },
     pattern: /give ?way|stand ?on|overtak|crossing situation|head-?on|right of way|collision|narrow channel|in sight of one another|restricted visibility|traffic separation|\bcolregs?\b|разминав|сблъс|изпревар|тесен канал|ausweich|kurshalt|[üu]berhol|vorfahrt|kollision|precedenza|rotta libera|sorpass|\bmanovra\b|abordaje/i,
   },
   {
     key: 'navigation',
-    en: 'Navigation & Position',
-    bg: 'Навигация и позиция',
+    names: {
+      English: 'Navigation & Position',
+      Bulgarian: 'Навигация и позиция',
+      Spanish: 'Navegación y Posición',
+      Greek: 'Ναυσιπλοΐα',
+      Italian: 'Navigazione',
+    },
     pattern: /\bbearings?\b|\bcourses?\b|latitude|longitude|coordinate|\bmeridians?\b|\bequator\b|\bparallel\b|declination|variation|deviation|\bnautical mile\b|\bknots?\b|\bspeed\b|great circle|rhumb|loxodrome|\bangle\b|\bdistance\b|\bposition\b|\bfix\b|\bgps\b|dead reckoning|ширин|дължин|координат|меридиан|курс|пеленг|склонение|девиац|\bkurs\b|peilung|seemeile|geschwindigkeit|\brotta\b|rilevamento|posizione|\bmiglia\b|velocit[àa]|\brumbo\b|\bmilla/i,
   },
   {
     key: 'instruments',
-    en: 'Instruments',
-    bg: 'Уреди',
+    names: {
+      English: 'Instruments',
+      Bulgarian: 'Уреди',
+      Spanish: 'Instrumentos',
+      Greek: 'Όργανα',
+      Italian: 'Strumenti',
+    },
     pattern: /\bcompass\b|echo ?sounder|\bradar\b|\bsextant\b|anemometer|barometer|hygrometer|\blog\b|\bais\b|\bepirb\b|navigation device|компас|ехолот|радар|уред|барометр/i,
   },
   {
     key: 'engine',
-    en: 'Engine & Systems',
-    bg: 'Двигател и системи',
+    names: {
+      English: 'Engine & Systems',
+      Bulgarian: 'Двигател и системи',
+      Spanish: 'Motor y Sistemas',
+      Greek: 'Μηχανή',
+      Italian: 'Motore e Impianti',
+    },
     pattern: /\bengines?\b|\bfuel\b|\bpropellers?\b|\bbatter(y|ies)\b|\bbilge\b|outboard|inboard|\bmotore?\b|carburante|\belica\b|\bmotor\b|kraftstoff|двигател|гориво|витло|акумулатор|combustible|h[ée]lice/i,
   },
   {
     key: 'weather',
-    en: 'Weather & Sea',
-    bg: 'Време и море',
+    names: {
+      English: 'Weather & Sea',
+      Bulgarian: 'Време и море',
+      Spanish: 'Meteorología y Mar',
+      Greek: 'Καιρός',
+      Italian: 'Meteo e Mare',
+    },
     pattern: /\bwinds?\b|\bweather\b|beaufort|\btides?\b|\bcurrents?\b|\bhumidity\b|\bfog\b|\bstorm\b|\bwaves?\b|\bforecast\b|\bpressure\b|вятър|време|прилив|течени|влажност|мъгла|\bwetter\b|\bwind\b|\bwelle|gezeit|str[öo]mung|\bvento\b|\bonda\b|\bmarea\b|corrente|\bmeteo\b|viento/i,
   },
   {
     key: 'localwaters',
-    en: 'Local Waters',
-    bg: 'Местни води',
+    names: {
+      English: 'Local Waters',
+      Bulgarian: 'Местни води',
+      Spanish: 'Aguas Locales',
+      Greek: 'Τοπικά Ύδατα',
+      Italian: 'Acque Locali',
+    },
     pattern: /\bcape\b|black sea|bulgaria|\bvarna\b|\bburgas\b|\bemine\b|athanasius|magnetic anomaly|нос |черно море|българ|варна|бургас/i,
   },
 
@@ -119,40 +181,70 @@ export const LEARN_TOPICS: TopicDef[] = [
   // report zero (and stay hidden) on the maritime exams, and vice versa. ---
   {
     key: 'distress',
-    en: 'Distress & Urgency',
-    bg: 'Бедствие и спешност',
+    names: {
+      English: 'Distress & Urgency',
+      Bulgarian: 'Бедствие и спешност',
+      Spanish: 'Socorro y Urgencia',
+      Greek: 'Κίνδυνος',
+      Italian: 'Soccorso e Urgenza',
+    },
     pattern: /\bmayday\b|\bpan[- ]?pan\b|s[ée]curit[ée]|\bdistress\b|\burgency\b|мейдей|бедств|спешн|тревог|авари|спасител|seenot|notruf|\brettung|soccorso|emergenza|\bpericolo\b|socorro|emergencia/i,
   },
   {
     key: 'radioprocedure',
-    en: 'Radio Procedure',
-    bg: 'Радиопроцедури',
+    names: {
+      English: 'Radio Procedure',
+      Bulgarian: 'Радиопроцедури',
+      Spanish: 'Procedimiento Radio',
+      Greek: 'Διαδικασίες Ασυρμάτου',
+      Italian: 'Procedure Radio',
+    },
     pattern: /\bcall sign\b|phonetic|spelling alphabet|\bover\b and \bout\b|позивн|повикван|предаван|приеман|съобщени|дежурств|процедур/i,
   },
   {
     key: 'channels',
-    en: 'Channels & Frequencies',
-    bg: 'Канали и честоти',
+    names: {
+      English: 'Channels & Frequencies',
+      Bulgarian: 'Канали и честоти',
+      Spanish: 'Canales y Frecuencias',
+      Greek: 'Κανάλια & Συχνότητες',
+      Italian: 'Canali e Frequenze',
+    },
     pattern: /channel\s*\d|\bvhf\b|\bfrequenc|\bmhz\b|simplex|duplex|\bкана[лг]|честот|\bукв\b|\bмхц\b|обхват/i,
   },
   {
     key: 'radioequipment',
-    en: 'Radio Equipment',
-    bg: 'Радиооборудване',
+    names: {
+      English: 'Radio Equipment',
+      Bulgarian: 'Радиооборудване',
+      Spanish: 'Equipo de Radio',
+      Greek: 'Εξοπλισμός Ασυρμάτου',
+      Italian: 'Apparati Radio',
+    },
     pattern: /\bgmdss\b|\bdsc\b|\bmmsi\b|navtex|\bsart\b|\bepirb\b|\bantenna\b|радиостанц|антена|батер|мощност|смущен/i,
   },
   {
     key: 'licensing',
-    en: 'Licensing & Rules',
-    bg: 'Правила и удостоверения',
+    names: {
+      English: 'Licensing & Rules',
+      Bulgarian: 'Правила и удостоверения',
+      Spanish: 'Licencias y Normas',
+      Greek: 'Άδειες & Κανόνες',
+      Italian: 'Licenze e Norme',
+    },
     pattern: /\blicen[cs]|certificate of competen|удостоверен|оператор|\bкурс\b|\bизпит\b|правил|разрешител/i,
   },
   {
     // Catch-all. Must stay last, and must match everything, so that no question
     // is ever left without a topic.
     key: 'general',
-    en: 'General Theory',
-    bg: 'Обща теория',
+    names: {
+      English: 'General Theory',
+      Bulgarian: 'Обща теория',
+      Spanish: 'Teoría General',
+      Greek: 'Γενική Θεωρία',
+      Italian: 'Teoria Generale',
+    },
     pattern: /.*/,
   },
 ];
@@ -176,7 +268,8 @@ export function parseTopicValue(raw: string | undefined | null): LearnTopic | nu
   if (!v) return null;
 
   for (const t of LEARN_TOPICS) {
-    if (v === norm(t.key) || v === norm(t.en) || v === norm(t.bg)) return t.key;
+    if (v === norm(t.key)) return t.key;
+    if (Object.values(t.names).some(n => norm(n) === v)) return t.key;
   }
 
   const aliases: Record<string, LearnTopic> = {
@@ -194,6 +287,11 @@ export function parseTopicValue(raw: string | undefined | null): LearnTopic | nu
     theory: 'general', generaltheory: 'general', other: 'general', misc: 'general',
   };
   return aliases[v] ?? null;
+}
+
+/** The topic's display name in the given UI language. */
+export function topicLabel(topic: LearnTopic, language: Language): string {
+  return TOPIC_BY_KEY[topic].names[language] ?? TOPIC_BY_KEY[topic].names.English;
 }
 
 /** Anything with a question and answers — works for both DB and local shapes. */

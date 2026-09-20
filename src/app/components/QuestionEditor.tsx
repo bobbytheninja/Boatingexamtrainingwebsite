@@ -194,7 +194,7 @@ export function QuestionEditor({ accessToken }: QuestionEditorProps) {
       setQuestions(prev => prev.map(q =>
         selected.has(q.questionNumber) ? { ...q, topic: bulkTopic } : q
       ));
-      setSaveResult({ ok: true, msg: `Set ${data.updated} question${data.updated === 1 ? '' : 's'} to ${TOPIC_BY_KEY[bulkTopic].en}.` });
+      setSaveResult({ ok: true, msg: `Set ${data.updated} question${data.updated === 1 ? '' : 's'} to ${TOPIC_BY_KEY[bulkTopic].names.English}.` });
       setSelected(new Set());
       setBulkTopic('');
     } catch (err: any) {
@@ -396,10 +396,10 @@ export function QuestionEditor({ accessToken }: QuestionEditorProps) {
                 style={inputStyle}
               >
                 <option value="">
-                  Automatic — {TOPIC_BY_KEY[resolveTopic({ ...draftQuestion, topic: null })].en}
+                  Automatic — {TOPIC_BY_KEY[resolveTopic({ ...draftQuestion, topic: null })].names.English}
                 </option>
                 {LEARN_TOPICS.map(t => (
-                  <option key={t.key} value={t.key}>{t.en}</option>
+                  <option key={t.key} value={t.key}>{t.names.English}</option>
                 ))}
               </select>
               <p className="text-xs mt-1" style={mutedStyle}>
@@ -493,7 +493,7 @@ export function QuestionEditor({ accessToken }: QuestionEditorProps) {
               >
                 <option value="">Set topic to…</option>
                 {LEARN_TOPICS.map(t => (
-                  <option key={t.key} value={t.key}>{t.en}</option>
+                  <option key={t.key} value={t.key}>{t.names.English}</option>
                 ))}
               </select>
               <Button
@@ -556,7 +556,7 @@ export function QuestionEditor({ accessToken }: QuestionEditorProps) {
                               }}
                               title={isAuto ? 'Detected automatically' : 'Set by an admin'}
                             >
-                              {TOPIC_BY_KEY[topicKey].en}
+                              {TOPIC_BY_KEY[topicKey].names.English}
                             </span>
                           </div>
                           <div className="flex flex-wrap gap-x-3 mt-1">

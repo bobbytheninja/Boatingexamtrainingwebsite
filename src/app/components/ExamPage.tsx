@@ -23,7 +23,7 @@ import { ExamType, examData, Question } from '../data/examQuestions';
 import { ExamMode, ExamTier } from './ExamModeSelection';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { getTranslation } from '../data/translations';
-import { filterByTopic, LEARN_TOPICS, type LearnTopic } from '../utils/questionTopics';
+import { filterByTopic, topicLabel as topicName, type LearnTopic } from '../utils/questionTopics';
 import { useAuth } from '../contexts/AuthContext';
 import { useDarkMode } from '../contexts/DarkModeContext';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -58,11 +58,7 @@ export function ExamPage({ examType, mode, tier, topic, onBackToHome, onNavigate
   const { darkMode } = useDarkMode();
   // Learn mode shares Study's rhythm: submit, see the answer, continue.
   const instantFeedback = mode === 'study' || mode === 'learn';
-  const topicLabel = topic
-    ? (language === 'English'
-        ? LEARN_TOPICS.find(tp => tp.key === topic)?.en
-        : LEARN_TOPICS.find(tp => tp.key === topic)?.bg) ?? 'Learn'
-    : 'Learn';
+  const topicLabel = topic ? topicName(topic, language) : 'Learn';
   const [examQuestions, setExamQuestions] = useState<Question[]>([]);
   const [loadingQuestions, setLoadingQuestions] = useState(true); // Always start with loading state
   const [questionLoadError, setQuestionLoadError] = useState<string | null>(null);

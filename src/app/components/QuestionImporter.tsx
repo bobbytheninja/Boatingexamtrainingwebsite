@@ -517,7 +517,7 @@ export function QuestionImporter() {
                     Unrecognised categories, which will fall back to automatic detection:{' '}
                     <strong>{unknownTopics.join(', ')}</strong>.
                     <br />
-                    Valid values: {LEARN_TOPICS.map(t => t.en).join(', ')}.
+                    Valid values: {LEARN_TOPICS.map(t => t.names.English).join(', ')}.
                   </span>
                 </div>
               )}
