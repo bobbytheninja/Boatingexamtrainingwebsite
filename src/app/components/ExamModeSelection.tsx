@@ -14,7 +14,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { api } from '../utils/api';
 import { LEARN_TOPICS, countByTopic, type LearnTopic } from '../utils/questionTopics';
 import { toast } from 'sonner';
-import { projectId, publicAnonKey } from '../utils/supabase/info';
+import { peekCategories, fetchCategories } from '../utils/categoriesCache';
 
 export type ExamMode = 'study' | 'exam' | 'learn';
 
@@ -59,54 +59,38 @@ export function ExamModeSelection() {
   
   const examType = examTypeParam as ExamType;
 
-  // Load exam category from server
+  // The category list is cached app-wide, so arriving here from the home page
+  // normally resolves without a request. The background refresh still runs.
   useEffect(() => {
-    const loadCategory = async () => {
-      try {
-        const response = await fetch(
-          `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/categories`,
-          {
-            headers: {
-              'Authorization': `Bearer ${publicAnonKey}`,
-            },
-          }
-        );
+    if (!examType) {
+      navigate('/');
+      return;
+    }
 
-        if (response.ok) {
-          const data = await response.json();
-          const categories = data.categories || [];
-          
-          // Find the category that matches examType
-          const category = categories.find((cat: any) => cat.type === examType);
-          
-          if (category) {
-            setExamCategory(category);
-          } else {
-            // Fallback to hardcoded examData if category not found in server
-            if (examData[examType]) {
-              setExamCategory({
-                type: examType,
-                name: examData[examType].title,
-                description: examData[examType].description,
-              });
-            } else {
-              console.error('Exam category not found:', examType);
-              navigate('/');
-            }
-          }
-        } else {
-          // Fallback to hardcoded examData
-          if (examData[examType]) {
-            setExamCategory({
-              type: examType,
-              name: examData[examType].title,
-              description: examData[examType].description,
-            });
-          }
-        }
-      } catch (error) {
-        console.error('Error loading category:', error);
-        // Fallback to hardcoded examData
+    const resolve = (list: { type: string; [k: string]: any }[]) => {
+      const found = list.find(cat => cat.type === examType);
+      if (found) {
+        setExamCategory(found);
+      } else if (examData[examType]) {
+        setExamCategory({
+          type: examType,
+          name: examData[examType].title,
+          description: examData[examType].description,
+        });
+      }
+    };
+
+    const cached = peekCategories();
+    if (cached) {
+      resolve(cached);
+      setLoading(false);
+    }
+
+    let cancelled = false;
+    fetchCategories()
+      .then(list => { if (!cancelled) resolve(list); })
+      .catch(() => {
+        if (cancelled || cached) return;
         if (examData[examType]) {
           setExamCategory({
             type: examType,
@@ -114,16 +98,10 @@ export function ExamModeSelection() {
             description: examData[examType].description,
           });
         }
-      } finally {
-        setLoading(false);
-      }
-    };
+      })
+      .finally(() => { if (!cancelled) setLoading(false); });
 
-    if (examType) {
-      loadCategory();
-    } else {
-      navigate('/');
-    }
+    return () => { cancelled = true; };
   }, [examType, navigate]);
 
   // Work out which topics actually have questions in this exam. Needs the full

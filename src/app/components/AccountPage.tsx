@@ -585,7 +585,7 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
                                     className="w-full border-2 font-semibold whitespace-nowrap hover:opacity-70 transition-opacity"
                                     style={{
                                       borderColor: darkMode ? '#60a5fa' : '#3b82f6',
-                                      backgroundImage: `radial-gradient(130% 130% at 100% 100%, ${darkMode ? 'rgba(52,211,153,0.30)' : 'rgba(16,185,129,0.26)'} 0%, transparent 58%)`,
+                                      backgroundImage: `linear-gradient(to bottom, transparent 42%, ${darkMode ? 'rgba(52,211,153,0.26)' : 'rgba(16,185,129,0.22)'} 100%)`,
                                       backgroundColor: darkMode ? 'rgba(30,58,138,0.38)' : 'rgba(37,99,235,0.10)',
                                       color: darkMode ? '#93c5fd' : '#1d4ed8',
                                     }}
@@ -610,7 +610,7 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
                                     className="w-full border-2 font-semibold whitespace-nowrap hover:opacity-70 transition-opacity"
                                     style={{
                                       borderColor: darkMode ? '#e0b83a' : '#d4a017',
-                                      backgroundImage: `radial-gradient(130% 130% at 0% 0%, ${darkMode ? 'rgba(52,211,153,0.30)' : 'rgba(16,185,129,0.26)'} 0%, transparent 58%)`,
+                                      backgroundImage: `linear-gradient(to top, transparent 42%, ${darkMode ? 'rgba(52,211,153,0.26)' : 'rgba(16,185,129,0.22)'} 100%)`,
                                       backgroundColor: darkMode ? 'rgba(212,160,23,0.20)' : 'rgba(212,160,23,0.12)',
                                       color: darkMode ? '#e0b83a' : '#a97a0f',
                                     }}

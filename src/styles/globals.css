@@ -439,3 +439,54 @@
 @media (prefers-reduced-motion: reduce) {
   .hero-pan { transition: none; }
 }
+
+/* ── Theme switch: a wave down the page ────────────────────────────────────
+   Darkness falls from the top — the bar first, then the page, then the
+   footer — the way dusk arrives overhead before it reaches the ground. Light
+   comes back the other way, rising from the bottom and pushing the dark up
+   and out.
+
+   Only the three bands each screen is built from are targeted: the nav, the
+   page wrapper, and the footer. Everything inside a band moves with it, so
+   there is nothing to annotate per component.
+
+   Applied to <html> only while a switch is in flight, then removed, so hover
+   and focus states are never left slowed down. */
+html.theme-wave,
+html.theme-wave *,
+html.theme-wave *::before,
+html.theme-wave *::after {
+  transition-property: background-color, background-image, border-color, color, fill, stroke, box-shadow !important;
+  transition-duration: 420ms !important;
+  transition-timing-function: cubic-bezier(0.4, 0.0, 0.2, 1) !important;
+}
+
+/* Falling dark: top band leads. */
+html.theme-wave-dark nav,
+html.theme-wave-dark nav * { transition-delay: 0ms !important; }
+
+html.theme-wave-dark .min-h-screen,
+html.theme-wave-dark .min-h-screen * { transition-delay: 140ms !important; }
+
+html.theme-wave-dark footer,
+html.theme-wave-dark footer * { transition-delay: 280ms !important; }
+
+/* Rising light: bottom band leads, and the dark is pushed up and out. */
+html.theme-wave-light footer,
+html.theme-wave-light footer * { transition-delay: 0ms !important; }
+
+html.theme-wave-light .min-h-screen,
+html.theme-wave-light .min-h-screen * { transition-delay: 140ms !important; }
+
+html.theme-wave-light nav,
+html.theme-wave-light nav * { transition-delay: 280ms !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  html.theme-wave,
+  html.theme-wave *,
+  html.theme-wave *::before,
+  html.theme-wave *::after {
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
+  }
+}

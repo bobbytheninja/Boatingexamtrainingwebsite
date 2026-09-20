@@ -9,6 +9,7 @@ import { Toaster } from './components/ui/sonner';
 import { toast } from 'sonner';
 import { HomePage } from './components/HomePage';
 import { Language } from './data/translations';
+import { prefetchCategories } from './utils/categoriesCache';
 const AppDiagnostics = React.lazy(() => import('./components/AppDiagnostics').then(m => ({ default: m.AppDiagnostics })));
 
 const LoginPage = React.lazy(() => import('./components/LoginPage').then(m => ({ default: m.LoginPage })));
@@ -348,6 +349,10 @@ function AppContent() {
   const { darkMode } = useDarkMode();
   const { forcedLogoutMessage, clearForcedLogoutMessage } = useAuth();
   const navigate = useNavigate();
+
+  // Warm the category list while the first screen is still rendering, so the
+  // page that needs it usually finds it already there.
+  React.useEffect(() => { prefetchCategories(); }, []);
 
   React.useEffect(() => {
     const params = new URLSearchParams(window.location.search);

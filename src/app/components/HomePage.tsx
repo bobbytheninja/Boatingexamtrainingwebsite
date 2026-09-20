@@ -24,7 +24,8 @@ import { useDarkMode } from '../contexts/DarkModeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useRegion } from '../contexts/RegionContext';
 import { AnimatedStatCard } from './AnimatedCounter';
-import { projectId, publicAnonKey } from '../utils/supabase/info';
+import { useCategories } from '../hooks/useCategories';
+import { fetchCategories } from '../utils/categoriesCache';
 
 // Icon mapping - maps icon names from database to actual icon components
 const ICON_MAP: Record<string, React.ComponentType<React.SVGProps<SVGSVGElement>>> = {
@@ -82,9 +83,8 @@ export function HomePage() {
       : 'Yacht & Boat Exam Training Online — Black Sea Bulgaria'
   );
   const isLoggedIn = !!user;
-  const [categories, setCategories] = useState<ExamCategory[]>([]);
-  const [loadingCategories, setLoadingCategories] = useState(true);
-  const [fetchError, setFetchError] = useState(false);
+  // Served from cache on repeat visits, refreshed in the background.
+  const { categories, loading: loadingCategories, error: fetchError } = useCategories();
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
   const descRefs = useRef<Record<string, HTMLElement | null>>({});
   const [isOverflowing, setIsOverflowing] = useState<Record<string, boolean>>({});
@@ -113,28 +113,7 @@ export function HomePage() {
     });
   }, [categories, region, language, expandedCards]);
 
-  const loadCategories = async () => {
-    setFetchError(false);
-    setLoadingCategories(true);
-    try {
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-d36f8f91/categories`,
-        { headers: { 'Authorization': `Bearer ${publicAnonKey}` } }
-      );
-      if (response.ok) {
-        const data = await response.json();
-        setCategories(data.categories || []);
-      } else {
-        setFetchError(true);
-      }
-    } catch {
-      setFetchError(true);
-    } finally {
-      setLoadingCategories(false);
-    }
-  };
 
-  useEffect(() => { loadCategories(); }, []);
 
   // Transform server categories into display format, filtered by selected region
   const examTypes = categories
@@ -293,7 +272,7 @@ export function HomePage() {
                   <p className="mb-4" style={{ color: darkMode ? '#fca5a5' : '#b91c1c' }}>
                     Failed to load exam categories. Check your connection.
                   </p>
-                  <Button onClick={loadCategories} variant="outline">Retry</Button>
+                  <Button onClick={() => { fetchCategories().catch(() => {}); }} variant="outline">Retry</Button>
                 </div>
               ) : examTypes.length === 0 ? (
                 <div className="col-span-full text-center py-20">
