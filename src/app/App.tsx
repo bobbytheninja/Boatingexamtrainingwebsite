@@ -350,12 +350,30 @@ function AppContent() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-sky-50/50 to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
       {showDiagnostics && <AppDiagnostics />}
       {forcedLogoutMessage && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+          onClick={() => clearForcedLogoutMessage()}
+          role="presentation"
+        >
           <div
-            className="rounded-xl p-8 max-w-sm mx-4 text-center shadow-2xl"
+            className="relative rounded-xl p-8 max-w-sm mx-4 text-center shadow-2xl"
             style={{ background: darkMode ? '#1e293b' : '#ffffff' }}
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
           >
-            <p className="text-lg font-semibold mb-6" style={{ color: darkMode ? '#f3f4f6' : '#0f172a' }}>
+            {/* Dismiss without signing in — the user may not want to log back in */}
+            <button
+              onClick={() => clearForcedLogoutMessage()}
+              aria-label="Dismiss"
+              className="absolute top-3 right-3 w-8 h-8 grid place-items-center rounded-md transition-colors hover:bg-black/10 dark:hover:bg-white/10"
+              style={{ color: darkMode ? '#94a3b8' : '#64748b' }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <path d="M18 6 6 18M6 6l12 12" />
+              </svg>
+            </button>
+            <p className="text-lg font-semibold mb-6 mt-2" style={{ color: darkMode ? '#f3f4f6' : '#0f172a' }}>
               {forcedLogoutMessage}
             </p>
             <button
