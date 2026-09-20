@@ -16,7 +16,7 @@ import { ButtonSpinner } from './LoadingSpinner';
 import { Navigation } from './Navigation';
 import { Footer } from './Footer';
 import { projectId } from '../utils/supabase/info';
-import { fetchCategories } from '../utils/categoriesCache';
+import { fetchCategories as fetchCategoriesCached } from '../utils/categoriesCache';
 
 interface AccountPageProps {
   userEmail: string;
@@ -57,12 +57,12 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
     ? new Date(user.created_at).toLocaleDateString(language === 'English' ? 'en-GB' : 'bg-BG', { month: 'long', year: 'numeric' })
     : '—';
 
-  const fetchCategories = async () => {
+  const loadCategories = async () => {
     setFetchError(false);
     try {
       // Shared cache: usually already warm from the home page.
-      const list = await fetchCategories();
-      setCategories(list as any);
+      const list = await fetchCategoriesCached();
+      setCategories((list ?? []) as CategoryData[]);
     } catch {
       setFetchError(true);
     } finally {
@@ -90,7 +90,7 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
   };
 
   React.useEffect(() => {
-    fetchCategories();
+    loadCategories();
     fetchPayments();
   }, []);
 
@@ -463,7 +463,7 @@ export function AccountPage({ userEmail, paidExams, subscriptionExpiresAt, onNav
                   ) : (
                     <div className="space-y-4">
                       {paidExams.map((examType) => {
-                        const categoryData = categories.find(cat => cat.type === examType);
+                        const categoryData = (categories ?? []).find(cat => cat.type === examType);
                         const exam = categoryData || examData[examType];
 
                         const examTitle = (() => {
