@@ -198,6 +198,8 @@ export interface Translations {
   noExamsForRegionDesc: string;
   showExamsFor: string;
   noExamsAtAll: string;
+  instantAccessConsent: string;
+  instantAccessRefund: string;
   notPassed: string;
   failed: string;
   correctAnswers: string;
@@ -449,6 +451,8 @@ export const translations: Record<Language, Translations> = {
     noExamsForRegionDesc: 'We have not added exams for this country yet. Try another region, or get in touch and tell us which exam you need.',
     showExamsFor: 'Show exams for {region}',
     noExamsAtAll: 'No exams are available right now. Please check back shortly.',
+    instantAccessConsent: 'Start my access right away.',
+    instantAccessRefund: 'This means the 14-day cancellation right no longer applies — but if something is wrong, email us and we will refund you.',
     notPassed: 'Not Passed',
     failed: 'Failed',
     correctAnswers: 'Correct Answers',
@@ -698,6 +702,8 @@ export const translations: Record<Language, Translations> = {
     noExamsForRegionDesc: 'Още не сме добавили изпити за тази държава. Изберете друг регион или ни пишете кой изпит ви трябва.',
     showExamsFor: 'Покажи изпитите за {region}',
     noExamsAtAll: 'В момента няма налични изпити. Моля, проверете отново скоро.',
+    instantAccessConsent: 'Искам достъп веднага.',
+    instantAccessRefund: 'Това означава, че 14-дневното право на отказ отпада — но ако нещо не е наред, пишете ни и ще ви върнем парите.',
     notPassed: 'Неиздържан',
     failed: 'Неиздържан',
     correctAnswers: 'Верни Отговори',
@@ -947,6 +953,8 @@ export const translations: Record<Language, Translations> = {
     noExamsForRegionDesc: 'Todavía no hemos añadido exámenes para este país. Pruebe otra región o escríbanos y díganos cuál necesita.',
     showExamsFor: 'Ver exámenes de {region}',
     noExamsAtAll: 'No hay exámenes disponibles en este momento. Vuelva a consultar pronto.',
+    instantAccessConsent: 'Quiero acceso inmediato.',
+    instantAccessRefund: 'Esto significa que el derecho de desistimiento de 14 días deja de aplicarse — pero si algo va mal, escríbanos y le devolvemos el dinero.',
     notPassed: 'No Aprobado',
     failed: 'Reprobado',
     correctAnswers: 'Respuestas Correctas',
@@ -1196,6 +1204,8 @@ export const translations: Record<Language, Translations> = {
     noExamsForRegionDesc: 'Δεν έχουμε προσθέσει ακόμη εξετάσεις για αυτή τη χώρα. Δοκιμάστε άλλη περιοχή ή επικοινωνήστε μαζί μας.',
     showExamsFor: 'Εμφάνιση εξετάσεων για {region}',
     noExamsAtAll: 'Δεν υπάρχουν διαθέσιμες εξετάσεις αυτή τη στιγμή. Ελέγξτε ξανά σύντομα.',
+    instantAccessConsent: 'Θέλω άμεση πρόσβαση.',
+    instantAccessRefund: 'Αυτό σημαίνει ότι το δικαίωμα υπαναχώρησης 14 ημερών παύει να ισχύει — αλλά αν κάτι δεν πάει καλά, γράψτε μας και θα σας επιστρέψουμε τα χρήματα.',
     notPassed: 'Δεν Πέρασε',
     failed: 'Απέτυχε',
     correctAnswers: 'Σωστές Απαντήσεις',
@@ -1445,6 +1455,8 @@ export const translations: Record<Language, Translations> = {
     noExamsForRegionDesc: 'Non abbiamo ancora aggiunto esami per questo paese. Prova un\'altra regione oppure scrivici quale ti serve.',
     showExamsFor: 'Mostra esami per {region}',
     noExamsAtAll: 'Nessun esame disponibile al momento. Riprova a breve.',
+    instantAccessConsent: 'Voglio accedere subito.',
+    instantAccessRefund: 'Questo significa che il diritto di recesso di 14 giorni non si applica più — ma se qualcosa non va, scrivici e ti rimborsiamo.',
     notPassed: 'Non Superato',
     failed: 'Bocciato',
     correctAnswers: 'Risposte Corrette',

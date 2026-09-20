@@ -442,13 +442,16 @@
 
 /* ── Theme switch: a wave down the page ────────────────────────────────────
    Darkness falls from the top — the bar first, then the page, then the
-   footer — and light comes back the other way, rising from the bottom.
+   footer — and light rises from the bottom on the way back.
 
-   Text is deliberately on a much shorter clock than the surfaces behind it.
-   Colour carries legibility, so a label easing over a quarter of a second
-   reads as lag; the background it sits on can afford to take its time. The
-   comma lists below pair each property with its own duration, so the two run
-   at different speeds within one transition.
+   Text does not take part in the wave at all. Colour carries legibility, and
+   a label that eases — or worse, waits for its band's turn before easing —
+   reads as the page struggling to keep up. So colour, fill and stroke switch
+   instantly and with no delay, while the surfaces behind them travel.
+
+   transition-property, -duration and -delay all take comma lists, and they are
+   matched by position: the first three entries are the text properties, at 0s
+   throughout; the rest are the surfaces, which each band then re-times.
 
    Only the three bands each screen is built from are targeted: the nav, the
    page wrapper, and the footer. Everything inside a band moves with it.
@@ -459,37 +462,39 @@ html.theme-wave *,
 html.theme-wave *::before,
 html.theme-wave *::after {
   transition-property: color, fill, stroke, background-color, background-image, border-color, box-shadow !important;
-  transition-duration: 120ms, 120ms, 120ms, 280ms, 280ms, 280ms, 280ms !important;
+  transition-duration: 0s, 0s, 0s, 280ms, 280ms, 280ms, 280ms !important;
+  transition-delay: 0s, 0s, 0s, 0s, 0s, 0s, 0s !important;
   transition-timing-function: cubic-bezier(0.4, 0.0, 0.2, 1) !important;
 }
 
 /* The strip above the nav is painted by the browser from the document
-   background, not by the page, so it changes at once and the wave starts at
-   the nav where the page does. */
+   background, not by the page, so it changes at once. */
 html.theme-wave,
 html.theme-wave body {
   transition: none !important;
 }
 
-/* Falling dark: the bar leads, the page follows, the footer last. */
-html.theme-wave-dark nav,
-html.theme-wave-dark nav * { transition-delay: 0ms !important; }
-
+/* Falling dark: surfaces only. The three leading zeros keep text instant. */
 html.theme-wave-dark .min-h-screen,
-html.theme-wave-dark .min-h-screen * { transition-delay: 80ms !important; }
+html.theme-wave-dark .min-h-screen * {
+  transition-delay: 0s, 0s, 0s, 80ms, 80ms, 80ms, 80ms !important;
+}
 
 html.theme-wave-dark footer,
-html.theme-wave-dark footer * { transition-delay: 150ms !important; }
+html.theme-wave-dark footer * {
+  transition-delay: 0s, 0s, 0s, 150ms, 150ms, 150ms, 150ms !important;
+}
 
 /* Rising light: same pacing, read from the bottom up. */
-html.theme-wave-light footer,
-html.theme-wave-light footer * { transition-delay: 0ms !important; }
-
 html.theme-wave-light .min-h-screen,
-html.theme-wave-light .min-h-screen * { transition-delay: 80ms !important; }
+html.theme-wave-light .min-h-screen * {
+  transition-delay: 0s, 0s, 0s, 80ms, 80ms, 80ms, 80ms !important;
+}
 
 html.theme-wave-light nav,
-html.theme-wave-light nav * { transition-delay: 150ms !important; }
+html.theme-wave-light nav * {
+  transition-delay: 0s, 0s, 0s, 150ms, 150ms, 150ms, 150ms !important;
+}
 
 @media (prefers-reduced-motion: reduce) {
   html.theme-wave *,

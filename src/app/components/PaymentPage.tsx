@@ -12,7 +12,8 @@ import { useDarkMode } from '../contexts/DarkModeContext';
 import { api } from '../utils/api';
 import { Navigation } from './Navigation';
 import { Footer } from './Footer';
-import { Language } from '../data/translations';
+import { Language, getTranslation } from '../data/translations';
+import { useLanguage } from '../contexts/LanguageContext';
 import { projectId, publicAnonKey } from '../utils/supabase/info';
 
 interface ExamCategory {
@@ -40,7 +41,13 @@ export function PaymentPage({ userEmail, onBack, onComplete, onNavigate }: Payme
   const { accessToken, refreshSubscriptions, user } = useAuth();
   const { darkMode, toggleDarkMode } = useDarkMode();
   const [selectedExams, setSelectedExams] = useState<ExamType[]>([]);
+  // This page keeps a local currentLanguage for its own older copy; the shared
+  // context is the one the user actually picked, so new copy reads from that.
+  const { language } = useLanguage();
+  const t = getTranslation(language);
   const [isProcessing, setIsProcessing] = useState(false);
+  // Must be ticked before checkout opens — see the label at the button.
+  const [instantAccessAccepted, setInstantAccessAccepted] = useState(false);
   const [currentLanguage, setCurrentLanguage] = useState<Language>('English');
   const [region, setRegion] = useState('Bulgaria');
   const [categories, setCategories] = useState<ExamCategory[]>([]);
@@ -428,11 +435,41 @@ export function PaymentPage({ userEmail, onBack, onComplete, onNavigate }: Payme
                     </ul>
                   </div>
 
+                  {/* EU distance selling gives 14 days to cancel. Digital content
+                      is exempt only where the buyer asks for immediate access and
+                      acknowledges losing that right, so it has to be an explicit
+                      opt-in rather than buried in the terms. The refund promise
+                      sits with it deliberately: a bare waiver on a young site
+                      reads as a catch, the same sentence with a plain guarantee
+                      attached reads as confidence. */}
+                  <label
+                    className="flex items-start gap-3 rounded-lg p-3 cursor-pointer select-none"
+                    style={{
+                      background: darkMode ? 'rgba(30,41,59,0.6)' : '#f8fafc',
+                      border: `1px solid ${darkMode ? 'rgba(71,85,105,0.6)' : '#e2e8f0'}`,
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={instantAccessAccepted}
+                      onChange={e => setInstantAccessAccepted(e.target.checked)}
+                      className="mt-0.5 w-4 h-4 shrink-0 cursor-pointer accent-sky-600"
+                    />
+                    <span className="text-xs leading-relaxed">
+                      <span className="font-semibold block" style={{ color: darkMode ? '#e2e8f0' : '#1e293b' }}>
+                        {t.instantAccessConsent}
+                      </span>
+                      <span style={{ color: darkMode ? '#94a3b8' : '#64748b' }}>
+                        {t.instantAccessRefund}
+                      </span>
+                    </span>
+                  </label>
+
                   <Button
                     onClick={handlePayment}
                     className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg"
                     size="lg"
-                    disabled={selectedExams.length === 0 || isProcessing}
+                    disabled={selectedExams.length === 0 || isProcessing || !instantAccessAccepted}
                   >
                     {isProcessing ? (
                       <>
