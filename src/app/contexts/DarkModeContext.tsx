@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import { flushSync } from 'react-dom';
+import { runThemeTransition, getVariant } from '../utils/themeTransition';
 import { setThemeTopColor, THEME_TOP_COLOR } from '../utils/topBarColor';
 
 interface DarkModeContextType {
@@ -34,7 +36,9 @@ export function DarkModeProvider({ children }: { children: React.ReactNode }) {
     // classes carry both "a switch is happening" and which way it travels;
     // the delays per band live in the stylesheet.
     let timer: number | undefined;
-    if (!firstRun.current && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const bandFallback = getVariant() === 'wave'
+      || typeof (document as any).startViewTransition !== 'function';
+    if (!firstRun.current && bandFallback && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       root.classList.add('theme-wave', darkMode ? 'theme-wave-dark' : 'theme-wave-light');
       // Outlast the last band: 200ms delay + 420ms travel.
       timer = window.setTimeout(() => {
@@ -64,10 +68,16 @@ export function DarkModeProvider({ children }: { children: React.ReactNode }) {
     } catch {}
   }, [darkMode]);
 
-  const toggleDarkMode = () => setDarkModeState(prev => !prev);
+  const toggleDarkMode = () => {
+    runThemeTransition(() => {
+      flushSync(() => setDarkModeState(prev => !prev));
+    });
+  };
 
   const setDarkMode = (value: boolean) => {
-    setDarkModeState(value);
+    runThemeTransition(() => {
+      flushSync(() => setDarkModeState(value));
+    });
   };
 
   return (

@@ -518,3 +518,53 @@ html.theme-wave-light nav * {
     transition-delay: 0s !important;
   }
 }
+
+/* ── View Transitions: theme switch variants ───────────────────────────────
+   The browser cross-fades its own before/after snapshots by default. Each
+   variant below replaces that with a specific motion. The new view is drawn
+   over the old one and clipped, so the incoming theme appears to travel across
+   the page the old one is still holding. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+::view-transition-old(root) { z-index: 1; }
+::view-transition-new(root) { z-index: 2; }
+
+/* 1. Blur — no direction at all. The page defocuses and resolves into the new
+      theme, so there is no edge to follow and no luminance step to catch. */
+@keyframes txBlurIn {
+  from { opacity: 0; filter: blur(16px) saturate(1.25); }
+  to   { opacity: 1; filter: blur(0) saturate(1); }
+}
+@keyframes txBlurOut {
+  from { opacity: 1; filter: blur(0); }
+  to   { opacity: 0; filter: blur(10px); }
+}
+html[data-tx="blur"]::view-transition-new(root) { animation: txBlurIn 520ms cubic-bezier(0.4, 0, 0.2, 1); }
+html[data-tx="blur"]::view-transition-old(root) { animation: txBlurOut 520ms cubic-bezier(0.4, 0, 0.2, 1); }
+
+/* 2. Radial — a circle opens from the top centre and floods down over the
+      page, the closest thing to light arriving from overhead. */
+@keyframes txRadialIn {
+  from { clip-path: circle(0% at 50% 0%); }
+  to   { clip-path: circle(150% at 50% 0%); }
+}
+html[data-tx="radial"]::view-transition-new(root) { animation: txRadialIn 620ms cubic-bezier(0.32, 0, 0.24, 1); }
+html[data-tx="radial"]::view-transition-old(root) { animation: none; }
+
+/* 3. Polygon — a straight-edged sheet falling from the top, its leading edge
+      raked so it does not land as one flat line. */
+@keyframes txPolygonDown {
+  from { clip-path: polygon(0 0, 100% 0, 100% -28%, 0 0); }
+  to   { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 128%); }
+}
+html[data-tx="polygon"]::view-transition-new(root) { animation: txPolygonDown 560ms cubic-bezier(0.36, 0, 0.2, 1); }
+html[data-tx="polygon"]::view-transition-old(root) { animation: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) { animation: none !important; }
+}
