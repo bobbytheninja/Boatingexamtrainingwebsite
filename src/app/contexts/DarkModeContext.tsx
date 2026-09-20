@@ -37,9 +37,14 @@ export function DarkModeProvider({ children }: { children: React.ReactNode }) {
     // would make ordinary hovers and focus rings feel sluggish.
     let timer: number | undefined;
     if (!firstRun.current && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      root.classList.add('theme-transition');
+      // The direction class decides which layer leads: going dark the content
+      // changes first, going light the background does.
+      const direction = darkMode ? 'theme-to-dark' : 'theme-to-light';
+      root.classList.add('theme-transition', direction);
       // Must outlast the slowest layer: 230ms delay + 460ms travel.
-      timer = window.setTimeout(() => root.classList.remove('theme-transition'), 740);
+      timer = window.setTimeout(() => {
+        root.classList.remove('theme-transition', 'theme-to-dark', 'theme-to-light');
+      }, 740);
     }
     firstRun.current = false;
 
