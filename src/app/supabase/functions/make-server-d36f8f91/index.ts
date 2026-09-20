@@ -469,7 +469,7 @@ app.post("/make-server-d36f8f91/public/grant-admin", async (c) => {
     // Strict limit: this endpoint grants admin and is guarded only by a shared
     // secret, so unlimited attempts would make that secret brute-forceable.
     const clientIp = c.req.header('x-forwarded-for') || 'unknown';
-    if (!checkRateLimit(clientIp, 'grant-admin', 5, 15 * 60_000)) {
+    if (!await checkRateLimit(clientIp, 'grant-admin', 5, 15 * 60_000)) {
       return c.json({ message: 'Too many attempts. Please try again later.' }, 429);
     }
 
@@ -662,7 +662,7 @@ Crawl-delay: 1
 // Sign up endpoint
 app.post("/make-server-d36f8f91/signup", async (c) => {
   const clientIp = c.req.header('x-forwarded-for') || 'unknown';
-  if (!checkRateLimit(clientIp, 'signup', 5, 60_000)) {
+  if (!await checkRateLimit(clientIp, 'signup', 5, 60_000)) {
     return c.json({ message: 'Too many signup attempts. Please try again in a minute.' }, 429);
   }
 
@@ -857,20 +857,62 @@ app.post("/make-server-d36f8f91/logout", async (c) => {
   }
 });
 
-// Simple in-memory rate limiter (resets on function cold-start, good enough for edge functions)
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
-
-function checkRateLimit(ip: string, key: string, maxRequests = 5, windowMs = 60_000): boolean {
-  const mapKey = `${key}:${ip}`;
+/**
+ * Shared rate limit, counted in the KV store.
+ *
+ * The in-memory version this replaces counted per instance and reset on every
+ * cold start, so a limit of "5 per minute" was really "5 per minute per
+ * instance, until the next restart" — which a spread-out or persistent caller
+ * walks straight through. Counting in KV makes the limit mean what it says.
+ *
+ * Two deliberate choices:
+ *  - Read-modify-write is not atomic here, so two requests landing in the same
+ *    instant can both see the same count. Being off by one under a burst is
+ *    acceptable for throttling; being wrong by a factor of the instance count
+ *    was not.
+ *  - A KV failure allows the request. A limiter that cannot read its own
+ *    counter should slow people down, not take signup and contact offline.
+ */
+async function checkRateLimit(ip: string, key: string, maxRequests = 5, windowMs = 60_000): Promise<boolean> {
+  const kvKey = `ratelimit:${key}:${ip}`;
   const now = Date.now();
-  const entry = rateLimitMap.get(mapKey);
-  if (!entry || entry.resetAt < now) {
-    rateLimitMap.set(mapKey, { count: 1, resetAt: now + windowMs });
+
+  try {
+    const entry = await kv.get(kvKey);
+    if (!entry || typeof entry.resetAt !== 'number' || entry.resetAt < now) {
+      await kv.set(kvKey, { count: 1, resetAt: now + windowMs });
+      return true;
+    }
+    if (entry.count >= maxRequests) return false;
+    await kv.set(kvKey, { count: entry.count + 1, resetAt: entry.resetAt });
+    return true;
+  } catch (error) {
+    console.error('[rateLimit] KV unavailable, allowing request:', error);
     return true;
   }
-  if (entry.count >= maxRequests) return false;
-  entry.count++;
-  return true;
+}
+
+/**
+ * A ceiling on outbound email for the whole site, not per caller.
+ *
+ * Per-IP limits do nothing against requests spread across many addresses, and
+ * the cost of that lands on the mail quota: once it is gone, welcome and
+ * payment-confirmation emails stop going out too. This caps the blast radius
+ * so abuse of one endpoint cannot silence the others.
+ */
+async function withinDailyEmailBudget(kind: string, maxPerDay: number): Promise<boolean> {
+  const day = new Date().toISOString().slice(0, 10);
+  const kvKey = `emailbudget:${kind}:${day}`;
+  try {
+    const entry = await kv.get(kvKey);
+    const count = typeof entry?.count === 'number' ? entry.count : 0;
+    if (count >= maxPerDay) return false;
+    await kv.set(kvKey, { count: count + 1 });
+    return true;
+  } catch (error) {
+    console.error('[emailBudget] KV unavailable, allowing send:', error);
+    return true;
+  }
 }
 
 // Contact form submission - send email
@@ -878,7 +920,7 @@ app.post("/make-server-d36f8f91/contact", async (c) => {
   console.log('[Contact] ===== NEW CONTACT FORM SUBMISSION =====');
 
   const clientIp = c.req.header('x-forwarded-for') || 'unknown';
-  if (!checkRateLimit(clientIp, 'contact')) {
+  if (!await checkRateLimit(clientIp, 'contact')) {
     return c.json({ message: 'Too many requests. Please try again in a minute.' }, 429);
   }
 
@@ -938,8 +980,17 @@ app.post("/make-server-d36f8f91/send-reset-email", async (c) => {
     // Unauthenticated and sends real email — limit to avoid inbox flooding
     // a victim's address and burning the Resend quota.
     const clientIp = c.req.header('x-forwarded-for') || 'unknown';
-    if (!checkRateLimit(clientIp, 'reset-email', 3, 15 * 60_000)) {
+    if (!await checkRateLimit(clientIp, 'reset-email', 3, 15 * 60_000)) {
       // Mirror the success response used below so this stays non-enumerable.
+      return c.json({ success: true });
+    }
+
+    // Backstop against abuse spread over many addresses, which a per-IP limit
+    // cannot see. Reset mail is the cheapest thing to abuse and the most
+    // expensive to lose: exhausting the quota would also stop welcome and
+    // payment-confirmation mail going out.
+    if (!await withinDailyEmailBudget('reset', 200)) {
+      console.warn('[ResetEmail] daily budget reached; refusing further sends today');
       return c.json({ success: true });
     }
 
@@ -3250,7 +3301,7 @@ app.post("/make-server-d36f8f91/categories/force-init", async (c) => {
 
     // Also cap it, so the seed path cannot be used to hammer the store.
     const clientIp = c.req.header('x-forwarded-for') || 'unknown';
-    if (!checkRateLimit(clientIp, 'force-init', 5, 60_000)) {
+    if (!await checkRateLimit(clientIp, 'force-init', 5, 60_000)) {
       return c.json({ message: 'Too many requests. Please try again shortly.' }, 429);
     }
 
