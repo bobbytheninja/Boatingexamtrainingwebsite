@@ -444,25 +444,29 @@
    Darkness falls from the top — the bar first, then the page, then the
    footer — and light rises from the bottom on the way back.
 
-   Text does not take part in the wave at all. Colour carries legibility, and
-   a label that eases — or worse, waits for its band's turn before easing —
-   reads as the page struggling to keep up. So colour, fill and stroke switch
-   instantly and with no delay, while the surfaces behind them travel.
+   Two properties are deliberately excluded from the travel:
 
-   transition-property, -duration and -delay all take comma lists, and they are
-   matched by position: the first three entries are the text properties, at 0s
-   throughout; the rest are the surfaces, which each band then re-times.
+   Text, because colour carries legibility. A label that eases — or worse,
+   waits for its band's turn before easing — reads as the page struggling to
+   keep up.
 
-   Only the three bands each screen is built from are targeted: the nav, the
-   page wrapper, and the footer. Everything inside a band moves with it.
+   Gradients, because interpolating one into another is a per-pixel wash that
+   looks like a lamp warming up rather than a colour changing. Most pages here
+   set their background with a linear-gradient, which is why they felt slow
+   while the home page, which uses a flat colour, felt fine. Gradients now cut
+   straight over, and the wave is carried by the flat surfaces on top of them.
+
+   transition-property, -duration and -delay are matched by position: the first
+   four entries switch instantly in every band, the last three travel and are
+   re-timed per band.
 
    Applied to <html> only while a switch is in flight, then removed, so hover
    and focus states are never left slowed down. */
 html.theme-wave *,
 html.theme-wave *::before,
 html.theme-wave *::after {
-  transition-property: color, fill, stroke, background-color, background-image, border-color, box-shadow !important;
-  transition-duration: 0s, 0s, 0s, 280ms, 280ms, 280ms, 280ms !important;
+  transition-property: color, fill, stroke, background-image, background-color, border-color, box-shadow !important;
+  transition-duration: 0s, 0s, 0s, 0s, 200ms, 200ms, 200ms !important;
   transition-delay: 0s, 0s, 0s, 0s, 0s, 0s, 0s !important;
   transition-timing-function: cubic-bezier(0.4, 0.0, 0.2, 1) !important;
 }
@@ -474,26 +478,26 @@ html.theme-wave body {
   transition: none !important;
 }
 
-/* Falling dark: surfaces only. The three leading zeros keep text instant. */
+/* Falling dark: surfaces only. The leading zeros keep text and gradients instant. */
 html.theme-wave-dark .min-h-screen,
 html.theme-wave-dark .min-h-screen * {
-  transition-delay: 0s, 0s, 0s, 80ms, 80ms, 80ms, 80ms !important;
+  transition-delay: 0s, 0s, 0s, 0s, 60ms, 60ms, 60ms !important;
 }
 
 html.theme-wave-dark footer,
 html.theme-wave-dark footer * {
-  transition-delay: 0s, 0s, 0s, 150ms, 150ms, 150ms, 150ms !important;
+  transition-delay: 0s, 0s, 0s, 0s, 110ms, 110ms, 110ms !important;
 }
 
 /* Rising light: same pacing, read from the bottom up. */
 html.theme-wave-light .min-h-screen,
 html.theme-wave-light .min-h-screen * {
-  transition-delay: 0s, 0s, 0s, 80ms, 80ms, 80ms, 80ms !important;
+  transition-delay: 0s, 0s, 0s, 0s, 60ms, 60ms, 60ms !important;
 }
 
 html.theme-wave-light nav,
 html.theme-wave-light nav * {
-  transition-delay: 0s, 0s, 0s, 150ms, 150ms, 150ms, 150ms !important;
+  transition-delay: 0s, 0s, 0s, 0s, 110ms, 110ms, 110ms !important;
 }
 
 @media (prefers-reduced-motion: reduce) {

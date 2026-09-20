@@ -65,10 +65,10 @@ export function DarkModeProvider({ children }: { children: React.ReactNode }) {
     if (waveTimer.current) window.clearTimeout(waveTimer.current);
     root.classList.remove('theme-wave-dark', 'theme-wave-light');
     root.classList.add('theme-wave', goingDark ? 'theme-wave-dark' : 'theme-wave-light');
-    // Outlast the last band: 150ms delay + 280ms travel.
+    // Outlast the last band: 110ms delay + 200ms travel.
     waveTimer.current = window.setTimeout(() => {
       root.classList.remove('theme-wave', 'theme-wave-dark', 'theme-wave-light');
-    }, 460);
+    }, 340);
   };
 
   const toggleDarkMode = () => {
