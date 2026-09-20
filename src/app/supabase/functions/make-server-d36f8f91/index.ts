@@ -254,6 +254,12 @@ async function verifyAdmin(authHeader: string | null) {
 
 // ============== EMAIL HELPERS ==============
 
+// Contact details for the signature on every outgoing email, in one place so
+// they cannot drift apart between templates.
+const CONTACT_EMAIL = 'gramatikovbobby@gmail.com';
+const CONTACT_PHONE = '+359 87 66 101 85';
+const CONTACT_PHONE_TEL = CONTACT_PHONE.replace(/\s/g, '');
+
 const EMAIL_LOGO_SVG = `<svg width="28" height="28" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"><g transform="rotate(-12 32 32)"><g stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><circle cx="32" cy="13" r="5" fill="none"/><line x1="32" y1="18" x2="32" y2="50"/><line x1="22" y1="24" x2="42" y2="24"/><path d="M 10 38 Q 14 54 32 54 Q 50 54 54 38" fill="none"/></g><polygon points="10,38 6,34 14,33" fill="#ffffff"/><polygon points="54,38 58,34 50,33" fill="#ffffff"/></g></svg>`;
 
 function emailShell(content: string): string {
@@ -271,9 +277,20 @@ function emailShell(content: string): string {
 <span style="font-size:12px;color:#64748b;">Yacht &amp; Boat Exam Training</span>
 </td></tr></table></td></tr>
 ${content}
-<tr><td style="padding:24px 0 8px;text-align:center;">
-<p style="margin:0;font-size:12px;color:#94a3b8;line-height:1.8;">&copy; 2025 Black Sea Bulgaria &bull; Yacht &amp; Boat Exam Training<br/>
-<a href="https://blackseabulgaria.com" style="color:#06b6d4;text-decoration:none;">blackseabulgaria.com</a></p>
+<tr><td style="padding:28px 0 0;">
+<div style="border-top:1px solid #dbeafe;padding-top:20px;">
+<p style="margin:0 0 10px;font-size:14px;color:#334155;line-height:1.6;">Fair winds,<br/>
+<strong style="color:#0f172a;">The Black Sea Bulgaria team</strong></p>
+<p style="margin:0;font-size:13px;color:#64748b;line-height:1.9;">
+<a href="mailto:${CONTACT_EMAIL}" style="color:#0891b2;text-decoration:none;">${CONTACT_EMAIL}</a><br/>
+<a href="tel:${CONTACT_PHONE_TEL}" style="color:#0891b2;text-decoration:none;">${CONTACT_PHONE}</a><br/>
+<a href="https://blackseabulgaria.com" style="color:#0891b2;text-decoration:none;">blackseabulgaria.com</a>
+</p>
+</div>
+</td></tr>
+<tr><td style="padding:18px 0 8px;text-align:center;">
+<p style="margin:0;font-size:11px;color:#94a3b8;line-height:1.8;">&copy; ${new Date().getFullYear()} Black Sea Bulgaria &bull; Yacht &amp; Boat Exam Training<br/>
+Training material only &mdash; not an official certification body.</p>
 </td></tr>
 </table></td></tr></table>
 </body></html>`;
@@ -893,16 +910,20 @@ async function checkRateLimit(ip: string, key: string, maxRequests = 5, windowMs
 }
 
 /**
- * A ceiling on outbound email for the whole site, not per caller.
+ * A per-day counter for whatever scope you name.
  *
- * Per-IP limits do nothing against requests spread across many addresses, and
- * the cost of that lands on the mail quota: once it is gone, welcome and
- * payment-confirmation emails stop going out too. This caps the blast radius
- * so abuse of one endpoint cannot silence the others.
+ * The sliding-window limiter above bounds bursts but not totals: three per
+ * fifteen minutes is 288 a day, so a single caller could still drain a
+ * 200-message budget on its own. This is the ceiling that stops that, and it
+ * is applied twice — once for the individual address and once for the site —
+ * so no one caller can spend everyone else's allowance.
+ *
+ * A KV failure allows the send, for the same reason as the limiter: losing
+ * the counter should not take the feature offline.
  */
-async function withinDailyEmailBudget(kind: string, maxPerDay: number): Promise<boolean> {
+async function withinDailyLimit(scope: string, maxPerDay: number): Promise<boolean> {
   const day = new Date().toISOString().slice(0, 10);
-  const kvKey = `emailbudget:${kind}:${day}`;
+  const kvKey = `dailylimit:${scope}:${day}`;
   try {
     const entry = await kv.get(kvKey);
     const count = typeof entry?.count === 'number' ? entry.count : 0;
@@ -910,7 +931,7 @@ async function withinDailyEmailBudget(kind: string, maxPerDay: number): Promise<
     await kv.set(kvKey, { count: count + 1 });
     return true;
   } catch (error) {
-    console.error('[emailBudget] KV unavailable, allowing send:', error);
+    console.error('[dailyLimit] KV unavailable, allowing:', error);
     return true;
   }
 }
@@ -922,6 +943,13 @@ app.post("/make-server-d36f8f91/contact", async (c) => {
   const clientIp = c.req.header('x-forwarded-for') || 'unknown';
   if (!await checkRateLimit(clientIp, 'contact')) {
     return c.json({ message: 'Too many requests. Please try again in a minute.' }, 429);
+  }
+  // The contact form was replaced by a plain mailto: link, so nothing in the
+  // site calls this any more — but it is still reachable and still sends mail
+  // on the shared quota, so it gets the same daily ceilings as the reset path.
+  if (!await withinDailyLimit(`contact:ip:${clientIp}`, 5)
+      || !await withinDailyLimit('contact:site', 100)) {
+    return c.json({ message: 'Too many requests today. Please email us directly.' }, 429);
   }
 
   try {
@@ -985,12 +1013,18 @@ app.post("/make-server-d36f8f91/send-reset-email", async (c) => {
       return c.json({ success: true });
     }
 
-    // Backstop against abuse spread over many addresses, which a per-IP limit
-    // cannot see. Reset mail is the cheapest thing to abuse and the most
-    // expensive to lose: exhausting the quota would also stop welcome and
-    // payment-confirmation mail going out.
-    if (!await withinDailyEmailBudget('reset', 200)) {
-      console.warn('[ResetEmail] daily budget reached; refusing further sends today');
+    // Two ceilings, because they stop different things. The per-address one
+    // keeps any single caller from spending the whole allowance — the sliding
+    // window alone permits 288 a day, more than the site budget. The site one
+    // bounds abuse spread across many addresses. Reset mail is the cheapest
+    // thing to abuse and the most expensive to lose, since exhausting the
+    // quota would also stop welcome and payment-confirmation mail.
+    if (!await withinDailyLimit(`reset:ip:${clientIp}`, 8)) {
+      console.warn('[ResetEmail] per-address daily cap reached');
+      return c.json({ success: true });
+    }
+    if (!await withinDailyLimit('reset:site', 200)) {
+      console.warn('[ResetEmail] site-wide daily cap reached; refusing further sends today');
       return c.json({ success: true });
     }
 
@@ -1020,57 +1054,21 @@ app.post("/make-server-d36f8f91/send-reset-email", async (c) => {
 
     const actionLink = data.properties.action_link;
 
-    const emailHtml = `<!DOCTYPE html>
-<html lang="en">
-<head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/></head>
-<body style="margin:0;padding:0;background-color:#f0f9ff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f0f9ff;padding:40px 16px;">
-<tr><td align="center">
-<table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;">
-<tr><td align="center" style="padding-bottom:28px;">
-<table cellpadding="0" cellspacing="0"><tr>
-<td style="padding-right:12px;vertical-align:middle;">
-<div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#0ea5e9 0%,#06b6d4 50%,#0d9488 100%);display:inline-flex;align-items:center;justify-content:center;">
-<svg width="28" height="28" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g transform="rotate(-12 32 32)">
-<g stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
-<circle cx="32" cy="13" r="5" fill="none"/><line x1="32" y1="18" x2="32" y2="50"/>
-<line x1="22" y1="24" x2="42" y2="24"/>
-<path d="M 10 38 Q 14 54 32 54 Q 50 54 54 38" fill="none"/>
-</g>
-<polygon points="10,38 6,34 14,33" fill="#ffffff"/>
-<polygon points="54,38 58,34 50,33" fill="#ffffff"/>
-</g></svg></div></td>
-<td style="vertical-align:middle;">
-<span style="font-size:18px;font-weight:700;color:#0f172a;letter-spacing:-0.3px;">Black Sea Bulgaria</span><br/>
-<span style="font-size:12px;color:#64748b;">Yacht &amp; Boat Exam Training</span>
-</td></tr></table></td></tr>
-<tr><td style="background:#ffffff;border-radius:16px;box-shadow:0 4px 24px rgba(14,165,233,0.10);overflow:hidden;">
-<div style="height:4px;background:linear-gradient(90deg,#0ea5e9,#06b6d4,#0d9488);"></div>
-<div style="padding:40px 40px 36px;">
-<div style="text-align:center;margin-bottom:24px;">
-<div style="display:inline-flex;align-items:center;justify-content:center;width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#e0f2fe,#cffafe);">
-<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-<rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-</svg></div></div>
+    // Uses the shared shell rather than repeating the whole document. It used
+    // to carry its own copy of the header, footer and layout, which is how the
+    // signature and the copyright year came to differ between emails.
+    const emailHtml = emailShell(`
+<tr><td style="background:#ffffff;border-radius:16px;padding:40px 32px;box-shadow:0 1px 3px rgba(15,23,42,0.08);">
 <h1 style="margin:0 0 8px;font-size:24px;font-weight:700;color:#0f172a;text-align:center;letter-spacing:-0.5px;">Reset your password</h1>
 <p style="margin:0 0 28px;font-size:15px;color:#64748b;text-align:center;line-height:1.6;">We received a request to reset the password for your account. Click the button below to choose a new password.</p>
-<div style="text-align:center;margin-bottom:28px;">
+<div style="text-align:center;margin:0 0 24px;">
 <a href="${actionLink}" style="display:inline-block;padding:14px 36px;background:linear-gradient(135deg,#0ea5e9,#0d9488);color:#ffffff;font-size:16px;font-weight:600;text-decoration:none;border-radius:10px;letter-spacing:0.2px;">Reset Password</a>
 </div>
 <p style="margin:0 0 20px;font-size:13px;color:#94a3b8;text-align:center;">This link expires in <strong>1 hour</strong>.</p>
-<div style="border-top:1px solid #e2e8f0;margin:24px 0;"></div>
 <p style="margin:0 0 8px;font-size:13px;color:#64748b;">If the button doesn't work, copy and paste this link into your browser:</p>
-<p style="margin:0;font-size:12px;color:#0ea5e9;word-break:break-all;line-height:1.6;">${actionLink}</p>
-<div style="margin-top:24px;padding:14px 16px;background:#f8fafc;border-radius:8px;border-left:3px solid #06b6d4;">
-<p style="margin:0;font-size:13px;color:#475569;line-height:1.6;"><strong>Didn't request this?</strong> You can safely ignore this email — your password will not change unless you click the button above.</p>
-</div></div></td></tr>
-<tr><td style="padding:24px 0 8px;text-align:center;">
-<p style="margin:0;font-size:12px;color:#94a3b8;line-height:1.8;">&copy; 2025 Black Sea Bulgaria &bull; Yacht &amp; Boat Exam Training<br/>
-<a href="https://blackseabulgaria.com" style="color:#06b6d4;text-decoration:none;">blackseabulgaria.com</a></p>
-</td></tr>
-</table></td></tr></table>
-</body></html>`;
+<p style="margin:0 0 20px;font-size:12px;color:#0ea5e9;word-break:break-all;line-height:1.6;">${actionLink}</p>
+<p style="margin:0;font-size:13px;color:#475569;line-height:1.6;"><strong>Didn't request this?</strong> You can safely ignore this email &mdash; your password will not change unless you click the button above.</p>
+</td></tr>`);
 
     const emailRes = await fetch('https://api.resend.com/emails', {
       method: 'POST',
