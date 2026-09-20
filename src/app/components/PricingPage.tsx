@@ -292,9 +292,12 @@ export function PricingPage({ onNavigate, isLoggedIn, paidExams = [] }: PricingP
           <Card 
             className="relative overflow-hidden border-2 shadow-lg transform scale-[1.02] transition-all duration-[400ms]"
             style={{ 
-              background: darkMode 
-                ? 'linear-gradient(to bottom right, #334155, #1e293b)'
-                : 'linear-gradient(to bottom right, #ffffff, #f0f9ff)',
+              // Flat, like the free card beside it. This was a gradient, and
+              // gradients cut straight over during a theme switch while flat
+              // colours ease — so the two cards changed at visibly different
+              // speeds. The tone is the old gradient's midpoint, so it still
+              // reads as the highlighted card.
+              backgroundColor: darkMode ? '#293548' : '#f8fcff',
               borderColor: darkMode ? '#0ea5e9' : '#38bdf8',
               transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)' 
             }}
