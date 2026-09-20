@@ -3,7 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import { Check, BookOpen, FileText, GraduationCap, Lightbulb, Flag, Volume2, Anchor, Map, Circle, Shuffle, Compass, Gauge, CloudSun, MapPin, Siren, Mic, RadioTower, Radio, FileCheck } from 'lucide-react';
+import { Check, BookOpen, FileText, GraduationCap, Lightbulb, Flag, Volume2, Anchor, Map, Circle, Shuffle, Compass, Gauge, CloudSun, MapPin, Siren, Mic, RadioTower, Radio, FileCheck, Cog } from 'lucide-react';
 import { ExamType, examData } from '../data/examQuestions';
 import { getTranslation } from '../data/translations';
 import { Navigation } from './Navigation';
@@ -28,6 +28,7 @@ const TOPIC_ICONS: Record<LearnTopic, typeof Lightbulb> = {
   colregs: Shuffle,
   navigation: Compass,
   instruments: Gauge,
+  engine: Cog,
   weather: CloudSun,
   localwaters: MapPin,
   distress: Siren,

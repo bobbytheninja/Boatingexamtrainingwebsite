@@ -24,6 +24,7 @@ export type LearnTopic =
   | 'colregs'
   | 'navigation'
   | 'instruments'
+  | 'engine'
   | 'weather'
   | 'localwaters'
   | 'distress'
@@ -45,49 +46,49 @@ export const LEARN_TOPICS: TopicDef[] = [
     key: 'shapes',
     en: 'Day Shapes',
     bg: 'Знаци (фигури)',
-    pattern: /these sh[as]pes?\b|\bday ?shapes?\b|\bshapes?\b|\bblack ball\b|\bcones?\b|\bcylinders?\b|\bdiamond\b|фигур|конус|цилиндър|ромб/i,
+    pattern: /these sh[as]pes?\b|\bday ?shapes?\b|\bshapes?\b|\bblack ball\b|\bcones?\b|\bcylinders?\b|\bdiamond\b|фигур|конус|цилиндър|ромб|signalk[öo]rper|\bkegel\b|zylinder|\bcono\b|pallone|cilindro|\brombo\b/i,
   },
   {
     key: 'lights',
     en: 'Lights',
     bg: 'Светлини',
-    pattern: /\blights?\b|\bsidelights?\b|masthead light|\bsternlights?\b|all-?round light|\bflashing\b|\bocculting\b|\bisophase\b|светлин|фенер|проблясв/i,
+    pattern: /\blights?\b|\bsidelights?\b|masthead light|\bsternlights?\b|all-?round light|\bflashing\b|\bocculting\b|\bisophase\b|светлин|фенер|проблясв|\blicht|\blichter\b|\bfeuer\b|leuchtfeuer|\bluce\b|\bluci\b|fanale|fanali|\bluz\b|\bluces\b/i,
   },
   {
     key: 'sounds',
     en: 'Sound Signals',
     bg: 'Звукови сигнали',
-    pattern: /\bsound signals?\b|\bfog signals?\b|\bwhistles?\b|\bhorns?\b|\bblasts?\b|\bbells?\b|\bgongs?\b|manoeuvring and warning|звуков|звук|свирк|камбан/i,
+    pattern: /\bsound signals?\b|\bfog signals?\b|\bwhistles?\b|\bhorns?\b|\bblasts?\b|\bbells?\b|\bgongs?\b|manoeuvring and warning|звуков|звук|свирк|камбан|schallsignal|signalton|nebelhorn|\bglocke\b|segnale acustico|\bfischi|suono|se[ñn]al ac[úu]stica/i,
   },
   {
     key: 'flags',
     en: 'Flags',
     bg: 'Флагове',
-    pattern: /\bflags?\b|\bpennants?\b|code letter|signal letter|\bensigns?\b|флаг|знаме/i,
+    pattern: /\bflags?\b|\bpennants?\b|code letter|signal letter|\bensigns?\b|флаг|знаме|\bflagge|\bflaggen\b|bandiera|bandiere|\bbandera/i,
   },
   {
     key: 'buoys',
     en: 'Buoys & Marks',
     bg: 'Буйове и знаци',
-    pattern: /\bbuoys?\b|cardinal marks?|lateral marks?|safe water|isolated danger|special marks?|region [ab]\b|\btopmarks?\b|port hand|starboard hand|буй|кардинал|латерал/i,
+    pattern: /\bbuoys?\b|cardinal marks?|lateral marks?|safe water|isolated danger|special marks?|region [ab]\b|\btopmarks?\b|port hand|starboard hand|буй|кардинал|латерал|\btonne\b|\btonnen\b|betonnung|fahrwasser|\bboa\b|\bboe\b|\bmeda\b|baliza|\bboya\b/i,
   },
   {
     key: 'charts',
     en: 'Chart Symbols',
     bg: 'Символи от карти',
-    pattern: /\bcharts?\b|admiralty|\bsymbols?\b|\bsoundings?\b|depth contour|\bisobath|карт|символ/i,
+    pattern: /\bcharts?\b|admiralty|\bsymbols?\b|\bsoundings?\b|depth contour|\bisobath|карт|символ|seekarte|\bkarte\b|carta nautica|\bcarte\b|\bsimbolo\b|carta n[áa]utica/i,
   },
   {
     key: 'colregs',
     en: 'Collision Rules',
     bg: 'Правила за разминаване',
-    pattern: /give ?way|stand ?on|overtak|crossing situation|head-?on|right of way|collision|narrow channel|in sight of one another|restricted visibility|traffic separation|\bcolregs?\b|разминав|сблъс|изпревар|тесен канал/i,
+    pattern: /give ?way|stand ?on|overtak|crossing situation|head-?on|right of way|collision|narrow channel|in sight of one another|restricted visibility|traffic separation|\bcolregs?\b|разминав|сблъс|изпревар|тесен канал|ausweich|kurshalt|[üu]berhol|vorfahrt|kollision|precedenza|rotta libera|sorpass|\bmanovra\b|abordaje/i,
   },
   {
     key: 'navigation',
     en: 'Navigation & Position',
     bg: 'Навигация и позиция',
-    pattern: /\bbearings?\b|\bcourses?\b|latitude|longitude|coordinate|\bmeridians?\b|\bequator\b|\bparallel\b|declination|variation|deviation|\bnautical mile\b|\bknots?\b|\bspeed\b|great circle|rhumb|loxodrome|\bangle\b|\bdistance\b|\bposition\b|\bfix\b|\bgps\b|dead reckoning|ширин|дължин|координат|меридиан|курс|пеленг|склонение|девиац/i,
+    pattern: /\bbearings?\b|\bcourses?\b|latitude|longitude|coordinate|\bmeridians?\b|\bequator\b|\bparallel\b|declination|variation|deviation|\bnautical mile\b|\bknots?\b|\bspeed\b|great circle|rhumb|loxodrome|\bangle\b|\bdistance\b|\bposition\b|\bfix\b|\bgps\b|dead reckoning|ширин|дължин|координат|меридиан|курс|пеленг|склонение|девиац|\bkurs\b|peilung|seemeile|geschwindigkeit|\brotta\b|rilevamento|posizione|\bmiglia\b|velocit[àa]|\brumbo\b|\bmilla/i,
   },
   {
     key: 'instruments',
@@ -96,10 +97,16 @@ export const LEARN_TOPICS: TopicDef[] = [
     pattern: /\bcompass\b|echo ?sounder|\bradar\b|\bsextant\b|anemometer|barometer|hygrometer|\blog\b|\bais\b|\bepirb\b|navigation device|компас|ехолот|радар|уред|барометр/i,
   },
   {
+    key: 'engine',
+    en: 'Engine & Systems',
+    bg: 'Двигател и системи',
+    pattern: /\bengines?\b|\bfuel\b|\bpropellers?\b|\bbatter(y|ies)\b|\bbilge\b|outboard|inboard|\bmotore?\b|carburante|\belica\b|\bmotor\b|kraftstoff|двигател|гориво|витло|акумулатор|combustible|h[ée]lice/i,
+  },
+  {
     key: 'weather',
     en: 'Weather & Sea',
     bg: 'Време и море',
-    pattern: /\bwinds?\b|\bweather\b|beaufort|\btides?\b|\bcurrents?\b|\bhumidity\b|\bfog\b|\bstorm\b|\bwaves?\b|\bforecast\b|\bpressure\b|вятър|време|прилив|течени|влажност|мъгла/i,
+    pattern: /\bwinds?\b|\bweather\b|beaufort|\btides?\b|\bcurrents?\b|\bhumidity\b|\bfog\b|\bstorm\b|\bwaves?\b|\bforecast\b|\bpressure\b|вятър|време|прилив|течени|влажност|мъгла|\bwetter\b|\bwind\b|\bwelle|gezeit|str[öo]mung|\bvento\b|\bonda\b|\bmarea\b|corrente|\bmeteo\b|viento/i,
   },
   {
     key: 'localwaters',
@@ -114,7 +121,7 @@ export const LEARN_TOPICS: TopicDef[] = [
     key: 'distress',
     en: 'Distress & Urgency',
     bg: 'Бедствие и спешност',
-    pattern: /\bmayday\b|\bpan[- ]?pan\b|s[ée]curit[ée]|\bdistress\b|\burgency\b|мейдей|бедств|спешн|тревог|авари|спасител/i,
+    pattern: /\bmayday\b|\bpan[- ]?pan\b|s[ée]curit[ée]|\bdistress\b|\burgency\b|мейдей|бедств|спешн|тревог|авари|спасител|seenot|notruf|\brettung|soccorso|emergenza|\bpericolo\b|socorro|emergencia/i,
   },
   {
     key: 'radioprocedure',
