@@ -2306,6 +2306,11 @@ app.post("/make-server-d36f8f91/questions/import", async (c) => {
     // Save all questions
     await questions.saveQuestions(questionsToImport);
 
+    // An import replaces the bank, so any cached per-topic counts are stale.
+    for (const examType of new Set(questionsToImport.map((q: any) => q.examType).filter(Boolean))) {
+      await invalidateTopicCountSummary(examType as string);
+    }
+
     return c.json({ 
       message: 'Questions imported successfully',
       count: questionsToImport.length,
@@ -2671,6 +2676,35 @@ async function hasExamAccess(userId: string, examType: string): Promise<{ ok: bo
 // Every question for an exam type. Admins use this in the question editor;
 // subscribers need it for Learn mode, which counts and drills whole topics and
 // so cannot work from the 40-question exam draw.
+/** Counts questions per stored topic. The expensive path — see topic-counts. */
+async function buildTopicCountSummary(examType: string) {
+  const questionIds = await questions.getQuestionIds(examType);
+  if (questionIds.length === 0) return { counts: {}, total: 0, unassigned: 0 };
+
+  const fetched = await Promise.all(questionIds.map(id => kv.get(`question:${id}`)));
+  const counts: Record<string, number> = {};
+  let unassigned = 0;
+
+  for (const q of fetched) {
+    if (!q) continue;
+    if (typeof q.topic === 'string' && q.topic) {
+      counts[q.topic] = (counts[q.topic] || 0) + 1;
+    } else {
+      unassigned += 1;
+    }
+  }
+  return { counts, total: questionIds.length, unassigned };
+}
+
+/** Drop the summary so the next read rebuilds it. */
+async function invalidateTopicCountSummary(examType: string): Promise<void> {
+  try {
+    await kv.del(`topic_counts:${examType}`);
+  } catch {
+    // A stale summary is better than a failed write breaking the caller.
+  }
+}
+
 /**
  * How many questions sit in each topic, and nothing else.
  *
@@ -2688,25 +2722,21 @@ async function hasExamAccess(userId: string, examType: string): Promise<{ ok: bo
 app.get("/make-server-d36f8f91/questions/:examType/topic-counts", async (c) => {
   try {
     const examType = c.req.param('examType');
-    const questionIds = await questions.getQuestionIds(examType);
-    if (questionIds.length === 0) {
-      return c.json({ counts: {}, total: 0, unassigned: 0 });
+    const summaryKey = `topic_counts:${examType}`;
+
+    // Served from a summary record. Counting from scratch means one KV read
+    // per question — 848 of them for the 40BT bank, which took about three
+    // and a half seconds. The summary is written the first time it is needed
+    // and cleared whenever topics or questions change, so the slow path runs
+    // once rather than on every visitor's page load.
+    const cached = await kv.get(summaryKey);
+    if (cached && typeof cached.total === 'number') {
+      return c.json({ counts: cached.counts || {}, total: cached.total, unassigned: cached.unassigned ?? 0 });
     }
 
-    const fetched = await Promise.all(questionIds.map(id => kv.get(`question:${id}`)));
-    const counts: Record<string, number> = {};
-    let unassigned = 0;
-
-    for (const q of fetched) {
-      if (!q) continue;
-      if (typeof q.topic === 'string' && q.topic) {
-        counts[q.topic] = (counts[q.topic] || 0) + 1;
-      } else {
-        unassigned += 1;
-      }
-    }
-
-    return c.json({ counts, total: questionIds.length, unassigned });
+    const summary = await buildTopicCountSummary(examType);
+    await kv.set(summaryKey, summary);
+    return c.json(summary);
   } catch (error: any) {
     console.error('[topic-counts] failed:', error);
     return c.json({ counts: {}, total: 0, unassigned: 0 });
@@ -2761,6 +2791,7 @@ app.put("/make-server-d36f8f91/questions/:examType/:questionNumber", async (c) =
       updated.topic = topic || null;
     }
     await kv.set(`question:${questionId}`, updated);
+    await invalidateTopicCountSummary(examType);
     return c.json({ success: true, question: updated });
   } catch (error: any) {
     return c.json({ message: error.message }, 500);
@@ -2797,6 +2828,7 @@ app.post("/make-server-d36f8f91/admin/questions/set-topic", async (c) => {
       updated += 1;
     }
 
+    await invalidateTopicCountSummary(examType);
     return c.json({ success: true, updated, missing });
   } catch (error: any) {
     console.error('[set-topic] error:', error);
