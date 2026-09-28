@@ -437,7 +437,10 @@
 }
 
 :root.dark .hero-pan {
-  filter: brightness(0.82) saturate(0.95);
+  /* Just enough to stop a full-brightness photo glaring against a dark page.
+     It used to also drop saturation, which drained the colour out of the water
+     — the photo should still look like the photo. */
+  filter: brightness(0.92);
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -181,23 +181,14 @@ export function HomePage() {
 
           {/* Scrim under the navbar so the logo stays legible against bright sky */}
           <div
-            className="absolute inset-x-0 top-0 h-[32%] pointer-events-none"
+            className="absolute inset-x-0 top-0 h-[22%] pointer-events-none"
             style={{
               background: darkMode
-                ? 'linear-gradient(to bottom, rgba(15,23,42,0.75), transparent)'
-                : 'linear-gradient(to bottom, rgba(15,23,42,0.45), transparent)',
+                ? 'linear-gradient(to bottom, rgba(15,23,42,0.5), transparent)'
+                : 'linear-gradient(to bottom, rgba(15,23,42,0.26), transparent)',
             }}
           />
 
-          {/* Vignette — pulls the eye to the centre and hides the soft edges
-              that come from upscaling a 1400px source across a large hero */}
-          <div
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              background:
-                'radial-gradient(120% 85% at 50% 42%, transparent 45%, rgba(8,20,35,0.28) 100%)',
-            }}
-          />
           <div
             className="absolute bottom-0 left-0 right-0 h-[20%] duration-[400ms]"
             style={{
