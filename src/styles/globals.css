@@ -370,9 +370,13 @@
 }
 /* Hero: a very slow pan so the image reads as composed rather than pasted in.
    Scaled slightly so the movement never exposes an edge. */
+/* The scale is what lets the image drift without exposing an edge, but it also
+   upscales a 1920px source — so it stays only as large as the drift needs.
+   At 1.06 that was a 6% enlargement before a retina screen doubled it again,
+   which read as softness on top of any compression. */
 @keyframes heroPan {
-  from { transform: scale(1.06) translate3d(0, 0, 0); }
-  to   { transform: scale(1.06) translate3d(-1.2%, -0.8%, 0); }
+  from { transform: scale(1.03) translate3d(0, 0, 0); }
+  to   { transform: scale(1.03) translate3d(-0.7%, -0.5%, 0); }
 }
 
 .hero-pan {
@@ -381,7 +385,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hero-pan { animation: none; transform: scale(1.02); }
+  .hero-pan { animation: none; transform: scale(1.01); }
 }
 
 /* Learn topic tiles: hover fills the tile with gold rather than only ringing

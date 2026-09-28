@@ -12,7 +12,8 @@ import { useDarkMode } from '../contexts/DarkModeContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../utils/api';
-import { LEARN_TOPICS, countByTopic, type LearnTopic } from '../utils/questionTopics';
+import { LEARN_TOPICS, type LearnTopic } from '../utils/questionTopics';
+import { peekTopicCounts, fetchTopicCounts, prefetchTopicCounts } from '../utils/topicCountCache';
 import { toast } from 'sonner';
 import { peekCategories, fetchCategories } from '../utils/categoriesCache';
 
@@ -53,7 +54,9 @@ export function ExamModeSelection() {
   const [selectedMode, setSelectedMode] = useState<ExamMode>(initialMode ?? 'exam');
   const [examCategory, setExamCategory] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [topicCounts, setTopicCounts] = useState<Record<LearnTopic, number> | null>(null);
+  const [topicCounts, setTopicCounts] = useState<Record<LearnTopic, number> | null>(
+    () => (examTypeParam ? peekTopicCounts(examTypeParam) : null)
+  );
   const [countsLoading, setCountsLoading] = useState(false);
   const [countsError, setCountsError] = useState(false);
   
@@ -112,24 +115,33 @@ export function ExamModeSelection() {
   // at their initial values, so the effect re-ran and refetched forever.
   const countsRequested = useRef<string | null>(null);
 
+  // Warm the counts as soon as the page opens, so the work overlaps with
+  // reading the page rather than starting when Learn is clicked.
+  useEffect(() => {
+    prefetchTopicCounts(examType, accessToken);
+  }, [examType, accessToken]);
+
   useEffect(() => {
     if (selectedMode !== 'learn' || !examType || !accessToken) return;
+
+    // Already known — from the prefetch above or an earlier visit this session.
+    const cached = peekTopicCounts(examType);
+    if (cached) {
+      setTopicCounts(cached);
+      setCountsLoading(false);
+      return;
+    }
+
     if (countsRequested.current === examType) return;
     countsRequested.current = examType;
 
     let cancelled = false;
     setCountsLoading(true);
     setCountsError(false);
-    api.getAllQuestions(examType, accessToken)
-      .then(res => {
-        if (!cancelled) setTopicCounts(countByTopic(res.questions || []));
-      })
-      .catch(() => {
-        if (!cancelled) setCountsError(true);
-      })
-      .finally(() => {
-        if (!cancelled) setCountsLoading(false);
-      });
+    fetchTopicCounts(examType, accessToken)
+      .then(counts => { if (!cancelled) setTopicCounts(counts); })
+      .catch(() => { if (!cancelled) setCountsError(true); })
+      .finally(() => { if (!cancelled) setCountsLoading(false); });
 
     return () => { cancelled = true; };
   }, [selectedMode, examType, accessToken]);

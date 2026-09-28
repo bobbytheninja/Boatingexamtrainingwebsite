@@ -388,14 +388,35 @@ export function ExamPage({ examType, mode, tier, topic, onBackToHome, onNavigate
         return;
       }
 
+      const goPrevious = () => {
+        if (currentQuestionIndex > 0) {
+          setCurrentQuestionIndex(currentQuestionIndex - 1);
+          setShowAnswerFeedback(false);
+        }
+      };
+
       switch (e.key) {
-        case 'ArrowLeft':
+        // Enter submits the answer and moves on, or clears the feedback panel
+        // when one is showing — the same thing the primary button does, so the
+        // keyboard never does something the mouse cannot.
+        case 'Enter': {
           e.preventDefault();
-          if (currentQuestionIndex > 0) {
-            setCurrentQuestionIndex(currentQuestionIndex - 1);
-            setShowAnswerFeedback(false);
+          const hasAnswer = isMultipleChoice ? selectedAnswers.length > 0 : selectedAnswer !== null;
+          if (showAnswerFeedback && instantFeedback) {
+            handleContinueAfterFeedback();
+          } else if (hasAnswer || tier === 'mock') {
+            handleNext();
           }
           break;
+        }
+        // Up and down walk the questions, alongside left and right. Vertical
+        // keys match how the question list reads on screen.
+        case 'ArrowUp':
+        case 'ArrowLeft':
+          e.preventDefault();
+          goPrevious();
+          break;
+        case 'ArrowDown':
         case 'ArrowRight':
           e.preventDefault();
           if (showAnswerFeedback && instantFeedback) {
@@ -420,7 +441,7 @@ export function ExamPage({ examType, mode, tier, topic, onBackToHome, onNavigate
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [currentQuestionIndex, showAnswerFeedback, showResults, showReview, mode, totalQuestions]);
+  }, [currentQuestionIndex, showAnswerFeedback, showResults, showReview, mode, totalQuestions, selectedAnswer, selectedAnswers, isMultipleChoice, tier]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -1280,8 +1301,9 @@ export function ExamPage({ examType, mode, tier, topic, onBackToHome, onNavigate
                     same weight as the harmless ones. */}
                 <div className="text-xs space-y-1.5">
                   {([
-                    { k: '←', label: 'Previous question', tone: 'move' },
-                    { k: '→', label: 'Next question', tone: 'move' },
+                    { k: 'Enter', label: 'Submit and continue', tone: 'move' },
+                    { k: '↑ ←', label: 'Previous question', tone: 'move' },
+                    { k: '↓ →', label: 'Next question', tone: 'move' },
                     { k: 'Esc', label: 'Exit exam', tone: 'exit' },
                   ] as const).map(({ k, label, tone }) => (
                     <p key={k} className="flex items-center gap-2">
