@@ -1333,7 +1333,16 @@ app.post("/make-server-d36f8f91/create-checkout-session", async (c) => {
 
   try {
     const body = await c.req.json();
-    const { examTypes } = body;
+    const { examTypes, instantAccessConsent } = body;
+
+    // The 14-day withdrawal right only falls away where the buyer asked for
+    // immediate access and acknowledged losing it. Checked here rather than
+    // only in the UI, so the record cannot be skipped by calling this directly.
+    if (instantAccessConsent !== true) {
+      return c.json({
+        message: 'Immediate access must be confirmed before checkout can start.',
+      }, 400);
+    }
 
     console.log('[Checkout] Exam types requested:', examTypes);
 
@@ -1431,6 +1440,12 @@ app.post("/make-server-d36f8f91/create-checkout-session", async (c) => {
       metadata: {
         userId: user.id,
         examTypes: examTypes.join(','),
+        // Evidence that the buyer asked for immediate access and accepted
+        // losing the 14-day withdrawal right. Kept on the Stripe session as
+        // well as in our own record, so it survives on the payment itself and
+        // is visible in the dashboard if a chargeback is ever disputed.
+        instantAccessConsent: 'true',
+        instantAccessConsentAt: new Date().toISOString(),
       },
     });
 
@@ -1510,6 +1525,11 @@ app.post("/make-server-d36f8f91/stripe-webhook", async (c) => {
           amountTotal: session.amount_total,
           currency: session.currency,
           paidAt: Date.now(),
+          // Copied off the session metadata set at checkout — see the comment
+          // there. Recorded per payment so the waiver can be produced for a
+          // specific purchase rather than inferred from the account.
+          instantAccessConsent: session.metadata?.instantAccessConsent === 'true',
+          instantAccessConsentAt: session.metadata?.instantAccessConsentAt || null,
         }, ...existingPayments].slice(0, 20);
         await kv.set(`payments:${userId}`, updatedPayments);
 

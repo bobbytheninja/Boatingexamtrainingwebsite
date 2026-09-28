@@ -41,14 +41,15 @@ export function PaymentPage({ userEmail, onBack, onComplete, onNavigate }: Payme
   const { accessToken, refreshSubscriptions, user } = useAuth();
   const { darkMode, toggleDarkMode } = useDarkMode();
   const [selectedExams, setSelectedExams] = useState<ExamType[]>([]);
-  // This page keeps a local currentLanguage for its own older copy; the shared
-  // context is the one the user actually picked, so new copy reads from that.
+  // Everything on this page reads the shared context. It used to keep its own
+  // language that began at English and was only ever changed through
+  // props Navigation does not accept — so a Bulgarian visitor still saw
+  // English exam titles and dates right at the point of paying.
   const { language } = useLanguage();
   const t = getTranslation(language);
   const [isProcessing, setIsProcessing] = useState(false);
   // Must be ticked before checkout opens — see the label at the button.
   const [instantAccessAccepted, setInstantAccessAccepted] = useState(false);
-  const [currentLanguage, setCurrentLanguage] = useState<Language>('English');
   const [region, setRegion] = useState('Bulgaria');
   const [categories, setCategories] = useState<ExamCategory[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
@@ -96,7 +97,7 @@ export function PaymentPage({ userEmail, onBack, onComplete, onNavigate }: Payme
   const getExpiryDateString = () => {
     if (!subscriptionExpiresAt) return 'N/A';
     const date = new Date(subscriptionExpiresAt);
-    return date.toLocaleDateString(currentLanguage === 'English' ? 'en-US' : 'bg-BG', { 
+    return date.toLocaleDateString(language === 'English' ? 'en-US' : 'bg-BG', { 
       year: 'numeric', 
       month: 'long', 
       day: 'numeric' 
@@ -106,8 +107,8 @@ export function PaymentPage({ userEmail, onBack, onComplete, onNavigate }: Payme
   // Transform server categories into display format
   const examTypes: { type: ExamType; title: string; description: string }[] = categories.map(cat => ({
     type: cat.type as ExamType,
-    title: currentLanguage === 'Bulgarian' && cat.titleBg ? cat.titleBg : cat.title,
-    description: currentLanguage === 'Bulgarian' && cat.descriptionBg ? cat.descriptionBg : cat.description,
+    title: language === 'Bulgarian' && cat.titleBg ? cat.titleBg : cat.title,
+    description: language === 'Bulgarian' && cat.descriptionBg ? cat.descriptionBg : cat.description,
   }));
 
   const toggleExam = (examType: ExamType) => {
@@ -156,7 +157,7 @@ export function PaymentPage({ userEmail, onBack, onComplete, onNavigate }: Payme
     setIsProcessing(true);
     
     try {
-      const { url } = await api.createCheckoutSession(selectedExams, accessToken);
+      const { url } = await api.createCheckoutSession(selectedExams, accessToken, instantAccessAccepted);
       window.location.href = url;
     } catch (error: any) {
       console.error('Payment error:', error);
@@ -179,12 +180,6 @@ export function PaymentPage({ userEmail, onBack, onComplete, onNavigate }: Payme
         onNavigate={handleNavigateInternal}
         isLoggedIn={true}
         transparent={false}
-        language={currentLanguage}
-        onLanguageChange={setCurrentLanguage}
-        region={region}
-        onRegionChange={setRegion}
-        darkMode={darkMode}
-        onDarkModeToggle={toggleDarkMode}
       />
       
       <div 

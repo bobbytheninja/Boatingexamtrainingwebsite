@@ -67,12 +67,17 @@ async function apiCall<T>(
 
 export const api = {
   // Payment endpoints
-  createCheckoutSession: async (examTypes: string[], token: string) => {
+  /**
+   * `instantAccessConsent` is the buyer waiving the 14-day withdrawal right in
+   * exchange for immediate access. The server refuses without it and records it
+   * with the payment, so the waiver is evidenced rather than merely displayed.
+   */
+  createCheckoutSession: async (examTypes: string[], token: string, instantAccessConsent: boolean) => {
     return apiCall<{ sessionId: string; url: string }>(
       '/create-checkout-session',
       {
         method: 'POST',
-        body: JSON.stringify({ examTypes }),
+        body: JSON.stringify({ examTypes, instantAccessConsent }),
       },
       token
     );
