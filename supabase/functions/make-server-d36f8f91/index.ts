@@ -1141,6 +1141,57 @@ app.post("/make-server-d36f8f91/subscriptions", async (c) => {
 });
 
 // Save exam result
+/**
+ * Per-topic Learn progress.
+ *
+ * Kept separate from exam results on purpose. An exam is a 40-question draw
+ * across the whole bank, so it might contain three Lights questions out of
+ * forty-two — scoring two of them says almost nothing about how someone is
+ * doing on lights, and showing it as a score would mislead. A Learn run covers
+ * one topic in full, so it is the only honest source for a per-topic figure.
+ *
+ * Latest run wins: this is "how you did last time", not a running average.
+ */
+app.post("/make-server-d36f8f91/learn-progress", async (c) => {
+  const { error, user } = await verifyUser(c.req.header('Authorization'));
+  if (error || !user) return c.json({ message: 'Unauthorized' }, 401);
+
+  try {
+    const { examType, topic, correct, total } = await c.req.json();
+
+    if (!examType || !topic || typeof correct !== 'number' || typeof total !== 'number') {
+      return c.json({ message: 'examType, topic, correct and total are required' }, 400);
+    }
+    if (total <= 0 || correct < 0 || correct > total) {
+      return c.json({ message: 'correct must be between 0 and total' }, 400);
+    }
+
+    const key = `learn_progress:${user.id}:${examType}`;
+    const current = (await kv.get(key)) || {};
+    current[topic] = { correct, total, at: Date.now() };
+    await kv.set(key, current);
+
+    return c.json({ success: true, progress: current });
+  } catch (err: any) {
+    console.error('[learn-progress] save failed:', err);
+    return c.json({ message: err.message }, 500);
+  }
+});
+
+app.get("/make-server-d36f8f91/learn-progress/:examType", async (c) => {
+  const { error, user } = await verifyUser(c.req.header('Authorization'));
+  if (error || !user) return c.json({ message: 'Unauthorized' }, 401);
+
+  try {
+    const progress = (await kv.get(`learn_progress:${user.id}:${c.req.param('examType')}`)) || {};
+    return c.json({ progress });
+  } catch (err: any) {
+    // The tiles work without it; never let this break the page.
+    console.error('[learn-progress] read failed:', err);
+    return c.json({ progress: {} });
+  }
+});
+
 app.post("/make-server-d36f8f91/exam-results", async (c) => {
   const { error, user } = await verifyUser(c.req.header('Authorization'));
   

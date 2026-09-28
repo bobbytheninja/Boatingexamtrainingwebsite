@@ -564,6 +564,30 @@ export function ExamPage({ examType, mode, tier, topic, onBackToHome, onNavigate
     }
   }, [currentQuestionIndex]);
 
+  // Record the run once it finishes, so the Learn tiles can show how it went.
+  //
+  // Hooked to the results screen appearing rather than to the several places
+  // that trigger it — finishing the last question, submitting early, running
+  // out of questions — so every route out of a run is covered by one path.
+  const learnProgressSent = useRef(false);
+
+  useEffect(() => {
+    if (!showResults || mode !== 'learn' || !topic || !accessToken) return;
+    if (learnProgressSent.current) return;
+    if (totalQuestions === 0) return;
+
+    learnProgressSent.current = true;
+    const correct = examQuestions.reduce(
+      (n, _q, i) => n + (answeredQuestions[i]?.isCorrect ? 1 : 0), 0,
+    );
+
+    api.saveLearnProgress(examType, topic, correct, totalQuestions, accessToken)
+      .catch(() => {
+        // Progress display is a nicety; a failure here must not disturb the
+        // results the candidate is reading.
+      });
+  }, [showResults, mode, topic, accessToken, examType, totalQuestions, examQuestions, answeredQuestions]);
+
   const calculateResults = () => {
     let wrongCount = 0;
     let correctCount = 0;

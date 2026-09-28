@@ -59,6 +59,7 @@ export function ExamModeSelection() {
   );
   const [countsLoading, setCountsLoading] = useState(false);
   const [countsError, setCountsError] = useState(false);
+  const [learnProgress, setLearnProgress] = useState<Record<string, { correct: number; total: number }>>({});
   
   const examType = examTypeParam as ExamType;
 
@@ -119,6 +120,18 @@ export function ExamModeSelection() {
   // reading the page rather than starting when Learn is clicked.
   useEffect(() => {
     prefetchTopicCounts(examType, accessToken);
+  }, [examType, accessToken]);
+
+  // How each topic went last time, for the bar under each tile.
+  useEffect(() => {
+    if (!examType || !accessToken) return;
+    let cancelled = false;
+    api.getLearnProgress(examType, accessToken)
+      .then(res => { if (!cancelled) setLearnProgress(res.progress || {}); })
+      .catch(() => {
+        // No progress yet, or the read failed — tiles simply show no bar.
+      });
+    return () => { cancelled = true; };
   }, [examType, accessToken]);
 
   useEffect(() => {
@@ -441,6 +454,43 @@ export function ExamModeSelection() {
                             ? (language === 'English' ? 'Unavailable' : 'Недостъпно')
                             : (language === 'English' ? 'Practise' : 'Упражнение')}
                         </span>
+
+                        {/* How the last run on this topic went. Correct fills
+                            from the left in green, the remainder in red, with
+                            the two blended across a few percent rather than
+                            meeting at a hard line — so a near-perfect score
+                            reads as almost entirely green and only a complete
+                            failure reads as fully red. Hidden until the topic
+                            has actually been attempted. */}
+                        {(() => {
+                          const run = learnProgress[topic.key];
+                          if (!available || !run || run.total <= 0) return null;
+                          const pct = Math.round((run.correct / run.total) * 100);
+                          const blendStart = Math.max(0, pct - 6);
+                          const blendEnd = Math.min(100, pct + 6);
+                          const green = darkMode ? '#34d399' : '#10b981';
+                          const red = darkMode ? '#f87171' : '#ef4444';
+                          return (
+                            <span
+                              className="w-full mt-1"
+                              title={`${run.correct} of ${run.total} correct last time`}
+                              aria-label={`Last attempt: ${run.correct} of ${run.total} correct`}
+                            >
+                              <span
+                                className="block h-1.5 rounded-full overflow-hidden"
+                                style={{
+                                  background: `linear-gradient(to right, ${green} 0%, ${green} ${blendStart}%, ${red} ${blendEnd}%, ${red} 100%)`,
+                                }}
+                              />
+                              <span
+                                className="block text-[10px] mt-0.5 text-center font-medium"
+                                style={{ color: darkMode ? '#94a3b8' : '#64748b' }}
+                              >
+                                {run.correct}/{run.total}
+                              </span>
+                            </span>
+                          );
+                        })()}
                       </button>
                     );
                   })}

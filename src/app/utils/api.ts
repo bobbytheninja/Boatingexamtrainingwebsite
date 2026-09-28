@@ -83,6 +83,26 @@ export const api = {
     );
   },
 
+  // Learn mode progress, one record per topic — see the endpoint for why this
+  // is kept apart from exam results.
+  saveLearnProgress: async (
+    examType: string, topic: string, correct: number, total: number, token: string,
+  ) => {
+    return apiCall<{ success: boolean }>(
+      '/learn-progress',
+      { method: 'POST', body: JSON.stringify({ examType, topic, correct, total }) },
+      token,
+    );
+  },
+
+  getLearnProgress: async (examType: string, token: string) => {
+    return apiCall<{ progress: Record<string, { correct: number; total: number; at: number }> }>(
+      `/learn-progress/${examType}`,
+      { method: 'GET' },
+      token,
+    );
+  },
+
   verifyPayment: async (sessionId: string, token: string) => {
     return apiCall<{ success: boolean; examTypes: string[] }>(
       `/verify-payment/${sessionId}`,
