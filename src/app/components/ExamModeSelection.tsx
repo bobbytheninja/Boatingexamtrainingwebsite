@@ -135,7 +135,7 @@ export function ExamModeSelection() {
   }, [examType, accessToken]);
 
   useEffect(() => {
-    if (selectedMode !== 'learn' || !examType || !accessToken) return;
+    if (selectedMode !== 'learn' || !examType) return;
 
     // Already known — from the prefetch above or an earlier visit this session.
     const cached = peekTopicCounts(examType);
@@ -159,6 +159,19 @@ export function ExamModeSelection() {
     return () => { cancelled = true; };
   }, [selectedMode, examType, accessToken]);
 
+  // Learn is paid-only: it drills the full question bank for a topic, which is
+  // the product. A free category is open to any signed-in user; everything else
+  // needs a live subscription for this exam. Mirrors the server's own check, so
+  // the tiles say the same thing the API would.
+  const hasLearnAccess = (() => {
+    if (!user) return false;
+    if (examCategory?.isFree) return true;
+    const subs = user.subscriptions || [];
+    if (!subs.includes(examType)) return false;
+    const expiry = user.perExamExpiry?.[examType];
+    return expiry === undefined || expiry > Date.now();
+  })();
+
   // Every question falls into some topic (General Theory is a catch-all), so a
   // zero across the board means the exam has no questions loaded at all rather
   // than merely lacking a category.
@@ -171,6 +184,13 @@ export function ExamModeSelection() {
         ? 'Please log in to use Learn mode.'
         : 'Моля, влезте в профила си, за да използвате режим Учи.');
       navigate('/login');
+      return;
+    }
+    if (!hasLearnAccess) {
+      toast.error(language === 'English'
+        ? 'Learn mode needs access to this exam. There is no free tier for it.'
+        : 'Режим Учи изисква достъп до този изпит. Няма безплатна версия.');
+      navigate('/pricing');
       return;
     }
     navigate(`/exam/${examType}`, { state: { mode: 'learn', tier: 'paid', topic } });
@@ -413,32 +433,39 @@ export function ExamModeSelection() {
                     // Only enable a topic we know has questions. While counts are
                     // loading, or if they failed, tiles stay disabled rather than
                     // letting someone start a run with nothing in it.
-                    const available = count !== null
+                    // "Has questions" and "you may open it" are different
+                    // things: a locked tile still shows its count, it just
+                    // cannot be started.
+                    const hasQuestions = count !== null
                       ? count > 0
                       : (!accessToken && !countsLoading && !countsError);
+                    const available = hasQuestions && hasLearnAccess;
+                    const locked = hasQuestions && !hasLearnAccess;
                     const label = topic.names[language] ?? topic.names.English;
 
                     return (
                       <button
                         key={topic.key}
-                        onClick={() => available && handleStartTopic(topic.key)}
-                        disabled={!available}
+                        onClick={() => (available || locked) && handleStartTopic(topic.key)}
+                        disabled={!available && !locked}
                         className={`flex flex-col items-center justify-center gap-2 rounded-lg border-2 p-6 select-none transition-all duration-200 ${
                           available
                             ? 'cursor-pointer hover:-translate-y-0.5 learn-tile'
+                            : locked
+                            ? 'cursor-pointer learn-tile-locked'
                             : 'cursor-not-allowed border-dashed'
                         }`}
                         style={{
                           borderColor: available
                             ? (darkMode ? '#d4a017' : '#e0b83a')
-                            : (darkMode ? '#3f4652' : '#e2e8f0'),
+                            : (darkMode ? '#3f4652' : '#dfe5ec'),
                           backgroundColor: available
                             ? (darkMode ? 'rgba(212,160,23,0.12)' : 'rgba(212,160,23,0.08)')
-                            : (darkMode ? 'rgba(51,65,85,0.35)' : '#f8fafc'),
+                            : (darkMode ? 'rgba(51,65,85,0.35)' : '#f6f8fa'),
                           color: available
                             ? (darkMode ? '#e0b83a' : '#a97a0f')
-                            : (darkMode ? '#6b7280' : '#94a3b8'),
-                          opacity: available ? 1 : 0.7,
+                            : (darkMode ? '#7e8b99' : '#8b98a6'),
+                          opacity: available ? 1 : locked ? 0.95 : 0.7,
                         }}
                       >
                         <Icon className="w-7 h-7" />

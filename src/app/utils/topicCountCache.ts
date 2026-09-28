@@ -1,4 +1,4 @@
-import { countByTopic, type LearnTopic } from './questionTopics';
+import { countByTopic, LEARN_TOPICS, type LearnTopic } from './questionTopics';
 import { api } from './api';
 
 /**
@@ -53,16 +53,38 @@ export function peekTopicCounts(examType: string): Counts | null {
 }
 
 /** Counts for this exam, fetching once and sharing the request. */
-export function fetchTopicCounts(examType: string, token: string): Promise<Counts> {
+export function fetchTopicCounts(examType: string, token: string | null): Promise<Counts> {
   const cached = peekTopicCounts(examType);
   if (cached) return Promise.resolve(cached);
 
   const existing = inFlight.get(examType);
   if (existing) return existing;
 
-  const request = api.getAllQuestions(examType, token)
+  const empty = () =>
+    Object.fromEntries(LEARN_TOPICS.map(t => [t.key, 0])) as Counts;
+
+  /**
+   * Counts come from the public endpoint where possible, because the tiles
+   * show them to people who have not paid. That endpoint reports stored topics
+   * only, so where an exam has never been categorised it falls back to
+   * classifying the question bank here — which needs a subscription, and is
+   * why a locked visitor sees counts only once an admin has assigned them.
+   */
+  const request = api.getTopicCounts(examType)
     .then(res => {
-      const counts = countByTopic(res.questions || []) as Counts;
+      const hasStored = Object.keys(res.counts || {}).length > 0;
+      if (hasStored && res.unassigned === 0) {
+        return { ...empty(), ...(res.counts as Partial<Counts>) } as Counts;
+      }
+      if (!token) {
+        // Partial is still better than nothing for a visitor who cannot fetch
+        // the bank; an uncategorised exam simply shows no numbers.
+        return { ...empty(), ...(res.counts as Partial<Counts>) } as Counts;
+      }
+      return api.getAllQuestions(examType, token)
+        .then(full => countByTopic(full.questions || []) as Counts);
+    })
+    .then(counts => {
       memory.set(examType, counts);
       writeStorage(examType, counts);
       return counts;
@@ -80,7 +102,7 @@ export function fetchTopicCounts(examType: string, token: string): Promise<Count
  * reading the page and choosing a mode rather than starting after they click.
  */
 export function prefetchTopicCounts(examType: string, token: string | null): void {
-  if (!token || !examType) return;
+  if (!examType) return;
   if (peekTopicCounts(examType)) return;
   fetchTopicCounts(examType, token).catch(() => {});
 }

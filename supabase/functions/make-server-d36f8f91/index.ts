@@ -2671,6 +2671,48 @@ async function hasExamAccess(userId: string, examType: string): Promise<{ ok: bo
 // Every question for an exam type. Admins use this in the question editor;
 // subscribers need it for Learn mode, which counts and drills whole topics and
 // so cannot work from the 40-question exam draw.
+/**
+ * How many questions sit in each topic, and nothing else.
+ *
+ * Public on purpose: the Learn tiles show their counts to everyone, including
+ * people who have not paid, so the page can say what they would be getting.
+ * Counting is safe to expose — the questions themselves are the product and
+ * stay behind /questions/:examType/all, which needs a live subscription.
+ *
+ * Counts come from the stored topic field rather than by classifying text
+ * here, which keeps the keyword rules in one place in the frontend and means
+ * this endpoint never has to read question bodies. Questions with no topic set
+ * are reported separately so the caller can tell "nothing in this topic" from
+ * "nobody has assigned topics yet".
+ */
+app.get("/make-server-d36f8f91/questions/:examType/topic-counts", async (c) => {
+  try {
+    const examType = c.req.param('examType');
+    const questionIds = await questions.getQuestionIds(examType);
+    if (questionIds.length === 0) {
+      return c.json({ counts: {}, total: 0, unassigned: 0 });
+    }
+
+    const fetched = await Promise.all(questionIds.map(id => kv.get(`question:${id}`)));
+    const counts: Record<string, number> = {};
+    let unassigned = 0;
+
+    for (const q of fetched) {
+      if (!q) continue;
+      if (typeof q.topic === 'string' && q.topic) {
+        counts[q.topic] = (counts[q.topic] || 0) + 1;
+      } else {
+        unassigned += 1;
+      }
+    }
+
+    return c.json({ counts, total: questionIds.length, unassigned });
+  } catch (error: any) {
+    console.error('[topic-counts] failed:', error);
+    return c.json({ counts: {}, total: 0, unassigned: 0 });
+  }
+});
+
 app.get("/make-server-d36f8f91/questions/:examType/all", async (c) => {
   // verifyAdmin reports an error for a non-admin even though it returns the
   // user, so identity and admin status are checked separately here.

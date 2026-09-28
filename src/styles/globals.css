@@ -388,63 +388,53 @@
   .hero-pan { animation: none; transform: scale(1.01); }
 }
 
-/* Learn topic tiles: hover fills the tile with gold rather than only ringing
-   it, so the whole card reads as highlighted. */
-.learn-tile {
-  transition: background-color .2s ease, box-shadow .2s ease, border-color .2s ease, transform .2s ease;
+/* Learn topic tiles.
+
+   Hover fills the whole tile rather than ringing it — the effect asked for was
+   a marker stroke, so the colour is laid on flat and solid across the card and
+   the label flips to read against it, instead of a tint that leaves the tile
+   looking merely warmer. */
+.learn-tile,
+.learn-tile-locked {
+  transition: background-color .18s ease, color .18s ease, box-shadow .18s ease,
+              border-color .18s ease, transform .18s ease;
 }
 
 .learn-tile:hover,
 .learn-tile:focus-visible {
-  border-color: #d4a017;
-  background-color: rgba(212, 160, 23, 0.34) !important;
-  box-shadow:
-    0 0 0 3px rgba(212, 160, 23, 0.3),
-    0 8px 24px -6px rgba(212, 160, 23, 0.6),
-    inset 0 0 40px -6px rgba(212, 160, 23, 0.55);
+  background-color: #d4a017 !important;
+  border-color: #b88a12 !important;
+  color: #ffffff !important;
+  box-shadow: 0 6px 18px -6px rgba(212, 160, 23, .65);
 }
 
 :root.dark .learn-tile:hover,
 :root.dark .learn-tile:focus-visible {
-  border-color: #e0b83a;
-  background-color: rgba(224, 184, 58, 0.3) !important;
-  box-shadow:
-    0 0 0 3px rgba(224, 184, 58, 0.34),
-    0 8px 28px -6px rgba(224, 184, 58, 0.72),
-    inset 0 0 44px -6px rgba(224, 184, 58, 0.6);
+  background-color: #e0b83a !important;
+  border-color: #e0b83a !important;
+  color: #1a1206 !important;
+  box-shadow: 0 6px 20px -6px rgba(224, 184, 58, .6);
+}
+
+/* A locked topic highlights in grey, not gold: it responds to the pointer so
+   it does not feel dead, while staying visibly not-yours-yet. */
+.learn-tile-locked:hover,
+.learn-tile-locked:focus-visible {
+  background-color: #8b98a6 !important;
+  border-color: #7a8794 !important;
+  color: #ffffff !important;
+}
+
+:root.dark .learn-tile-locked:hover,
+:root.dark .learn-tile-locked:focus-visible {
+  background-color: #59677a !important;
+  border-color: #59677a !important;
+  color: #eef3f8 !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .learn-tile { transition: none; }
-}
-
-/* Under viewport-fit=cover the fixed nav grows by the status-bar inset, since
-   it pads itself by env(safe-area-inset-top). Pages clear the nav with
-   `min-h-screen pt-32`, so that pairing has to grow by the same amount or the
-   first rows of content end up tucked underneath. Scoped to the pairing rather
-   than to pt-32 alone, so it cannot affect unrelated spacing. */
-.min-h-screen.pt-32 {
-  padding-top: calc(8rem + env(safe-area-inset-top));
-}
-
-/* A photo at full brightness against a dark page is the one element that still
-   reads as glaring — the surface around it darkens but the image does not.
-   Easing it down slightly keeps it part of the page. Applied to the image
-   itself rather than a parent, so no ancestor gets a compositing layer it did
-   not need. */
-.hero-pan {
-  transition: filter 460ms cubic-bezier(0.4, 0.0, 0.2, 1);
-}
-
-:root.dark .hero-pan {
-  /* Just enough to stop a full-brightness photo glaring against a dark page.
-     It used to also drop saturation, which drained the colour out of the water
-     — the photo should still look like the photo. */
-  filter: brightness(0.92);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .hero-pan { transition: none; }
+  .learn-tile,
+  .learn-tile-locked { transition: none; }
 }
 
 /* ── Theme switch: a wave down the page ────────────────────────────────────

@@ -130,6 +130,16 @@ export const api = {
     );
   },
 
+  // Counts only — public, so locked Learn tiles can still say how much is
+  // behind them. Returns `unassigned` so the caller can tell an empty topic
+  // from an exam whose questions have never been categorised.
+  getTopicCounts: async (examType: string) => {
+    return apiCall<{ counts: Record<string, number>; total: number; unassigned: number }>(
+      `/questions/${examType}/topic-counts`,
+      { method: 'GET' },
+    );
+  },
+
   getMockQuestions: async (examType: string) => {
     return apiCall<{ questions: any[] }>(
       `/questions/${examType}/mock`,
